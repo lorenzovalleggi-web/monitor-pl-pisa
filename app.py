@@ -5,57 +5,77 @@ import requests
 from streamlit_autorefresh import st_autorefresh
 
 # Configurazione della pagina
-st.set_page_config(page_title="HUD Monitor PL Pisa", page_icon="🚦", layout="centered")
+st.set_page_config(page_title="Monitor PL Pisa Live", page_icon="🚦", layout="centered")
 
-# STYLING HUD (Heads-Up Display) STILE NAVIGATORE AUTOMOBILISTICO
+# INTERFACCIA MINIMALISTA STILE TESLA / CARPLAY
 st.markdown("""
     <style>
-    /* Sfondo nero assoluto per evitare riflessi di notte */
-    .stApp { background-color: #000000; color: #FFFFFF; }
+    /* Sfondo scuro opaco moderno */
+    .stApp { background-color: #1A1C20; color: #E2E8F0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     
-    /* Titoli in font elettronico */
-    h1, h3 { 
-        color: #00FFCC !important; 
-        font-family: 'Courier New', Courier, monospace; 
-        text-align: center;
-        font-weight: bold;
+    /* Titoli minimali */
+    h1 { color: #FFFFFF !important; font-size: 26px !important; text-align: center; font-weight: 700; margin-bottom: 2px; }
+    p.subtitle { text-align: center; color: #94A3B8; font-size: 14px; margin-bottom: 20px; }
+    
+    /* Box info superiore */
+    .stAlert { background-color: #262930 !important; border: none !important; border-radius: 12px !important; }
+    
+    /* Card passaggi a livello stile CarPlay */
+    .pl-card {
+        display: flex;
+        align-items: center;
+        background-color: #262930;
+        padding: 16px 20px;
+        border-radius: 14px;
+        margin-bottom: 12px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     }
     
-    /* Box informazioni di linea */
-    .stAlert { 
-        background-color: #111111 !important; 
-        border: 1px solid #333333 !important;
+    /* Icona di stato tonda */
+    .status-dot {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        margin-right: 18px;
+        flex-shrink: 0;
     }
+    .dot-aperto { background-color: rgba(16, 185, 129, 0.15); border: 2px solid #10B981; }
+    .dot-preallarme { background-color: rgba(245, 158, 11, 0.15); border: 2px solid #F59E0B; }
+    .dot-chiuso { background-color: rgba(239, 68, 68, 0.15); border: 2px solid #EF4444; }
     
-    /* Stili personalizzati per i grandi cartelli di stato */
-    .status-card {
-        padding: 18px;
-        border-radius: 8px;
-        margin-bottom: 10px;
-        text-align: center;
-        font-family: 'Arial Black', Gadget, sans-serif;
+    /* Testi interni alle card */
+    .pl-details { flex-grow: 1; }
+    .pl-name { font-size: 16px; font-weight: 600; color: #FFFFFF; margin: 0; }
+    .pl-info { font-size: 13px; color: #94A3B8; margin-top: 2px; }
+    
+    /* Timer sul lato destro */
+    .pl-timer {
+        font-size: 16px;
+        font-weight: 700;
+        text-align: right;
+        white-space: nowrap;
     }
-    .chiuso { background-color: #330000; border: 2px solid #FF0033; color: #FF3366; }
-    .preallarme { background-color: #332200; border: 2px solid #FF9900; color: #FFCC00; }
-    .aperto { background-color: #002200; border: 2px solid #00CC33; color: #33FF66; }
+    .timer-chiuso { color: #EF4444; }
+    .timer-preallarme { color: #F59E0B; }
+    .timer-aperto { color: #10B981; }
     
-    .timer-text { font-size: 28px; font-weight: bold; display: block; margin: 5px 0; }
-    .info-text { font-size: 14px; opacity: 0.8; }
+    /* Separatore freccia */
+    .road-arrow { text-align: center; color: #475569; font-size: 14px; margin: -4px 0 8px 0; }
     </style>
 """, unsafe_allow_html=True)
 
-st.title("📟 HUD MONITOR PL LIVE")
-st.markdown("<p style='text-align: center; color: #888;'>Sincronizzato con Server Satellitari FS</p>", unsafe_allow_html=True)
+st.markdown("<h1>🚦 MONITOR TRAFFICO LIVE</h1>", unsafe_allow_html=True)
+st.markdown("<p class='subtitle'>San Giuliano Terme ↔ Pisa S. Rossore</p>", unsafe_allow_html=True)
 
-# Aggiornamento super rapido ogni 5 secondi per far scendere il timer in modo fluido
-st_autorefresh(interval=5000, key="hud_refresh")
-
-if st.button("🔄 FORZA SINCRONIZZAZIONE SERVER"):
-    st.rerun()
+# Aggiornamento automatico ogni 5 secondi per un countdown fluido
+st_autorefresh(interval=5000, key="carplay_refresh")
 
 fuso_italia = pytz.timezone('Europe/Rome')
 ora_adesso = datetime.datetime.now(fuso_italia)
-st.markdown(f"<p style='text-align: center; font-size: 16px;'>Ora GPS: <b>{ora_adesso.strftime('%H:%M:%S')}</b></p>", unsafe_allow_html=True)
 
 secondi_attuali_assoluti = (ora_adesso.hour * 3600) + (ora_adesso.minute * 60) + ora_adesso.second
 
@@ -65,7 +85,7 @@ ID_PISA_ROSSORE = "S06501"
 @st.cache_data(ttl=8)
 def recupera_treni_reali():
     treni_attivi = []
-    # 1. Tratta da Lucca verso Pisa (Partenze da San Giuliano)
+    # 1. Verso Pisa (Partenze da San Giuliano)
     try:
         url_sg = f"http://www.viaggiatreno.it/viaggiatrenonew/api/esitoPartenze/{ID_SAN_GIULIANO}/{ora_adesso.strftime('%Y-%m-%dT00:00:00')}"
         res = requests.get(url_sg, timeout=3).json()
@@ -79,11 +99,11 @@ def recupera_treni_reali():
                     if ritardo == "---" or ritardo is None: ritardo = 0
                     treni_attivi.append({
                         "ora_p": h, "min_p": m, "ritardo": int(ritardo), "direzione": "PISA",
-                        "info": f"➔ REG {t.get('numeroTreno')} per {t.get('destinazione')}"
+                        "info": f"Treno {t.get('numeroTreno')} per {t.get('destinazione')}"
                     })
     except: pass
 
-    # 2. Tratta da Pisa verso Lucca (Partenze da Pisa S. Rossore)
+    # 2. Verso Lucca (Partenze da Pisa S. Rossore)
     try:
         url_pr = f"http://www.viaggiatreno.it/viaggiatrenonew/api/esitoPartenze/{ID_PISA_ROSSORE}/{ora_adesso.strftime('%Y-%m-%dT00:00:00')}"
         res = requests.get(url_pr, timeout=3).json()
@@ -97,14 +117,14 @@ def recupera_treni_reali():
                     if ritardo == "---" or ritardo is None: ritardo = 0
                     treni_attivi.append({
                         "ora_p": h, "min_p": m, "ritardo": int(ritardo), "direzione": "LUCCA",
-                        "info": f"🡨 REG {t.get('numeroTreno')} per {t.get('destinazione')}"
+                        "info": f"Treno {t.get('numeroTreno')} per {t.get('destinazione')}"
                     })
     except: pass
     return treni_attivi
 
 lista_treni_fs = recupera_treni_reali()
 
-# --- BLOCCO PROSSIMO TRENO ---
+# --- DETERMINA MESSAGGIO DI LINEA ---
 prossimo_treno_testo = ""
 treni_futuri = []
 for t in lista_treni_fs:
@@ -117,18 +137,18 @@ if treni_futuri:
     min_totale = prox["ora_p"] * 60 + prox["min_p"] + prox["ritardo"]
     ora_effettiva = min_totale // 60
     min_effettiva = min_totale % 60
-    nota_ritardo = f" (+{prox['ritardo']} min ritardo)" if prox['ritardo'] > 0 else " (In orario)"
-    prossimo_treno_testo = f"Prossimo transito reale: {prox['info']} stimato alle **{ora_effettiva:02d}:{min_effettiva:02d}**{nota_ritardo}"
+    nota_ritardo = f" (+{prox['ritardo']} min)" if prox['ritardo'] > 0 else ""
+    prossimo_treno_testo = f"Prossimo arrivo: {prox['info']} alle **{ora_effettiva:02d}:{min_effettiva:02d}**{nota_ritardo}"
 else:
     if ora_adesso.hour >= 22:
-        prossimo_treno_testo = "Servizio ferroviario concluso. 🌅 Primi treni: 05:30 (Lucca) / 05:51 (Pisa)."
+        prossimo_treno_testo = "Servizio concluso. Primi passaggi dalle ore 05:30."
     else:
-        prossimo_treno_testo = "Nessun convoglio imminente rilevato sui monitor di stazione."
+        prossimo_treno_testo = "Linea regolare. Nessun treno imminente rilevato."
 
-st.info(f"📋 **STATO DELLA LINEA:** {prossimo_treno_testo}")
-st.markdown("---")
+st.info(f"ℹ️ {prossimo_treno_testo}")
+st.write("")
 
-# CONFIGURAZIONE DISTANZE REALI PASSAGGI A LIVELLO
+# ELENCO PASSAGGI A LIVELLO
 pl_lista = [
     {"nome": "San Giuliano Terme", "ind_pisa": 0, "ind_lucca": 4},
     {"nome": "Via Ulisse Dini (Gello)", "ind_pisa": 2, "ind_lucca": 3},
@@ -136,49 +156,50 @@ pl_lista = [
     {"nome": "Via Ugo Rindi (Pisa)", "ind_pisa": 7, "ind_lucca": 0}
 ]
 
-st.write("### 🚊 PROSPEZIONE SBARRE AL VOLANTE")
-
-for pl in pl_lista:
-    st.markdown("<div style='text-align: center; color: #444; margin: 0;'>│</div>", unsafe_allow_html=True)
-    
+for idx, pl in enumerate(pl_lista):
+    if idx > 0:
+        st.markdown('<div class="road-arrow">│</div>', unsafe_allow_html=True)
+        
     stato = "APERTO"
-    info_segnaletica = "STRADA LIBERA"
+    info_segnaletica = "Strada libera"
     secondi_rimanenti = 0
     
     for treno in lista_treni_fs:
-        # Calcolo Orario Reale al secondo (Programmato + Ritardo)
         sec_partenza_reale = (treno["ora_p"] * 3600) + (treno["min_p"] * 60) + (treno["ritardo"] * 60)
         durata_occupazione = 600 if (treno["ora_p"] == 21 and treno["min_p"] == 58) else 360
         
         if treno["direzione"] == "PISA":
             sec_inizio_chiusura = sec_partenza_reale - 360 + (pl["ind_pisa"] * 60)
             sec_fine_chiusura = sec_partenza_reale + durata_occupazione + 60
-        else: # LUCCA
+        else:
             sec_inizio_chiusura = sec_partenza_reale - 360 + (pl["ind_lucca"] * 60)
             sec_fine_chiusura = sec_partenza_reale + 300 + 120
             
-        sec_preavviso = sec_inizio_chiusura - 120 # Il Pre-allarme giallo si attiva 2 minuti prima della chiusura fissa
+        sec_preavviso = sec_inizio_chiusura - 120 # Preallarme giallo 2 minuti prima delle sbarre giù
         
         if sec_inizio_chiusura <= secondi_attuali_assoluti <= sec_fine_chiusura:
             stato = "CHIUSO"
             secondi_rimanenti = sec_fine_chiusura - secondi_attuali_assoluti
-            info_segnaletica = treno["info"].upper()
+            info_segnaletica = treno["info"]
             break
         elif sec_preavviso <= secondi_attuali_assoluti < sec_inizio_chiusura:
             stato = "PRE-ALLARME"
             secondi_rimanenti = sec_inizio_chiusura - secondi_attuali_assoluti
-            info_segnaletica = "SBARRE IN DISCESA ⚠️ CONVOGLIO IN ARRIVO"
+            info_segnaletica = "Sbarre in discesa imminente"
             break
 
-    # Stampa dei grandi cartelli HUD ad alto contrasto
+    # Rendering grafico CarPlay / Tesla Style
     if stato == "CHIUSO":
         m_timer = secondi_rimanenti // 60
         s_timer = secondi_rimanenti % 60
         st.markdown(f"""
-            <div class="status-card chiuso">
-                <span style="font-size: 14px; letter-spacing: 2px;">BARRIERA CHIUSA</span>
-                <span class="timer-text">🛑 RIAPERTURA: {m_timer}m {s_timer:02d}s</span>
-                <span class="info-text">{info_segnaletica}</span>
+            <div class="pl-card">
+                <div class="status-dot dot-chiuso">🔴</div>
+                <div class="pl-details">
+                    <p class="pl-name">{pl['nome']}</p>
+                    <p class="pl-info">{info_segnaletica}</p>
+                </div>
+                <div class="pl-timer timer-chiuso">🛑 {m_timer}:{s_timer:02d}</div>
             </div>
         """, unsafe_allow_html=True)
         
@@ -186,21 +207,26 @@ for pl in pl_lista:
         m_timer = secondi_rimanenti // 60
         s_timer = secondi_rimanenti % 60
         st.markdown(f"""
-            <div class="status-card preallarme">
-                <span style="font-size: 14px; letter-spacing: 2px;">⚠️ ATTENZIONE</span>
-                <span class="timer-text">🟠 CHIUSURA TRA: {m_timer}m {s_timer:02d}s</span>
-                <span class="info-text">{info_segnaletica}</span>
+            <div class="pl-card">
+                <div class="status-dot dot-preallarme">🟠</div>
+                <div class="pl-details">
+                    <p class="pl-name">{pl['nome']}</p>
+                    <p class="pl-info">{info_segnaletica}</p>
+                </div>
+                <div class="pl-timer timer-preallarme">⏳ {m_timer}:{s_timer:02d}</div>
             </div>
         """, unsafe_allow_html=True)
         
     else:
         st.markdown(f"""
-            <div class="status-card aperto">
-                <span style="font-size: 13px; letter-spacing: 2px;">VIA LIBERA</span>
-                <span style="font-size: 20px; display: block; margin: 4px 0; font-weight: bold;">🟢 APERTO - {pl['nome']}</span>
-                <span class="info-text">{info_segnaletica}</span>
+            <div class="pl-card">
+                <div class="status-dot dot-aperto">🟢</div>
+                <div class="pl-details">
+                    <p class="pl-name">{pl['nome']}</p>
+                    <p class="pl-info">{info_segnaletica}</p>
+                </div>
+                <div class="pl-timer timer-aperto">OK</div>
             </div>
         """, unsafe_allow_html=True)
 
-st.markdown("---")
-st.caption("⚙️ HUD Automotive v3.0 | Modalità Notturna Permanente Attiva")
+st.markdown("<p style='text-align: center; color: #475569; font-size: 11px; margin-top: 30px;'>Aggiornato alle " + ora_adesso.strftime('%H:%M:%S') + " | Nav-System v4.0</p>", unsafe_allow_html=True)
