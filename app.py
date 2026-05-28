@@ -129,4 +129,27 @@ st.write("### 🚊 STATO VARCHI FERROVIARI")
 
 for i, pl in enumerate(pl_lista):
     if i > 0:
-        st.markdown("<div style='text-align: center; font-size: 16px; margin: 1px 0;'>
+        st.markdown("### :arrow_down:")
+    
+    stato_chiuso = False
+    info_segnaletica = "Strada libera"
+    
+    if lista_treni_fs:
+        for treno in lista_treni_fs:
+            min_p = treno["ora_p"] * 60 + treno["min_p"] + treno["ritardo"]
+            durata = 10 if (treno["ora_p"] == 21 and treno["min_p"] == 58) else 6
+            
+            if treno["direzione"] == "PISA":
+                ini = min_p - 6 + pl["ind_pisa"]
+                fin = min_p + durata + 1 + minuti_estensione_blocco
+                if ini <= minuti_assoluti_ora <= fin:
+                    stato_chiuso = True
+                    info_segnaletica = f"{treno['info']}\n\n⏱️ Chiusura stimata: {ini//60:02d}:{ini%60:02d} ↔ {fin//60:02d}:{fin%60:02d}"
+                    break
+                    
+            elif treno["direzione"] == "LUCCA":
+                ini = min_p - 6 + pl["ind_lucca"]
+                fin = min_p + 5 + 2 + minuti_estensione_blocco
+                if ini <= minuti_assoluti_ora <= fin:
+                    stato_chiuso = True
+                    info_segnaletica = f"{treno['info']}\n\n⏱️ Chiusura stimata: {ini//60:02d}:{ini%60:02d} ↔ {fin//60:02d}:{fin%60:02d}"
