@@ -161,3 +161,14 @@ for i, pl in enumerate(pl_lista):
 
 st.markdown("---")
 st.success("🛰️ **Analisi Correlata Attiva**: Rilevamento indiretto delle ostruzioni merci tramite calcolo dei ritardi di tratta.")
+
+# --- FOOTER CON CONTATORE VISITE E COPYRIGHT ---
+st.markdown("<br><hr>", unsafe_allow_html=True)
+col_copy, col_counter = st.columns([2, 1])
+
+with col_copy:
+    st.markdown("<p style='color: #777777; font-size: 12px; margin:0;'>© 2026 Pisa ⇄ Lucca RailFlow.<br>Tutti i diritti riservati intellettuali.</p>", unsafe_allow_html=True)
+
+with col_counter:
+    # Genera un badge contatore dinamico e sicuro basato sull'URL del progetto
+    st.markdown("<p style='text-align:right; margin:0;'><img src='https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fmonitor-pl-pisa.streamlit.app&count_bg=%234CAF50&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=Visite+Totali&edge_flat=false' alt='Contatore'></p>", unsafe_allow_html=True)
