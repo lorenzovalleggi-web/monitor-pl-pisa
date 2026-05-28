@@ -4,61 +4,34 @@ import pytz
 import requests
 from streamlit_autorefresh import st_autorefresh
 
-# Configurazione della pagina
 st.set_page_config(page_title="Monitor PL Pisa Live", page_icon="🚦", layout="centered")
 
-# INTERFACCIA MINIMALE AD ALTO CONTRASTO (PULITA)
-st.markdown("""
-    <style>
-    /* Sfondo nero assoluto e testo bianco e nitido */
-    .stApp { background-color: #000000; color: #FFFFFF; font-family: -apple-system, sans-serif; }
-    
-    /* Titolo centrale pulito */
-    h1 { color: #FFFFFF !important; font-size: 24px !important; text-align: center; font-weight: bold; margin-bottom: 25px; }
-    
-    /* Riga separatrice invisibile o sottile */
-    hr { border-top: 1px solid #222222 !important; }
-    
-    /* Layout riga passaggio a livello */
-    .pl-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 12px 5px;
-        border-bottom: 1px solid #111111;
-    }
-    
-    .pl-text-section { display: flex; flex-direction: column; }
-    .pl-main-title { font-size: 18px; font-weight: bold; color: #FFFFFF; margin: 0; }
-    .pl-sub-info { font-size: 13px; color: #888888; margin-top: 3px; }
-    
-    /* Stati colorati netti */
-    .status-badge { font-size: 16px; font-weight: bold; padding: 4px 10px; border-radius: 6px; }
-    .badge-aperto { color: #00FF66; }
-    .badge-preallarme { color: #FF9900; }
-    .badge-chiuso { color: #FF3333; }
-    </style>
-""", unsafe_allow_html=True)
+st.title("Monitor Passaggi a Livello Live")
+st.subheader("Tratta: San Giuliano Terme ↔ Pisa S. Rossore")
 
-st.markdown("<h1>🚦 MONITOR PASSAGGI A LIVELLO</h1>", unsafe_allow_html=True)
+# Aggiornamento automatico ogni 15 secondi
+st_autorefresh(interval=15000, key="datarefresh")
 
-# Aggiornamento automatico ogni 5 secondi
-st_autorefresh(interval=5000, key="minimal_refresh")
+if st.button("🔄 Aggiorna Stato Ora"):
+    st.rerun()
 
 fuso_italia = pytz.timezone('Europe/Rome')
 ora_adesso = datetime.datetime.now(fuso_italia)
-secondi_attuali_assoluti = (ora_adesso.hour * 3600) + (ora_adesso.minute * 60) + ora_adesso.second
+st.write(f"Ultimo aggiornamento automatico: **{ora_adesso.strftime('%H:%M:%S')}**")
 
+minuti_assoluti_ora = ora_adesso.hour * 60 + ora_adesso.minute
+
+# ID Stazioni ufficiali ViaggiaTreno
 ID_SAN_GIULIANO = "S06411"
 ID_PISA_ROSSORE = "S06501"
 
-@st.cache_data(ttl=8)
+@st.cache_data(ttl=10)
 def recupera_treni_reali():
     treni_attivi = []
-    # 1. Verso Pisa (Partenze da San Giuliano)
+    # 1. Controlla partenze da San Giuliano (Verso Pisa)
     try:
         url_sg = f"http://www.viaggiatreno.it/viaggiatrenonew/api/esitoPartenze/{ID_SAN_GIULIANO}/{ora_adesso.strftime('%Y-%m-%dT00:00:00')}"
-        res = requests.get(url_sg, timeout=3).json()
+        res = requests.get(url_sg, timeout=5).json()
         for t in res.get('tabellone', []):
             dest = t.get('destinazione', '').upper()
             if "PISA" in dest or "LIVORNO" in dest:
@@ -69,14 +42,15 @@ def recupera_treni_reali():
                     if ritardo == "---" or ritardo is None: ritardo = 0
                     treni_attivi.append({
                         "ora_p": h, "min_p": m, "ritardo": int(ritardo), "direzione": "PISA",
-                        "numero": t.get('numeroTreno')
+                        "info": f"➔ **REG {t.get('numeroTreno')}** per {t.get('destinazione')}"
                     })
-    except: pass
+    except:
+        pass
 
-    # 2. Verso Lucca (Partenze da Pisa S. Rossore)
+    # 2. Controlla partenze da Pisa S. Rossore (Verso Lucca)
     try:
         url_pr = f"http://www.viaggiatreno.it/viaggiatrenonew/api/esitoPartenze/{ID_PISA_ROSSORE}/{ora_adesso.strftime('%Y-%m-%dT00:00:00')}"
-        res = requests.get(url_pr, timeout=3).json()
+        res = requests.get(url_pr, timeout=5).json()
         for t in res.get('tabellone', []):
             dest = t.get('destinazione', '').upper()
             if "LUCCA" in dest or "PISTOIA" in dest or "FIRENZE" in dest:
@@ -87,105 +61,37 @@ def recupera_treni_reali():
                     if ritardo == "---" or ritardo is None: ritardo = 0
                     treni_attivi.append({
                         "ora_p": h, "min_p": m, "ritardo": int(ritardo), "direzione": "LUCCA",
-                        "numero": t.get('numeroTreno')
+                        "info": f"🡨 **REG {t.get('numeroTreno')}** per {t.get('destinazione')}"
                     })
-    except: pass
+    except:
+        pass
     return treni_attivi
 
+# Scarica lo stato della linea live
 lista_treni_fs = recupera_treni_reali()
 
-pl_lista = [
-    {"nome": "San Giuliano Terme", "ind_pisa": 0, "ind_lucca": 4},
-    {"nome": "Via Ulisse Dini (Gello)", "ind_pisa": 2, "ind_lucca": 3},
-    {"nome": "Via di Gagno (Pisa)", "ind_pisa": 5, "ind_lucca": 2},
-    {"nome": "Via Ugo Rindi (Pisa)", "ind_pisa": 7, "ind_lucca": 0}
-]
+# --- TROVA PROSSIMO TRENO ---
+prossimo_treno_testo = ""
+treni_futuri = []
+for t in lista_treni_fs:
+    min_ass_treno = t["ora_p"] * 60 + t["min_p"] + t["ritardo"]
+    if min_ass_treno > minuti_assoluti_ora:
+        treni_futuri.append((min_ass_treno, t))
 
-# CREAZIONE DELLA LISTA MINIMALE PL
-for pl in pl_lista:
-    stato = "APERTO"
-    secondi_rimanenti = 0
-    prossimo_treno_orario = ""
-    info_treno_corrente = ""
-    
-    # Lista dei transiti futuri specifici per questo Passaggio a Livello
-    transiti_futuri_pl = []
-    
-    for treno in lista_treni_fs:
-        sec_partenza_reale = (treno["ora_p"] * 3600) + (treno["min_p"] * 60) + (treno["ritardo"] * 60)
-        durata_occupazione = 600 if (treno["ora_p"] == 21 and treno["min_p"] == 58) else 360
-        
-        if treno["direzione"] == "PISA":
-            sec_inizio_chiusura = sec_partenza_reale - 360 + (pl["ind_pisa"] * 60)
-            sec_fine_chiusura = sec_partenza_reale + durata_occupazione + 60
-            dir_freccia = "➔ PISA"
-        else:
-            sec_inizio_chiusura = sec_partenza_reale - 360 + (pl["ind_lucca"] * 60)
-            sec_fine_chiusura = sec_partenza_reale + 300 + 120
-            dir_freccia = "🡨 LUCCA"
-            
-        sec_preavviso = sec_inizio_chiusura - 120
-        
-        # Memorizziamo tutti i transiti futuri per calcolare l'orario del prossimo treno
-        if sec_inizio_chiusura > secondi_attuali_assoluti:
-            transiti_futuri_pl.append((sec_inizio_chiusura, dir_freccia))
-            
-        # Controlliamo lo stato attuale del PL
-        if sec_inizio_chiusura <= secondi_attuali_assoluti <= sec_fine_chiusura:
-            stato = "CHIUSO"
-            secondi_rimanenti = sec_fine_chiusura - secondi_attuali_assoluti
-            info_treno_corrente = f"Treno {treno['numero']} ({dir_freccia})"
-        elif sec_preavviso <= secondi_attuali_assoluti < sec_inizio_chiusura and stato != "CHIUSO":
-            stato = "PRE-ALLARME"
-            secondi_rimanenti = sec_inizio_chiusura - secondi_attuali_assoluti
-            info_treno_corrente = f"Treno {treno['numero']} in arrivo"
-
-    # Calcolo testo del prossimo treno se il PL è libero
-    if transiti_futuri_pl:
-        prossimo_sec, direzione_treno = min(transiti_futuri_pl, key=lambda x: x[0])
-        ora_p = prossimo_sec // 3600
-        min_p = (prossimo_sec % 3600) // 60
-        prossimo_treno_orario = f"Prossimo transito: ore {ora_p:02d}:{min_p:02d} ({direzione_treno})"
+if treni_futuri:
+    _, prox = min(treni_futuri, key=lambda x: x[0])
+    min_totale = prox["ora_p"] * 60 + prox["min_p"] + prox["ritardo"]
+    ora_effettiva = min_totale // 60
+    min_effettiva = min_totale % 60
+    nota_ritardo = f" (+{prox['ritardo']} min ritardo)" if prox['ritardo'] > 0 else " (In orario)"
+    prossimo_treno_testo = f"Prossimo transito reale: {prox['info']} alle **{ora_effettiva:02d}:{min_effettiva:02d}**{nota_ritardo}"
+else:
+    if ora_adesso.hour >= 22:
+        prossimo_treno_testo = "Servizio giornaliero terminato. 🌅 Primo treno della mattina: **REG delle 05:30 per Lucca** / **05:51 per Pisa**."
     else:
-        if ora_adesso.hour >= 22:
-            prossimo_treno_orario = "Servizio terminato. Riprende domattina."
-        else:
-            prossimo_treno_orario = "Nessun treno rilevato nelle prossime ore"
+        prossimo_treno_testo = "Nessun transito imminente rilevato dai sistemi di stazione."
 
-    # Rendering grafico pulito a righe
-    if stato == "CHIUSO":
-        m = secondi_rimanenti // 60
-        s = secondi_rimanenti % 60
-        st.markdown(f"""
-            <div class="pl-row">
-                <div class="pl-text-section">
-                    <span class="pl-main-title">{pl['nome']}</span>
-                    <span class="pl-sub-info">{info_treno_corrente}</span>
-                </div>
-                <div class="status-badge badge-chiuso">🛑 CHIUSO ({m}:{s:02d})</div>
-            </div>
-        """, unsafe_allow_html=True)
-    elif stato == "PRE-ALLARME":
-        m = secondi_rimanenti // 60
-        s = secondi_rimanenti % 60
-        st.markdown(f"""
-            <div class="pl-row">
-                <div class="pl-text-section">
-                    <span class="pl-main-title">{pl['nome']}</span>
-                    <span class="pl-sub-info">{info_treno_corrente}</span>
-                </div>
-                <div class="status-badge badge-preallarme">⏳ IN CHIUSURA ({m}:{s:02d})</div>
-            </div>
-        """, unsafe_allow_html=True)
-    else:
-        st.markdown(f"""
-            <div class="pl-row">
-                <div class="pl-text-section">
-                    <span class="pl-main-title">{pl['nome']}</span>
-                    <span class="pl-sub-info">{prossimo_treno_orario}</span>
-                </div>
-                <div class="status-badge badge-aperto">🟢 APERTO</div>
-            </div>
-        """, unsafe_allow_html=True)
+st.info(f"📋 **STATO LINEA LIVE:** {prossimo_treno_testo}")
+st.markdown("---")
 
-st.markdown("<p style='text-align: center; color: #444444; font-size: 11px; margin-top: 40px;'>Aggiornato: " + ora_adesso.strftime('%H:%M:%S') + " | PureMinimal v5.0</p>", unsafe_allow_html=True)
+pl_lista =
