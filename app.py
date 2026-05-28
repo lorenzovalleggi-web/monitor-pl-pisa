@@ -162,6 +162,38 @@ for i, pl in enumerate(pl_lista):
 st.markdown("---")
 st.success("🛰️ **Analisi Correlata Attiva**: Rilevamento indiretto delle ostruzioni merci tramite calcolo dei ritardi di tratta.")
 
+# --- NUOVO AVVISO PUBBLICITARIO D'IMPATTO ---
+st.markdown("<br>", unsafe_allow_html=True)
+st.markdown("""
+    <div style="background: linear-gradient(135deg, #fff9db 0%, #fff3bf 100%); border-left: 5px solid #fcc419; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: center;">
+        <span style="background-color: #fcc419; color: #333333; font-size: 11px; font-weight: bold; text-transform: uppercase; padding: 3px 8px; border-radius: 3px; letter-spacing: 0.5px;">📢 SPAZIO PROMOZIONALE</span>
+        <h4 style="color: #212529; margin: 12px 0 6px 0; font-family: sans-serif; font-size: 16px;"><b>PROMUOVI LA TUA ATTIVITÀ SU RAILFLOW</b></h4>
+        <p style="color: #495057; font-size: 14px; margin: 0 0 12px 0; line-height: 1.4;">
+            Ogni giorno centinaia di automobilisti locali consultano questa pagina mentre sono in viaggio sulla tratta <b>Pisa ↔ San Giuliano ↔ Lucca</b>.<br>
+            Non perdere l'occasione di intercettare clienti mirati sul territorio!
+        </p>
+        <a href="mailto:rebolo73@gmail.com?subject=Richiesta%20Informazioni%20Sponsor%20RailFlow" style="text-decoration: none;">
+            <span style="color: #d9480f; font-weight: bold; font-size: 14px; border-bottom: 2px solid #d9480f; padding-bottom: 2px;">👉 Clicca qui per diventare Sponsor Unico: rebolo73@gmail.com</span>
+        </a>
+    </div>
+""", unsafe_allow_html=True)
+
+# --- SEZIONE CONTRIBUTO VOLONTARIO ---
+st.write("### ☕ Sostieni il Progetto")
+st.info("Questo servizio è gratuito e privo di pubblicità. Se ti è utile per evitare il traffico e vuoi aiutarmi a mantenerlo attivo e migliorarlo, puoi fare una piccola donazione volontaria!")
+
+LINK_DONAZIONE = "https://www.paypal.com/paypalme/rebolo73" 
+
+st.markdown(f"""
+    <div style="text-align: center; margin: 15px 0;">
+        <a href="{LINK_DONAZIONE}" target="_blank" style="text-decoration: none;">
+            <button style="background-color: #FF813F; color: white; border: none; padding: 12px 24px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; box-shadow: 0px 4px 6px rgba(0,0,0,0.1);">
+                ☕ Offrimi un caffè (Contributo Volontario)
+            </button>
+        </a>
+    </div>
+""", unsafe_allow_html=True)
+
 # --- FOOTER CON CONTATORE VISITE E COPYRIGHT ---
 st.markdown("<br><hr>", unsafe_allow_html=True)
 col_copy, col_counter = st.columns([2, 1])
@@ -170,5 +202,4 @@ with col_copy:
     st.markdown("<p style='color: #777777; font-size: 12px; margin:0;'>© 2026 Pisa ⇄ Lucca RailFlow.<br>Tutti i diritti riservati intellettuali.</p>", unsafe_allow_html=True)
 
 with col_counter:
-    # Genera un badge contatore dinamico e sicuro basato sull'URL del progetto
     st.markdown("<p style='text-align:right; margin:0;'><img src='https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fmonitor-pl-pisa.streamlit.app&count_bg=%234CAF50&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=Visite+Totali&edge_flat=false' alt='Contatore'></p>", unsafe_allow_html=True)
