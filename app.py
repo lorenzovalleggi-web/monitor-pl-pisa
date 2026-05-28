@@ -141,8 +141,7 @@ for i, pl in enumerate(pl_lista):
             if treno["direzione"] == "PISA":
                 ini = min_p - 6 + pl["ind_pisa"]
                 fin = min_p + durata + 1 + minuti_estensione_blocco
-                if ini <= minutes_assoluti_ora = minuti_assoluti_ora <= fin:
-                    # Riga di fallback pulita ed unita per evitare tagli di stringhe
+                if ini <= minuti_assoluti_ora <= fin:
                     stato_chiuso = True
                     info_segnaletica = f"{treno['info']}\n\n⏱️ Chiusura stimata: {ini//60:02d}:{ini%60:02d} ↔ {fin//60:02d}:{fin%60:02d}"
                     break
@@ -181,11 +180,4 @@ st.markdown(f"""
 
 # --- FOOTER SUPER COMPATTO ANTI-TAGLIO ---
 st.markdown("<br><hr>", unsafe_allow_html=True)
-col_copy, col_counter = st.columns([2, 1])
-
-with col_copy:
-    st.write("© 2026 RailFlow Pisa-San Giuliano Terme.")
-    st.caption("Sviluppato da Team RailFlow.")
-
-with col_counter:
-    st.markdown("<p style='text-align:right; margin:0;'><img src='https://counter.moe/badge.svg?id=monitor-pl-pisa-railflow&color=green&style=flat' alt='Visite'></p>", unsafe_allow_html=True)
+col_copy, col_counter = st.columns
