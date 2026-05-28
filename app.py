@@ -27,17 +27,14 @@ try:
     risposta = requests.get(URL_RFI, timeout=5)
     
     # Se il server risponde, analizziamo i treni in arrivo/partenza
-    # Nota: se ci sono treni segnalati con passaggi imminenti nei tabelloni, le barriere si chiudono
     pl_chiusi = False
     
     if risposta.status_code == 200:
         dati = risposta.json()
-        # Se ci sono treni in movimento attivo nella tratta nell'ultimo quarto d'ora o imminenti
+        # Se ci sono treni in movimento attivo nella tratta o imminenti
         for treno in dati.get('arrivi', []) + dati.get('partenze', []):
             compagnia = treno.get('compagnia', '')
-            # Filtro logico per capire se il treno sta occupando la tratta Pisa-Lucca adesso
             if "REG" in compagnia or treno.get('orarioArrivo', '') != '':
-                # Logica semplificata: se c'è un treno reale con un ritardo/orario compatibile negli ultimi 5-7 minuti
                 pl_chiusi = True
                 break
 
@@ -63,7 +60,7 @@ try:
     st.write("**[ DIREZIONE PISA SAN ROSSORE ]**")
 
 except Exception as e:
-    # Piano C di emergenza se saltano tutti i server
+    # Piano di emergenza se saltano i server
     st.write("**[ DIREZIONE LUCCA ]**")
     for nome in ["San Giuliano Terme", "Via Ulisse Dini (Gello)", "Via di Gagno (Pisa)", "Via Ugo Rindi (Pisa)"]:
         st.markdown("<div style='text-align: center; font-size: 20px; margin: 5px 0;'>│<br>▼</div>", unsafe_allow_html=True)
