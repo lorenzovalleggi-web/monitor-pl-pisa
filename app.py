@@ -33,7 +33,8 @@ def recupera_treni_reali():
         url_sg = f"http://www.viaggiatreno.it/viaggiatrenonew/api/esitoPartenze/{ID_SAN_GIULIANO}/{ora_adesso.strftime('%Y-%m-%dT00:00:00')}"
         res = requests.get(url_sg, timeout=5).json()
         for t in res.get('tabellone', []):
-            if "PISA" in t.get('destinazione', '').upper() or "LIVORNO" in t.get('destinazione', '').upper():
+            dest = t.get('destinazione', '').upper()
+            if "PISA" in dest or "LIVORNO" in dest:
                 orario_prog = t.get('orarioProgrammato', '') # Formato HH:MM
                 if orario_prog:
                     h, m = map(int, orario_prog.split(':'))
@@ -51,7 +52,8 @@ def recupera_treni_reali():
         url_pr = f"http://www.viaggiatreno.it/viaggiatrenonew/api/esitoPartenze/{ID_PISA_ROSSORE}/{ora_adesso.strftime('%Y-%m-%dT00:00:00')}"
         res = requests.get(url_pr, timeout=5).json()
         for t in res.get('tabellone', []):
-            if "LUCCA" in t.get('destinazione', '').upper() or "PISTOIA" in t.get('destinazione', '').upper() or "FIRENZE" in t.get('destinazione', '').upper():
+            dest = t.get('destinazione', '').upper()
+            if "LUCCA" in dest or "PISTOIA" in dest or "FIRENZE" in dest:
                 orario_prog = t.get('orarioProgrammato', '')
                 if orario_prog:
                     h, m = map(int, orario_prog.split(':'))
@@ -78,7 +80,62 @@ for t in lista_treni_fs:
 
 if treni_futuri:
     _, prox = min(treni_futuri, key=lambda x: x[0])
-    ora_effettiva = (prox["ora_p"] * 60 + prox["min_p"] + prox["ritardo"]) // 60
-    min_effettiva = (prox["ora_p"] * 60 + prox["min_p"] + prox["ritardo"]) % 60
+    min_totale = prox["ora_p"] * 60 + prox["min_p"] + prox["ritardo"]
+    ora_effettiva = min_totale // 60
+    min_effettiva = min_totale % 60
     nota_ritardo = f" (+{prox['ritardo']} min ritardo)" if prox['ritardo'] > 0 else " (In orario)"
-    prossimo_treno_testo = f"Prossimo transito reale: {prox['info']} alle **{ora_eff
+    prossimo_treno_testo = f"Prossimo transito reale: {prox['info']} alle **{ora_effettiva:02d}:{min_effettiva:02d}**{nota_ritardo}"
+
+st.info(f"📋 **STATO LINEA LIVE:** {prossimo_treno_testo}")
+st.markdown("---")
+
+pl_lista = [
+    {"nome": "San Giuliano Terme", "ind_pisa": 0, "ind_lucca": 4},
+    {"nome": "Via Ulisse Dini (Gello)", "ind_pisa": 2, "ind_lucca": 3},
+    {"nome": "Via di Gagno (Pisa)", "ind_pisa": 5, "ind_lucca": 2},
+    {"nome": "Via Ugo Rindi (Pisa)", "ind_pisa": 7, "ind_lucca": 0}
+]
+
+st.write("### 🚊 MAPPATURA PASSAGGI A LIVELLO")
+st.caption("Analisi matematica basata sulla posizione reale dei convogli FS")
+
+# CALCOLO STATO DEI PASSAGGI A LIVELLO CON DATI REALI
+for pl in pl_lista:
+    st.markdown("<div style='text-align: center; font-size: 16px; margin: 1px 0;'>│<br>▼</div>", unsafe_allow_html=True)
+    
+    stato_chiuso = False
+    info_segnaletica = "Strada libera"
+    
+    for treno in lista_treni_fs:
+        min_partenza_reale = treno["ora_p"] * 60 + treno["min_p"] + treno["ritardo"]
+        durata_viaggio = 10 if (treno["ora_p"] == 21 and treno["min_p"] == 58) else 6
+        
+        if treno["direzione"] == "PISA":
+            inizio_chiusura = min_partenza_reale - 6 + pl["ind_pisa"]
+            fine_chiusura = min_partenza_reale + durata_viaggio + 1
+            
+            if inizio_chiusura <= minuti_assoluti_ora <= fine_chiusura:
+                stato_chiuso = True
+                ora_c = f"{inizio_chiusura // 60:02d}:{inizio_chiusura % 60:02d}"
+                ora_r = f"{fine_chiusura // 60:02d}:{fine_chiusura % 60:02d}"
+                info_segnaletica = f"{treno['info']}\n\n⏱️ Chiusura effettiva: {ora_c} ↔ {ora_r}"
+                break
+                
+        elif treno["direzione"] == "LUCCA":
+            inizio_chiusura = min_partenza_reale - 6 + pl["ind_lucca"]
+            fine_chiusura = min_partenza_reale + 5 + 2
+            
+            if inizio_chiusura <= minuti_assoluti_ora <= fine_chiusura:
+                stato_chiuso = True
+                ora_c = f"{inizio_chiusura // 60:02d}:{inizio_chiusura % 60:02d}"
+                ora_r = f"{fine_chiusura // 60:02d}:{fine_chiusura % 60:02d}"
+                info_segnaletica = f"{treno['info']}\n\n⏱️ Chiusura effettiva: {ora_c} ↔ {ora_r}"
+                break
+
+    if stato_chiuso:
+        st.error(f"🔴 **CHIUSO / IN CHIUSURA** - {pl['nome']}\n\n{info_segnaletica}")
+    else:
+        st.success(f"🟢 **APERTO** - {pl['nome']}\n\n{info_segnaletica}")
+
+st.markdown("---")
+st.success("🛰️ **Modalità Dinamica Attiva**: L'applicazione è interfacciata con ViaggiaTreno Trenitalia. Gli orari cambieranno da soli in caso di ritardi o cambi stagione.")
