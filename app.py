@@ -84,14 +84,4 @@ if treni_futuri:
     ora_effettiva = min_totale // 60
     min_effettiva = min_totale % 60
     nota_ritardo = f" (+{prox['ritardo']} min ritardo)" if prox['ritardo'] > 0 else " (In orario)"
-    prossimo_treno_testo = f"Prossimo transito reale: {prox['info']} alle **{ora_effettiva:02d}:{min_effettiva:02d}**{nota_ritardo}"
-else:
-    if ora_adesso.hour >= 22:
-        prossimo_treno_testo = "Servizio giornaliero terminato. 🌅 Primo treno della mattina: **REG delle 05:30 per Lucca** / **05:51 per Pisa**."
-    else:
-        prossimo_treno_testo = "Nessun transito imminente rilevato dai sistemi di stazione."
-
-st.info(f"📋 **STATO LINEA LIVE:** {prossimo_treno_testo}")
-st.markdown("---")
-
-pl_lista =
+    prossimo_treno_testo = f"Prossimo transito reale: {prox
