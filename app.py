@@ -3,12 +3,12 @@ import datetime
 import pytz
 from streamlit_autorefresh import st_autorefresh
 
-st.set_page_config(page_title="Monitor PL Pisa 24h", page_icon="🚊", layout="centered")
+st.set_page_config(page_title="Monitor PL Pisa 24h Pro", page_icon="🚊", layout="centered")
 
 st.title("Monitor Passaggi a Livello Live")
 st.subheader("Tratta: San Giuliano Terme ↔ Pisa S. Rossore")
 
-# Aggiornamento automatico ogni 10 secondi per inseguire i treni
+# Aggiornamento automatico ogni 10 secondi
 st_autorefresh(interval=10000, key="datarefresh")
 
 fuso_italia = pytz.timezone('Europe/Rome')
@@ -17,71 +17,74 @@ st.write(f"Ultimo aggiornamento automatico: **{ora_adesso.strftime('%H:%M:%S')}*
 
 st.markdown("---")
 
-# DATABASE 24H: Minuti standard di passaggio dei treni Regionali ogni ora sulla linea
-# I treni sulla Lucca-Pisa passano cadenzati principalmente a questi minuti di ogni ora
-MINUTI_PASSAGGIO = [5, 22, 35, 52]
-
-pl_chiusi = False
-info_chiusura = ""
-prossimo_treno_info = "Nessun treno imminente"
+# DATABASE 24H: Orari dei passaggi cadenzati
+MINUTI_PISA = [5, 35]   # Treni in direzione Pisa S. Rossore
+MINUTI_LUCCA = [22, 52] # Treni in direzione Lucca
 
 minuto_attuale = ora_adesso.minute
+ora_attuale_h = ora_adesso.hour
 
-# Cerchiamo il treno più vicino per calcolare la chiusura e simulare i sensori
-for min_t in MINUTI_PASSAGGIO:
-    # Finestra concordata: 6 minuti prima del passaggio, fino a 2 minuti dopo
-    min_inizio_blocco = min_t - 6
-    min_fine_blocco = min_t + 2
-    
-    if min_inizio_blocco <= minuto_attuale <= min_fine_blocco:
-        pl_chiusi = True
+# 1. CALCOLO DINAMICO DEL RITARDO (Fattore Ore di Punta)
+ritardo_stimato = 0
+if (7 <= ora_attuale_h <= 9) or (17 <= ora_attuale_h <= 19):
+    ritardo_stimato = 3 # Nelle ore di punta i regionali accumulano mediamente 3 minuti
+
+# Funzione per verificare lo stato del PL in base alla direzione del treno
+def controlla_pl(nome_pl, minuti_assegnati, direzione):
+    for min_t in minuti_assegnati:
+        min_reale = min_t + ritardo_stimato
         
-        # Calcoliamo l'orario esatto della presunta chiusura e riapertura
-        ora_chiusura = ora_adesso.replace(minute=min_t if min_inizio_blocco >= 0 else 0) - datetime.timedelta(minutes=6)
-        ora_riapertura = ora_adesso.replace(minute=min_t) + datetime.timedelta(minutes=2)
+        # Finestra di sbarre giù (6 minuti prima del transito reale, 2 minuti dopo)
+        inizio_blocco = min_reale - 6
+        fine_blocco = min_reale + 2
         
-        info_chiusura = f"Sbarre chiuse dalle **{ora_chiusura.strftime('%H:%M')}** alle **{ora_riapertura.strftime('%H:%M')}**"
-        break
+        if inizio_blocco <= minuto_attuale <= fine_blocco:
+            ora_chiusura = ora_adesso.replace(minute=max(0, inizio_blocco))
+            ora_riapertura = ora_adesso.replace(minute=min(59, fine_blocco))
+            return True, f"🔴 **CHIUSO / IN CHIUSURA** - {nome_pl}\n\nTreno in transito dir. {direzione}. Sbarre giù: {ora_chiusura.strftime('%H:%M')} ↔ {ora_riapertura.strftime('%H:%M')}"
+    return False, f"🟢 **APERTO** - {nome_pl}\n\nStrada libera"
 
-# Calcolo del prossimo treno della giornata per il pannello informativo
-orari_futuri = [m for m in MINUTI_PASSAGGIO if m > minuto_attuale]
-if orari_futuri:
-    prossimo_minuto = orari_futuri[0]
-    prossimo_treno_info = f"Prossimo transito stimato al minuto **:{prossimo_minuto}** dell'ora in corso."
-else:
-    prossimo_treno_info = f"Prossimo transito stimato al minuto **:{MINUTI_PASSAGGIO[0]}** della prossima ora."
+# --- GRAFICA FLUSSO 1: DIREZIONE PISA SAN ROSSORE ---
+st.write("### 🛤️ FLUSSO: DIREZIONE PISA S. ROSSORE")
+st.caption("I sensori si attivano dall'alto verso il basso (da San Giuliano verso Pisa)")
 
-# Box informativo dei sensori di linea
-st.info(f"📋 **Stato Linea 24h:** {prossimo_treno_info}")
+# Ordine geografico per chi va verso Pisa
+pl_verso_pisa = ["San Giuliano Terme", "Via Ulisse Dini (Gello)", "Via di Gagno (Pisa)", "Via Ugo Rindi (Pisa)"]
 
-# Lista geografica ordinata dei passaggi a livello
-pl_ordinati = [
-    {"nome": "San Giuliano Terme", "ritardo_sensore": -2}, # Il treno passa prima da qui (se viene da Lucca)
-    {"nome": "Via Ulisse Dini (Gello)", "ritardo_sensore": 0},
-    {"nome": "Via di Gagno (Pisa)", "ritardo_sensore": 1},
-    {"nome": "Via Ugo Rindi (Pisa)", "ritardo_sensore": 2}   # Il treno arriva qui per ultimo verso Pisa
-]
-
-st.write("**[ DIREZIONE LUCCA ]**")
-
-for pl in pl_ordinati:
-    st.markdown("<div style='text-align: center; font-size: 20px; margin: 5px 0;'>│<br>▼</div>", unsafe_allow_html=True)
+for i, nome in enumerate(pl_verso_pisa):
+    st.markdown("<div style='text-align: center; font-size: 16px; margin: 2px 0;'>│<br>▼</div>", unsafe_allow_html=True)
+    # Applichiamo un leggero sfasamento dei minuti per simulare il passaggio fisico a cascata
+    minuti_sfasati = [m + (i * 1) for m in MINUTI_PISA]
+    chiuso, messaggio = controlla_pl(nome, minuti_sfasati, "Pisa")
     
-    # Rilevamento avanzato "Sensore di Tratta": 
-    # Calcoliamo se il treno si trova esattamente sopra questo specifico PL in base ai minuti
-    stato_pl_singolo = False
-    for min_t in MINUTI_PASSAGGIO:
-        # Il sensore virtuale si attiva dinamicamente per ogni singolo passaggio a livello
-        inizio_sensore = min_t - 5 + pl["ritardo_sensore"]
-        fine_sensore = min_t + pl["ritardo_sensore"]
-        if inizio_sensore <= minuto_attuale <= fine_sensore:
-            stato_pl_singolo = True
-            break
-            
-    if stato_pl_singolo:
-        st.error(f"🔴 **CHIUSO / IN CHIUSURA** - {pl['nome']}\n\n⚠️ Sensore binario attivato. {info_chiusura}")
+    if chiuso:
+        st.error(messaggio)
     else:
-        st.success(f"🟢 **APERTO** - {pl['nome']}\n\nStrada libera")
+        st.success(messaggio)
 
-st.markdown("<div style='text-align: center; font-size: 20px; margin: 5px 0;'>│<br>▼</div>", unsafe_allow_html=True)
-st.write("**[ DIREZIONE PISA SAN ROSSORE ]**")
+st.markdown("---")
+
+# --- GRAFICA FLUSSO 2: DIREZIONE LUCCA ---
+st.write("### 🛤️ FLUSSO: DIREZIONE LUCCA")
+st.caption("I sensori si attivano dal basso verso l'alto (da Pisa risalendo verso San Giuliano)")
+
+# Ordine geografico inverso per i treni che tornano verso Lucca
+pl_verso_lucca = ["Via Ugo Rindi (Pisa)", "Via di Gagno (Pisa)", "Via Ulisse Dini (Gello)", "San Giuliano Terme"]
+
+for i, nome in enumerate(pl_verso_lucca):
+    st.markdown("<div style='text-align: center; font-size: 16px; margin: 2px 0;'>│<br>▼</div>", unsafe_allow_html=True)
+    # Anche qui sfasamento progressivo basato sul movimento inverso del treno
+    minuti_sfasati = [m + (i * 1) for m in MINUTI_LUCCA]
+    chiuso, messaggio = controlla_pl(nome, minuti_sfasati, "Lucca")
+    
+    if chiuso:
+        st.error(messaggio)
+    else:
+        st.success(messaggio)
+
+# Pannello informativo di controllo in fondo alla pagina
+st.markdown("---")
+if ritardo_stimato > 0:
+    st.warning(f"⚠️ **Fascia Oraria di Punta attiva:** L'algoritmo sta calcolando +{ritardo_stimato} minuti di tolleranza sul traffico ferroviario.")
+else:
+    st.info("ℹ️ **Fascia Oraria Regolare:** Nessuna anomalia o ritardo statistico stimato sui binari.")
