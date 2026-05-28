@@ -111,4 +111,13 @@ with streamlit_analytics.track():
     # --- SEZIONE SPONSOR MULTIPLI (IN ORIZZONTALE) ---
     st.caption("✨ IN COLLABORAZIONE CON GLI SPONSOR UFFICIALI")
 
-    col_sp
+    col_sp1, col_sp2, col_sp3 = st.columns(3)
+
+    with col_sp1:
+        LINK_FB1 = "https://www.facebook.com/ilcappellaiomatto"
+        if os.path.exists("sponsor1.jpg"):
+            st.image("sponsor1.jpg", use_container_width=True)
+        st.markdown(f"**[Il Cappellaio Matto]({LINK_FB1})**")
+        st.caption("Personalizzazioni, abbigliamento e grafica.")
+
+    with
