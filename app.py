@@ -105,31 +105,4 @@ st.info(f"📋 **STATO LINEA LIVE:** {prossimo_treno_testo}")
 st.caption("ℹ️ **Nota sul traffico merci:** I sistemi pubblici monitorano esclusivamente i treni passeggeri. I transiti di treni merci e convogli straordinari non sono programmati e potrebbero causare chiusure estemporanee non segnalate dall'app.")
 
 if ritardo_rilevato_linea:
-    st.warning("⚠️ **ANOMALIA TRAFFICO LIVE:** Rilevato rallentamento dinamico sulla tratta. I passaggi a livello potrebbero rimanere chiusi più a lungo per possibili incroci o treni merci non in orario.")
-
-st.markdown("---")
-
-pl_lista = [
-    {"nome": "San Giuliano Terme", "ind_pisa": 0, "ind_lucca": 4},
-    {"nome": "Via Ulisse Dini (Gello)", "ind_pisa": 2, "ind_lucca": 3},
-    {"nome": "Via di Gagno (Pisa)", "ind_pisa": 5, "ind_lucca": 2},
-    {"nome": "Via Ugo Rindi (Pisa)", "ind_pisa": 7, "ind_lucca": 0}
-]
-
-st.write("### 🚊 LINEA PISA ↔ LUCCA")
-
-for i, pl in enumerate(pl_lista):
-    if i > 0:
-        st.markdown("<div style='text-align: center; font-size: 16px; margin: 1px 0;'>│<br>▼</div>", unsafe_allow_html=True)
-    
-    stato_chiuso = False
-    info_segnaletica = "Strada libera"
-    
-    if lista_treni_fs:
-        for treno in lista_treni_fs:
-            min_partenza_reale = treno["ora_p"] * 60 + treno["min_p"] + treno["ritardo"]
-            durata_viaggio = 10 if (treno["ora_p"] == 21 and treno["min_p"] == 58) else 6
-            
-            if treno["direzione"] == "PISA":
-                inizio_chiusura = min_partenza_reale - 6 + pl["ind_pisa"]
-                fine_chiusura = min_partenza_reale + durata_viaggio + 1 +
+    st.warning("⚠️ **ANOMALIA TRAFFICO LIVE:** Rilevato rallentamento dinamico sulla tratta. I passaggi a livello potrebbero rimanere chiusi più a lungo per possibili incroci o tren
