@@ -7,10 +7,6 @@ from streamlit_autorefresh import st_autorefresh
 # 1. Configurazione della pagina
 st.set_page_config(page_title="Pisa ⇄ Lucca RailFlow", page_icon="🚦", layout="centered")
 
-# --- LOGO UFFICIALE IN TESTATA ---
-# Carica il logo generato direttamente in cima alla pagina
-st.image("https://i.ibb.co/b3mF8gq/Gemini-Generated-Image-7l8ta87l8ta87l8t.png", use_container_width=True)
-
 # --- TITOLO MODERNO ---
 st.title("Pisa ⇄ Lucca RailFlow")
 st.subheader("Monitoraggio predittivo barriere in tempo reale")
@@ -153,7 +149,7 @@ for i, pl in enumerate(pl_lista):
             
             if treno["direzione"] == "PISA":
                 inizio_chiusura = min_partenza_reale - 6 + pl["ind_pisa"]
-                fine_chiusura = min_partenza_reale + durata_viaggio + 1 + minuti_estensione_blocco
+                fine_chiusura = min_partenza_reale + durata_viaggio + 1 + Urban_estensione_blocco
                 if inizio_chiusura <= minuti_assoluti_ora <= fine_chiusura:
                     stato_chiuso = True
                     ora_c = f"{inizio_chiusura // 60:02d}:{inizio_chiusura % 60:02d}"
@@ -195,7 +191,7 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-# --- FOOTER CON NUOVO CONTATORE AD ALTA COMPATIBILITÀ ---
+# --- FOOTER CON CREDITI BRANDIZZATI E CONTATORE ---
 st.markdown("<br><hr>", unsafe_allow_html=True)
 col_copy, col_counter = st.columns([2, 1])
 
@@ -203,5 +199,4 @@ with col_copy:
     st.markdown("<p style='color: #777777; font-size: 12px; margin:0;'>© 2026 Pisa ⇄ Lucca RailFlow.<br>Sviluppato da Team RailFlow.<br>Tutti i diritti riservati intellettuali.</p>", unsafe_allow_html=True)
 
 with col_counter:
-    # Nuovo endpoint contatore indipendente ad aggiornamento garantito per Streamlit Cloud
     st.markdown("<p style='text-align:right; margin:0;'><img src='https://counter.moe/badge.svg?id=monitor-pl-pisa-railflow&color=green&style=flat' alt='Visite'></p>", unsafe_allow_html=True)
