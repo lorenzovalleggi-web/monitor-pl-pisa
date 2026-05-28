@@ -1,4 +1,3 @@
-
 import streamlit as st
 import datetime
 import pytz
@@ -45,8 +44,7 @@ def recupera_treni_reali():
                         "ora_p": h, "min_p": m, "ritardo": int(ritardo), "direzione": "PISA",
                         "info": f"➔ **REG {t.get('numeroTreno')}** per {t.get('destinazione')}"
                     })
-    except:
-        pass
+    except: pass
 
     # 2. Controlla partenze da Pisa S. Rossore (Verso Lucca)
     try:
@@ -64,12 +62,18 @@ def recupera_treni_reali():
                         "ora_p": h, "min_p": m, "ritardo": int(ritardo), "direzione": "LUCCA",
                         "info": f"🡨 **REG {t.get('numeroTreno')}** per {t.get('destinazione')}"
                     })
-    except:
-        pass
+    except: pass
     return treni_attivi
 
-# Scarica lo stato della linea live
 lista_treni_fs = recupera_treni_reali()
+
+# --- DETECTOR ANOMALIE LINEA ---
+ritardo_rilevato_linea = False
+minuti_estensione_blocco = 0
+for t in lista_treni_fs:
+    if t["ritardo"] >= 4:
+        ritardo_rilevato_linea = True
+        minuti_estensione_blocco = min(t["ritardo"], 12)
 
 # --- TROVA PROSSIMO TRENO ---
 prossimo_treno_testo = ""
@@ -84,8 +88,6 @@ if treni_futuri:
     min_totale = prox["ora_p"] * 60 + prox["min_p"] + prox["ritardo"]
     ora_effettiva = min_totale // 60
     min_effettiva = min_totale % 60
-    
-    # Ricostruiamo la stringa in modo spezzato e sicuro per evitare bug di tranciatura
     stringa_ora = f"{ora_effettiva:02d}:{min_effettiva:02d}"
     nota_ritardo = f" (+{prox['ritardo']} min ritardo)" if prox['ritardo'] > 0 else " (In orario)"
     prossimo_treno_testo = "Prossimo transito reale: " + prox["info"] + " alle **" + stringa_ora + "**" + nota_ritardo
@@ -96,6 +98,13 @@ else:
         prossimo_treno_testo = "Nessun transito imminente rilevato dai sistemi di stazione."
 
 st.info(f"📋 **STATO LINEA LIVE:** {prossimo_treno_testo}")
+
+# --- NOTA FISSA SUI TRENI MERCI REIEZIONE RESPONSABILITÀ ---
+st.caption("ℹ️ **Nota sul traffico merci:** I sistemi pubblici monitorano esclusivamente i treni passeggeri. I transiti di treni merci e convogli straordinari non sono programmati e potrebbero causare chiusure estemporanee non segnalate dall'app.")
+
+if ritardo_rilevato_linea:
+    st.warning("⚠️ **ANOMALIA TRAFFICO LIVE:** Rilevato rallentamento dinamico sulla tratta. I passaggi a livello potrebbero rimanere chiusi più a lungo per possibili incroci o treni merci non in orario.")
+
 st.markdown("---")
 
 pl_lista = [
@@ -107,7 +116,6 @@ pl_lista = [
 
 st.write("### 🚊 LINEA PISA ↔ LUCCA")
 
-# CALCOLO STATO DEI PASSAGGI A LIVELLO CON DATI REALI
 for pl in pl_lista:
     st.markdown("<div style='text-align: center; font-size: 16px; margin: 1px 0;'>│<br>▼</div>", unsafe_allow_html=True)
     
@@ -120,24 +128,22 @@ for pl in pl_lista:
         
         if treno["direzione"] == "PISA":
             inizio_chiusura = min_partenza_reale - 6 + pl["ind_pisa"]
-            fine_chiusura = min_partenza_reale + durata_viaggio + 1
-            
+            fine_chiusura = min_partenza_reale + durata_viaggio + 1 + minuti_estensione_blocco
             if inizio_chiusura <= minuti_assoluti_ora <= fine_chiusura:
                 stato_chiuso = True
                 ora_c = f"{inizio_chiusura // 60:02d}:{inizio_chiusura % 60:02d}"
                 ora_r = f"{fine_chiusura // 60:02d}:{fine_chiusura % 60:02d}"
-                info_segnaletica = f"{treno['info']}\n\n⏱️ Chiusura effettiva: {ora_c} ↔ {ora_r}"
+                info_segnaletica = f"{treno['info']}\n\n⏱️ Chiusura stimata: {ora_c} ↔ {ora_r}"
                 break
                 
         elif treno["direzione"] == "LUCCA":
             inizio_chiusura = min_partenza_reale - 6 + pl["ind_lucca"]
-            fine_chiusura = min_partenza_reale + 5 + 2
-            
+            fine_chiusura = min_partenza_reale + 5 + 2 + minuti_estensione_blocco
             if inizio_chiusura <= minuti_assoluti_ora <= fine_chiusura:
                 stato_chiuso = True
                 ora_c = f"{inizio_chiusura // 60:02d}:{inizio_chiusura % 60:02d}"
                 ora_r = f"{fine_chiusura // 60:02d}:{fine_chiusura % 60:02d}"
-                info_segnaletica = f"{treno['info']}\n\n⏱️ Chiusura effettiva: {ora_c} ↔ {ora_r}"
+                info_segnaletica = f"{treno['info']}\n\n⏱️ Chiusura stimata: {ora_c} ↔ {ora_r}"
                 break
 
     if stato_chiuso:
@@ -146,4 +152,4 @@ for pl in pl_lista:
         st.success(f"🟢 **APERTO** - {pl['nome']}\n\n{info_segnaletica}")
 
 st.markdown("---")
-st.success("🛰️ **Modalità Dinamica Attiva**: Collegamento diretto con i server ViaggiaTreno Trenitalia abilitato.")
+st.success("🛰️ **Analisi Correlata Attiva**: Rilevamento indiretto delle ostruzioni merci tramite calcolo dei ritardi di tratta.")
