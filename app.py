@@ -104,16 +104,38 @@ if ritardo_rilevato_linea:
 
 st.markdown("---")
 
-# --- SEZIONE SPONSOR AUTOMATICA ---
-st.caption("✨ IN COLLABORAZIONE CON LO SPONSOR UFFICIALE")
-LINK_FB = "https://www.facebook.com/ilcappellaiomatto"
+# --- SEZIONE SPONSOR MULTIPLI (IN ORIZZONTALE) ---
+st.caption("✨ IN COLLABORAZIONE CON GLI SPONSOR UFFICIALI")
 
-with st.container(border=True):
-    if os.path.exists("sponsor.jpg"):
-        st.image("sponsor.jpg", use_container_width=True)
-    st.markdown(f"**[Il Cappellaio Matto Pisa]({LINK_FB})**")
-    st.write("Progetti grafici loghi per attività commerciali, gruppi stadio e associazioni sportive. Personalizzazioni di ogni genere: T-shirt, felpe, k-way, tazze, cappellini e allestimenti in palloncini.")
-    st.link_button("🌐 Visita la Pagina Facebook", LINK_FB)
+col_sp1, col_sp2, col_sp3 = st.columns(3)
+
+# Sponsor 1: Il Cappellaio Matto
+with col_sp1:
+    LINK_FB1 = "https://www.facebook.com/ilcappellaiomatto"
+    if os.path.exists("sponsor1.jpg"):
+        st.image("sponsor1.jpg", use_container_width=True)
+    st.markdown(f"**[Il Cappellaio Matto]({LINK_FB1})**")
+    st.caption("Personalizzazioni, abbigliamento e grafica.")
+
+# Sponsor 2: Segnaposto
+with col_sp2:
+    if os.path.exists("sponsor2.jpg"):
+        st.image("sponsor2.jpg", use_container_width=True)
+    st.markdown("**[Spazio Disponibile 2]**")
+    st.caption("Contattaci per inserire la tua attività commerciale.")
+
+# Sponsor 3: Segnaposto
+with col_sp3:
+    if os.path.exists("sponsor3.jpg"):
+        st.image("sponsor3.jpg", use_container_width=True)
+    st.markdown("**[Spazio Disponibile 3]**")
+    st.caption("Contattaci per inserire la tua attività commerciale.")
+
+st.markdown(" ")
+# Banner d'invito per i nuovi sponsor con EMAIL info.railflow@gmail.com
+st.write("📢 **Vuoi pubblicizzare la tua attività su RailFlow?**")
+st.caption("Diventa sponsor ufficiale della pagina e metti in mostra il tuo logo e i tuoi contatti.")
+st.link_button("📩 Diventa Sponsor (Invia Email)", "mailto:info.railflow@gmail.com?subject=Richiesta%20Informazioni%20Sponsor%20RailFlow")
 
 st.markdown("---")
 
@@ -134,7 +156,6 @@ for i, pl in enumerate(pl_lista):
     stato_chiuso = False
     info_segnaletica = "Strada libera"
     
-    # Controllo dei treni attivo solo se la lista contiene dati
     if lista_treni_fs:
         for treno in lista_treni_fs:
             min_p = treno["ora_p"] * 60 + treno["min_p"] + treno["ritardo"]
@@ -156,7 +177,6 @@ for i, pl in enumerate(pl_lista):
                     info_segnaletica = f"{treno['info']}\n\n⏱️ Chiusura stimata: {ini//60:02d}:{ini%60:02d} ↔ {fin//60:02d}:{fin%60:02d}"
                     break
 
-    # Questo blocco ora viene eseguito sempre correttamente per ciascun varco
     if stato_chiuso:
         st.error(f"🔴 **CHIUSO / IN CHIUSURA** - {pl['nome']}\n\n{info_segnaletica}")
     else:
@@ -181,13 +201,14 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-# --- FOOTER ---
+# --- FOOTER CON EMAIL info.railflow@gmail.com ---
 st.markdown("<br><hr>", unsafe_allow_html=True)
 col_copy, col_counter = st.columns([2, 1])
 
 with col_copy:
     st.write("© 2026 RailFlow Pisa-San Giuliano Terme.")
-    st.caption("Sviluppato da Team RailFlow.")
+    st.markdown("📧 Contatto supporto e pubblicità: [info.railflow@gmail.com](mailto:info.railflow@gmail.com)")
+    st.caption("Sviluppato da Team RailFlow. Servizio indipendente non affiliato a FS.")
 
 with col_counter:
     st.markdown("<p style='text-align:right; margin:0;'><img src='https://counter.moe/badge.svg?id=monitor-pl-pisa-railflow&color=green&style=flat' alt='Visite'></p>", unsafe_allow_html=True)
