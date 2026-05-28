@@ -4,6 +4,7 @@ import pytz
 import requests
 from streamlit_autorefresh import st_autorefresh
 
+# 1. Configurazione della pagina
 st.set_page_config(page_title="Monitor PL Pisa Live", page_icon="🚦", layout="centered")
 
 st.title("Monitor Passaggi a Livello Live")
@@ -28,7 +29,7 @@ ID_PISA_ROSSORE = "S06501"
 @st.cache_data(ttl=10)
 def recupera_treni_reali():
     treni_attivi = []
-    # 1. Controlla partenze da San Giuliano (Verso Pisa)
+    # Controlla partenze da San Giuliano (Verso Pisa)
     try:
         url_sg = f"http://www.viaggiatreno.it/viaggiatrenonew/api/esitoPartenze/{ID_SAN_GIULIANO}/{ora_adesso.strftime('%Y-%m-%dT00:00:00')}"
         res = requests.get(url_sg, timeout=5).json()
@@ -44,9 +45,10 @@ def recupera_treni_reali():
                         "ora_p": h, "min_p": m, "ritardo": int(ritardo), "direzione": "PISA",
                         "info": f"➔ **REG {t.get('numeroTreno')}** per {t.get('destinazione')}"
                     })
-    except: pass
+    except:
+        pass
 
-    # 2. Controlla partenze da Pisa S. Rossore (Verso Lucca)
+    # Controlla partenze da Pisa S. Rossore (Verso Lucca)
     try:
         url_pr = f"http://www.viaggiatreno.it/viaggiatrenonew/api/esitoPartenze/{ID_PISA_ROSSORE}/{ora_adesso.strftime('%Y-%m-%dT00:00:00')}"
         res = requests.get(url_pr, timeout=5).json()
@@ -62,7 +64,8 @@ def recupera_treni_reali():
                         "ora_p": h, "min_p": m, "ritardo": int(ritardo), "direzione": "LUCCA",
                         "info": f"🡨 **REG {t.get('numeroTreno')}** per {t.get('destinazione')}"
                     })
-    except: pass
+    except:
+        pass
     return treni_attivi
 
 lista_treni_fs = recupera_treni_reali()
@@ -72,7 +75,7 @@ ritardo_rilevato_linea = False
 minuti_estensione_blocco = 0
 if lista_treni_fs:
     for t in lista_treni_fs:
-        if t["ritardo"] >= 4:
+        if t.get("ritardo", 0) >= 4:
             ritardo_rilevato_linea = True
             minuti_estensione_blocco = min(t["ritardo"], 12)
 
@@ -119,4 +122,41 @@ pl_lista = [
 st.write("### 🚊 LINEA PISA ↔ LUCCA")
 
 for i, pl in enumerate(pl_lista):
-    if i
+    if i > 0:
+        st.markdown("<div style='text-align: center; font-size: 16px; margin: 1px 0;'>│<br>▼</div>", unsafe_allow_html=True)
+    
+    stato_chiuso = False
+    info_segnaletica = "Strada libera"
+    
+    if lista_treni_fs:
+        for treno in lista_treni_fs:
+            min_partenza_reale = treno["ora_p"] * 60 + treno["min_p"] + treno["ritardo"]
+            durata_viaggio = 10 if (treno["ora_p"] == 21 and treno["min_p"] == 58) else 6
+            
+            if treno["direzione"] == "PISA":
+                inizio_chiusura = min_partenza_reale - 6 + pl["ind_pisa"]
+                fine_chiusura = min_partenza_reale + durata_viaggio + 1 + minuti_estensione_blocco
+                if inizio_chiusura <= minuti_assoluti_ora <= fine_chiusura:
+                    stato_chiuso = True
+                    ora_c = f"{inizio_chiusura // 60:02d}:{inizio_chiusura % 60:02d}"
+                    ora_r = f"{fine_chiusura // 60:02d}:{fine_chiusura % 60:02d}"
+                    info_segnaletica = f"{treno['info']}\n\n⏱️ Chiusura stimata: {ora_c} ↔ {ora_r}"
+                    break
+                    
+            elif treno["direzione"] == "LUCCA":
+                inizio_chiusura = min_partenza_reale - 6 + pl["ind_lucca"]
+                fine_chiusura = min_partenza_reale + 5 + 2 + minuti_estensione_blocco
+                if inizio_chiusura <= minuti_assoluti_ora <= fine_chiusura:
+                    stato_chiuso = True
+                    ora_c = f"{inizio_chiusura // 60:02d}:{inizio_chiusura % 60:02d}"
+                    ora_r = f"{fine_chiusura // 60:02d}:{fine_chiusura % 60:02d}"
+                    info_segnaletica = f"{treno['info']}\n\n⏱️ Chiusura stimata: {ora_c} ↔ {ora_r}"
+                    break
+
+    if stato_chiuso:
+        st.error(f"🔴 **CHIUSO / IN CHIUSURA** - {pl['nome']}\n\n{info_segnaletica}")
+    else:
+        st.success(f"🟢 **APERTO** - {pl['nome']}\n\n{info_segnaletica}")
+
+st.markdown("---")
+st.success("🛰️ **Analisi Correlata Attiva**: Rilevamento indiretto delle ostruzioni merci tramite calcolo dei ritardi di tratta.")
