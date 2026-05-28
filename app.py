@@ -113,15 +113,15 @@ if ritardo_rilevato_linea:
 
 st.markdown("---")
 
-# --- CONFIGURAZIONE PUBBLICITÀ AMICO ---
-LINK_NEGOZIO_AMICO = "https://www.google.it"  
-URL_IMMAGINE_BANNER = "https://placehold.co/600x120/ff813f/white?text=Spazio+Sponsor+Disponibile"  
+# --- BANNER SPONSOR GRAFICO COMPLETO ---
+LINK_NEGOZIO_AMICO = "https://www.facebook.com/ilcappellaiomatto"  
+URL_IMMAGINE_BANNER = "https://i.ibb.co/V9h0b8P/Banner-Cappellaio-Def.jpg"  
 
 st.markdown(f"""
-    <div style="text-align: center; margin: 5px 0 20px 0; background-color: #f9f9f9; padding: 10px; border-radius: 8px; border: 1px dashed #cccccc;">
-        <span style="color: #888888; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 8px;">In collaborazione con</span>
+    <div style="text-align: center; margin: 5px 0 20px 0; background-color: #ffffff; padding: 5px; border-radius: 10px; border: 1px solid #eaeaea; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
+        <span style="color: #777777; font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; display: block; margin-bottom: 6px; font-weight: bold;">In collaborazione con lo Sponsor Ufficiale</span>
         <a href="{LINK_NEGOZIO_AMICO}" target="_blank">
-            <img src="{URL_IMMAGINE_BANNER}" alt="Sponsor" style="width: 100%; max-width: 600px; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+            <img src="{URL_IMMAGINE_BANNER}" alt="Sponsor" style="width: 100%; max-width: 600px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
         </a>
     </div>
 """, unsafe_allow_html=True)
@@ -149,7 +149,7 @@ for i, pl in enumerate(pl_lista):
             
             if treno["direzione"] == "PISA":
                 inizio_chiusura = min_partenza_reale - 6 + pl["ind_pisa"]
-                fine_chiusura = min_partenza_reale + durata_viaggio + 1 + Urban_estensione_blocco
+                fine_chiusura = min_partenza_reale + durata_viaggio + 1 + minuti_estensione_blocco
                 if inizio_chiusura <= minuti_assoluti_ora <= fine_chiusura:
                     stato_chiuso = True
                     ora_c = f"{inizio_chiusura // 60:02d}:{inizio_chiusura % 60:02d}"
