@@ -129,11 +129,12 @@ st.write("### 🚊 STATO VARCHI FERROVIARI")
 
 for i, pl in enumerate(pl_lista):
     if i > 0:
-        st.markdown("### :arrow_down:")
+        st.write("### :arrow_down:")
     
     stato_chiuso = False
     info_segnaletica = "Strada libera"
     
+    # Controllo dei treni attivo solo se la lista contiene dati
     if lista_treni_fs:
         for treno in lista_treni_fs:
             min_p = treno["ora_p"] * 60 + treno["min_p"] + treno["ritardo"]
@@ -153,3 +154,40 @@ for i, pl in enumerate(pl_lista):
                 if ini <= minuti_assoluti_ora <= fin:
                     stato_chiuso = True
                     info_segnaletica = f"{treno['info']}\n\n⏱️ Chiusura stimata: {ini//60:02d}:{ini%60:02d} ↔ {fin//60:02d}:{fin%60:02d}"
+                    break
+
+    # Questo blocco ora viene eseguito sempre correttamente per ciascun varco
+    if stato_chiuso:
+        st.error(f"🔴 **CHIUSO / IN CHIUSURA** - {pl['nome']}\n\n{info_segnaletica}")
+    else:
+        st.success(f"🟢 **APERTO** - {pl['nome']}\n\n{info_segnaletica}")
+
+st.markdown("---")
+st.success("🛰️ **Analisi Correlata Attiva**: Rilevamento indiretto delle ostruzioni merci tramite calcolo dei ritardi di tratta.")
+
+# --- SEZIONE CONTRIBUTO VOLONTARIO ---
+st.write("### ☕ Sostieni il Progetto")
+st.info("Questo servizio è gratuito e gestito in modo indipendente dallo staff di RailFlow. Se ti è utile per evitare le code ai passaggi a livello e vuoi supportare lo sviluppo di nuove funzioni, puoi fare una piccola donazione libera.")
+
+LINK_DONAZIONE = "https://www.paypal.com/paypalme/rebolo73" 
+
+st.markdown(f"""
+    <div style="text-align: center; margin: 15px 0;">
+        <a href="{LINK_DONAZIONE}" target="_blank" style="text-decoration: none;">
+            <button style="background-color: #FF813F; color: white; border: none; padding: 12px 24px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; box-shadow: 0px 4px 6px rgba(0,0,0,0.1);">
+                ☕ Clicca qui per offrirmi un caffè (PayPal)
+            </button>
+        </a>
+    </div>
+""", unsafe_allow_html=True)
+
+# --- FOOTER ---
+st.markdown("<br><hr>", unsafe_allow_html=True)
+col_copy, col_counter = st.columns([2, 1])
+
+with col_copy:
+    st.write("© 2026 RailFlow Pisa-San Giuliano Terme.")
+    st.caption("Sviluppato da Team RailFlow.")
+
+with col_counter:
+    st.markdown("<p style='text-align:right; margin:0;'><img src='https://counter.moe/badge.svg?id=monitor-pl-pisa-railflow&color=green&style=flat' alt='Visite'></p>", unsafe_allow_html=True)
