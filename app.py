@@ -117,4 +117,16 @@ with st.container(border=True):
 
 st.markdown("---")
 
-pl_lista =
+# --- LISTA COMPLETA DEI VARCHI ---
+pl_lista = [
+    {"nome": "San Giuliano Terme", "ind_pisa": 0, "ind_lucca": 4},
+    {"nome": "Via Ulisse Dini (Gello)", "ind_pisa": 2, "ind_lucca": 3},
+    {"nome": "Via di Gagno (Pisa)", "ind_pisa": 5, "ind_lucca": 2},
+    {"nome": "Via Ugo Rindi (Pisa)", "ind_pisa": 7, "ind_lucca": 0}
+]
+
+st.write("### 🚊 STATO VARCHI FERROVIARI")
+
+for i, pl in enumerate(pl_lista):
+    if i > 0:
+        st.markdown("<div style='text-align: center; font-size: 16px; margin: 1px 0;'>
