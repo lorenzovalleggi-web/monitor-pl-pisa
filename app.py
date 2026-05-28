@@ -3,6 +3,8 @@ import datetime
 import pytz
 import requests
 from streamlit_autorefresh import st_autorefresh
+import os
+import base64
 
 # 1. Configurazione della pagina
 st.set_page_config(page_title="Pisa ⇄ Lucca RailFlow", page_icon="🚦", layout="centered")
@@ -113,90 +115,30 @@ if ritardo_rilevato_linea:
 
 st.markdown("---")
 
-# --- BANNER SPONSOR GRAFICO COMPLETO ---
-LINK_NEGOZIO_AMICO = "https://www.facebook.com/ilcappellaiomatto"  
-URL_IMMAGINE_BANNER = "https://i.ibb.co/V9h0b8P/Banner-Cappellaio-Def.jpg"  
+# --- BANNER SPONSOR DIGITALE SICURO ---
+LINK_FACEBOOK = "https://www.facebook.com/ilcappellaiomatto"
 
-st.markdown(f"""
-    <div style="text-align: center; margin: 5px 0 20px 0; background-color: #ffffff; padding: 5px; border-radius: 10px; border: 1px solid #eaeaea; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
-        <span style="color: #777777; font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; display: block; margin-bottom: 6px; font-weight: bold;">In collaborazione con lo Sponsor Ufficiale</span>
-        <a href="{LINK_NEGOZIO_AMICO}" target="_blank">
-            <img src="{URL_IMMAGINE_BANNER}" alt="Sponsor" style="width: 100%; max-width: 600px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
-        </a>
-    </div>
-""", unsafe_allow_html=True)
-
-pl_lista = [
-    {"nome": "San Giuliano Terme", "ind_pisa": 0, "ind_lucca": 4},
-    {"nome": "Via Ulisse Dini (Gello)", "ind_pisa": 2, "ind_lucca": 3},
-    {"nome": "Via di Gagno (Pisa)", "ind_pisa": 5, "ind_lucca": 2},
-    {"nome": "Via Ugo Rindi (Pisa)", "ind_pisa": 7, "ind_lucca": 0}
-]
-
-st.write("### 🚊 STATO VARCHI FERROVIARI")
-
-for i, pl in enumerate(pl_lista):
-    if i > 0:
-        st.markdown("<div style='text-align: center; font-size: 16px; margin: 1px 0;'>│<br>▼</div>", unsafe_allow_html=True)
+if os.path.exists("sponsor.jpg"):
+    # Convertiamo l'immagine locale in formato sicuro per il browser
+    with open("sponsor.jpg", "rb") as img_file:
+        img_encoded = base64.b64encode(img_file.read()).decode()
     
-    stato_chiuso = False
-    info_segnaletica = "Strada libera"
-    
-    if lista_treni_fs:
-        for treno in lista_treni_fs:
-            min_partenza_reale = treno["ora_p"] * 60 + treno["min_p"] + treno["ritardo"]
-            durata_viaggio = 10 if (treno["ora_p"] == 21 and treno["min_p"] == 58) else 6
-            
-            if treno["direzione"] == "PISA":
-                inizio_chiusura = min_partenza_reale - 6 + pl["ind_pisa"]
-                fine_chiusura = min_partenza_reale + durata_viaggio + 1 + minuti_estensione_blocco
-                if inizio_chiusura <= minuti_assoluti_ora <= fine_chiusura:
-                    stato_chiuso = True
-                    ora_c = f"{inizio_chiusura // 60:02d}:{inizio_chiusura % 60:02d}"
-                    ora_r = f"{fine_chiusura // 60:02d}:{fine_chiusura % 60:02d}"
-                    info_segnaletica = f"{treno['info']}\n\n⏱️ Chiusura stimata: {ora_c} ↔ {ora_r}"
-                    break
-                    
-            elif treno["direzione"] == "LUCCA":
-                inizio_chiusura = min_partenza_reale - 6 + pl["ind_lucca"]
-                fine_chiusura = min_partenza_reale + 5 + 2 + minuti_estensione_blocco
-                if inizio_chiusura <= minuti_assoluti_ora <= fine_chiusura:
-                    stato_chiuso = True
-                    ora_c = f"{inizio_chiusura // 60:02d}:{inizio_chiusura % 60:02d}"
-                    ora_r = f"{fine_chiusura // 60:02d}:{fine_chiusura % 60:02d}"
-                    info_segnaletica = f"{treno['info']}\n\n⏱️ Chiusura stimata: {ora_c} ↔ {ora_r}"
-                    break
-
-    if stato_chiuso:
-        st.error(f"🔴 **CHIUSO / IN CHIUSURA** - {pl['nome']}\n\n{info_segnaletica}")
-    else:
-        st.success(f"🟢 **APERTO** - {pl['nome']}\n\n{info_segnaletica}")
-
-st.markdown("---")
-st.success("🛰️ **Analisi Correlata Attiva**: Rilevamento indiretto delle ostruzioni merci tramite calcolo dei ritardi di tratta.")
-
-# --- SEZIONE CONTRIBUTO VOLONTARIO BRANDIZZATA ---
-st.write("### ☕ Sostieni il Progetto")
-st.info("Questo servizio è gratuito e gestito in modo indipendente dallo staff di RailFlow. Se ti è utile per evitare le code ai passaggi a livello e vuoi supportare lo sviluppo di nuove funzioni, puoi fare una piccola donazione libera.")
-
-LINK_DONAZIONE = "https://www.paypal.com/paypalme/rebolo73" 
-
-st.markdown(f"""
-    <div style="text-align: center; margin: 15px 0;">
-        <a href="{LINK_DONAZIONE}" target="_blank" style="text-decoration: none;">
-            <button style="background-color: #FF813F; color: white; border: none; padding: 12px 24px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; box-shadow: 0px 4px 6px rgba(0,0,0,0.1);">
-                ☕ Clicca qui per offrirmi un caffè (PayPal)
-            </button>
-        </a>
-    </div>
-""", unsafe_allow_html=True)
-
-# --- FOOTER CON CREDITI BRANDIZZATI E CONTATORE ---
-st.markdown("<br><hr>", unsafe_allow_html=True)
-col_copy, col_counter = st.columns([2, 1])
-
-with col_copy:
-    st.markdown("<p style='color: #777777; font-size: 12px; margin:0;'>© 2026 Pisa ⇄ Lucca RailFlow.<br>Sviluppato da Team RailFlow.<br>Tutti i diritti riservati intellettuali.</p>", unsafe_allow_html=True)
-
-with col_counter:
-    st.markdown("<p style='text-align:right; margin:0;'><img src='https://counter.moe/badge.svg?id=monitor-pl-pisa-railflow&color=green&style=flat' alt='Visite'></p>", unsafe_allow_html=True)
+    st.markdown(f"""
+        <div style="text-align: center; margin: 5px 0 20px 0; background-color: #ffffff; padding: 15px; border-radius: 12px; border: 1px solid #eaeaea; box-shadow: 0 4px 10px rgba(0,0,0,0.03);">
+            <p style="color: #777777; font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; margin: 0 0 12px 0; font-weight: bold;">In collaborazione con lo Sponsor Ufficiale</p>
+            <a href="{LINK_FACEBOOK}" target="_blank" style="text-decoration: none; display: inline-block; width: 100%; max-width: 500px;">
+                <img src="data:image/jpeg;base64,{img_encoded}" alt="Il Cappellaio Matto" style="width: 100%; max-width: 450px; height: auto; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.08);">
+                <div style="margin-top: 10px; text-align: center;">
+                    <h4 style="margin: 0; color: #111; font-size: 16px; font-weight: bold;">Il Cappellaio Matto Pisa</h4>
+                    <p style="margin: 4px 0 0 0; color: #555; font-size: 12.5px; line-height: 1.4;">
+                        Progetti grafici loghi per attività, gruppi stadio e associazioni.<br>
+                        Personalizzazioni di ogni genere: T-shirt, felpe, k-way, tazze, cappellini e allestimenti in palloncini.
+                    </p>
+                </div>
+            </a>
+        </div>
+    """, unsafe_allow_html=True)
+else:
+    st.markdown(f"""
+        <div style="text-align: center; margin: 5px 0 20px 0; padding: 15px; border-radius: 10px; border: 1px solid #eaeaea; background-color: #ffffff;">
+            <p style="color: #777777; font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 6px; font-weight: bold;">
