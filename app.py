@@ -110,34 +110,4 @@ st.caption("✨ IN COLLABORAZIONE CON GLI SPONSOR UFFICIALI")
 col_sp1, col_sp2, col_sp3 = st.columns(3)
 
 with col_sp1:
-    LINK_FB1 = "https://www.facebook.com/ilcappellaiomatto"
-    if os.path.exists("sponsor1.jpg"):
-        st.image("sponsor1.jpg", use_container_width=True)
-    st.markdown(f"**[Il Cappellaio Matto]({LINK_FB1})**")
-    st.caption("Personalizzazioni, abbigliamento e grafica.")
-
-with col_sp2:
-    if os.path.exists("sponsor2.jpg"):
-        st.image("sponsor2.jpg", use_container_width=True)
-    st.markdown("**[Spazio Disponibile 2]**")
-    st.caption("Contattaci per inserire la tua attività commerciale.")
-
-with col_sp3:
-    if os.path.exists("sponsor3.jpg"):
-        st.image("sponsor3.jpg", use_container_width=True)
-    st.markdown("**[Spazio Disponibile 3]**")
-    st.caption("Contattaci per inserire la tua attività commerciale.")
-
-st.markdown(" ")
-st.write("📢 **Vuoi pubblicizzare la tua attività su RailFlow?**")
-st.caption("Diventa sponsor ufficiale della pagina e metti in mostra il tuo logo e i tuoi contatti.")
-st.link_button("📩 Diventa Sponsor (Invia Email)", "mailto:info.railflow@gmail.com?subject=Richiesta%20Informazioni%20Sponsor%20RailFlow")
-
-st.markdown("---")
-
-# --- LISTA COMPLETA DEI VARCHI ---
-pl_lista = [
-    {"nome": "San Giuliano Terme", "ind_pisa": 0, "ind_lucca": 4},
-    {"nome": "Via Ulisse Dini (Gello)", "ind_pisa": 2, "ind_lucca": 3},
-    {"nome": "Via di Gagno (Pisa)", "ind_pisa": 5, "ind_lucca": 2},
-    {"nome": "Via Ugo Rindi (Pisa)", "
+    LINK_FB1 = "https://www.facebook
