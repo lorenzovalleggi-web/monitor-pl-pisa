@@ -69,7 +69,7 @@ treni_futuri = []
 if lista_treni_fs:
     for t in lista_treni_fs:
         min_ass_treno = t["ora_p"] * 60 + t["min_p"] + t["ritardo"]
-        if min_ass_treno > minutes_assoluti_ora:
+        if min_ass_treno > minuti_assoluti_ora:
             treni_futuri.append((min_ass_treno, t))
 
 if treni_futuri:
@@ -134,4 +134,27 @@ for i, pl in enumerate(pl_lista):
                 fin = min_p + durata + 1 + minuti_estensione_blocco
                 if ini <= minuti_assoluti_ora <= fin:
                     stato_chiuso = True
-                    info_segnaletica
+                    info_segnaletica = f"{treno['info']}\n\n⏱️ {ini//60:02d}:{ini%60:02d} ↔ {fin//60:02d}:{fin%60:02d}"
+                    break
+            elif treno["direzione"] == "LUCCA":
+                ini = min_p - 6 + pl["ind_lucca"]
+                fin = min_p + 5 + 2 + minuti_estensione_blocco
+                if ini <= minuti_assoluti_ora <= fin:
+                    stato_chiuso = True
+                    info_segnaletica = f"{treno['info']}\n\n⏱️ {ini//60:02d}:{ini%60:02d} ↔ {fin//60:02d}:{fin%60:02d}"
+                    break
+    if stato_chiuso: st.error(f"🔴 **CHIUSO** - {pl['nome']}\n\n{info_segnaletica}")
+    else: st.success(f"🟢 **APERTO** - {pl['nome']}\n\n{info_segnaletica}")
+
+st.markdown("---")
+st.success("🛰️ Analisi Correlata Attiva.")
+
+st.write("### ☕ Sostieni il Progetto")
+st.markdown('<div style="text-align: center;"><a href="https://www.paypal.com/paypalme/rebolo73" target="_blank"><button style="background-color: #FF813F; color: white; border: none; padding: 12px 24px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer;">☕ Offrimi un caffè (PayPal)</button></a></div>', unsafe_allow_html=True)
+
+st.markdown("<br><hr>", unsafe_allow_html=True)
+st.write("© 2026 RailFlow Pisa-San Giuliano Terme.")
+st.markdown("📧 Contatto: [info.railflow@gmail.com](mailto:info.railflow@gmail.com)")
+st.caption("Sviluppato da Team RailFlow. Servizio indipendente.")
+
+st.markdown("<div style='display:none;'><img src='
