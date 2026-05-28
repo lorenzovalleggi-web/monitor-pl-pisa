@@ -136,7 +136,7 @@ for i, pl in enumerate(pl_lista):
             
             if treno["direzione"] == "PISA":
                 inizio_chiusura = min_partenza_reale - 6 + pl["ind_pisa"]
-                fine_chiusura = min_partenza_reale + durata_viaggio + 1 + minuti_estensione_blocco
+                fine_chiusura = min_partenza_reale + durata_viaggio + 1 + minutes_estensione_blocco if 'minutes_estensione_blocco' in locals() else min_partenza_reale + durata_viaggio + 1 + minuti_estensione_blocco
                 if inizio_chiusura <= minuti_assoluti_ora <= fine_chiusura:
                     stato_chiuso = True
                     ora_c = f"{inizio_chiusura // 60:02d}:{inizio_chiusura % 60:02d}"
@@ -162,29 +162,16 @@ for i, pl in enumerate(pl_lista):
 st.markdown("---")
 st.success("🛰️ **Analisi Correlata Attiva**: Rilevamento indiretto delle ostruzioni merci tramite calcolo dei ritardi di tratta.")
 
-# --- SEZIONE CONTRIBUTO VOLONTARIO PAYPAL ---
+# --- SEZIONE CONTRIBUTO VOLONTARIO CON QR CODE ---
 st.write("### ☕ Sostieni il Progetto")
-st.info("Questo servizio è gratuito e gestito in modo indipendente. Se ti è utile per evitare le code ai passaggi a livello e vuoi supportare lo sviluppo di nuove funzioni, puoi fare una piccola donazione libera.")
+st.info("Questo servizio è gratuito e gestito in modo indipendente. Se ti è utile per evitare le code e vuoi supportare il mio lavoro, puoi fare una donazione libera tramite il pulsante o scansionando il codice QR qui sotto.")
 
-# Quando attiverai il profilo, se il link finale sarà diverso (es. paypal.me/lorenzovalleggi), modificalo qui sotto
-LINK_DONAZIONE = "https://www.paypal.com/paypalme/rebolo73" 
+LINK_DONAZIONE = "https://www.paypal.com/paypalme/rebolo73"
 
+# Mostra il QR Code ufficiale estratto direttamente dalla tua immagine PayPal
 st.markdown(f"""
     <div style="text-align: center; margin: 15px 0;">
         <a href="{LINK_DONAZIONE}" target="_blank" style="text-decoration: none;">
-            <button style="background-color: #FF813F; color: white; border: none; padding: 12px 24px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; box-shadow: 0px 4px 6px rgba(0,0,0,0.1);">
-                ☕ Offrimi un caffè (Contributo Volontario)
-            </button>
-        </a>
-    </div>
-""", unsafe_allow_html=True)
-
-# --- FOOTER CON CONTATORE VISITE E COPYRIGHT AGGIORNATO ---
-st.markdown("<br><hr>", unsafe_allow_html=True)
-col_copy, col_counter = st.columns([2, 1])
-
-with col_copy:
-    st.markdown("<p style='color: #777777; font-size: 12px; margin:0;'>© 2026 Pisa ⇄ Lucca RailFlow.<br>Sviluppato da Lorenzo Valleggi.<br>Tutti i diritti riservati intellettuali.</p>", unsafe_allow_html=True)
-
-with col_counter:
-    st.markdown("<p style='text-align:right; margin:0;'><img src='https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fmonitor-pl-pisa.streamlit.app&count_bg=%234CAF50&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=Visite+Totali&edge_flat=false' alt='Contatore'></p>", unsafe_allow_html=True)
+            <button style="background-color: #FF813F; color: white; border: none; padding: 12px 24px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; box-shadow: 0px 4px 6px rgba(0,0,0,0.1); margin-bottom: 15px;">
+                ☕ Clicca qui per offrimi un caffè
+            </button
