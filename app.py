@@ -4,27 +4,20 @@ import pytz
 import requests
 from streamlit_autorefresh import st_autorefresh
 
-# Configurazione della pagina minimale
-st.set_page_config(page_title="Pisa ⇄ Lucca Live", page_icon="🚦", layout="centered")
+st.set_page_config(page_title="Monitor PL Pisa Live", page_icon="🚦", layout="centered")
+
+st.title("Monitor Passaggi a Livello Live")
+st.subheader("Tratta: San Giuliano Terme ↔ Pisa S. Rossore")
 
 # Aggiornamento automatico ogni 15 secondi
 st_autorefresh(interval=15000, key="datarefresh")
 
+if st.button("🔄 Aggiorna Stato Ora"):
+    st.rerun()
+
 fuso_italia = pytz.timezone('Europe/Rome')
 ora_adesso = datetime.datetime.now(fuso_italia)
-
-# --- HEADER MODERNO ED ELEGANTE ---
-col_titolo, col_sync = st.columns([3, 1])
-with col_titolo:
-    st.markdown("<h2 style='margin:0; font-weight:800; letter-spacing:-1px;'>PISA ⇄ LUCCA</h2>", unsafe_allow_html=True)
-    st.markdown("<p style='margin:0; color:#888888; font-size:14px; font-weight:500;'>Rilevamento Barriere Ferrovia</p>", unsafe_allow_html=True)
-
-with col_sync:
-    st.markdown(f"<p style='text-align:right; margin:0; color:#888888; font-size:12px;'>Sync Live<br><b style='font-size:14px; color:#ffffff;'>{ora_adesso.strftime('%H:%M:%S')}</b></p>", unsafe_allow_html=True)
-    if st.button("🔄 Ricarica", use_container_width=True):
-        st.rerun()
-
-st.markdown("---")
+st.write(f"Ultimo aggiornamento automatico: **{ora_adesso.strftime('%H:%M:%S')}**")
 
 minuti_assoluti_ora = ora_adesso.hour * 60 + ora_adesso.minute
 
@@ -99,20 +92,22 @@ if treni_futuri:
     min_effettiva = min_totale % 60
     stringa_ora = f"{ora_effettiva:02d}:{min_effettiva:02d}"
     nota_ritardo = f" (+{prox['ritardo']} min ritardo)" if prox['ritardo'] > 0 else " (In orario)"
-    prossimo_treno_testo = f"Prossimo transito reale: {prox['info']} alle **{stringa_ora}**{nota_ritardo}"
+    prossimo_treno_testo = "Prossimo transito reale: " + prox["info"] + " alle **" + stringa_ora + "**" + nota_ritardo
 else:
     if ora_adesso.hour >= 22 or ora_adesso.hour < 5:
-        prossimo_treno_testo = "Servizio giornaliero terminato. 🌅 Primo del mattino: REG delle 05:30 per Lucca / 05:51 per Pisa."
+        prossimo_treno_testo = "Servizio giornaliero terminato. 🌅 Primo treno della mattina: **REG delle 05:30 per Lucca** / **05:51 per Pisa**."
     else:
         prossimo_treno_testo = "Nessun transito imminente rilevato dai sistemi di stazione."
 
-st.info(f"📋 **STATO LINEA:** {prossimo_treno_testo}")
-st.caption("ℹ️ **Nota traffico merci:** Servizio passeggeri monitorato in tempo reale. I treni merci non sono programmati e possono causare chiusure estemporanee fuori tabellone.")
+st.info(f"📋 **STATO LINEA LIVE:** {prossimo_treno_testo}")
+
+# --- NOTA FISSA SUI TRENI MERCI REIEZIONE RESPONSABILITÀ ---
+st.caption("ℹ️ **Nota sul traffico merci:** I sistemi pubblici monitorano esclusivamente i treni passeggeri. I transiti di treni merci e convogli straordinari non sono programmati e potrebbero causare chiusure estemporanee non segnalate dall'app.")
 
 if ritardo_rilevato_linea:
-    st.warning("⚠️ **RALLENTAMENTO DINAMICO RILEVATO:** Tratta congestionata. Le barriere potrebbero rimanere abbassate più a lungo del previsto.")
+    st.warning("⚠️ **ANOMALIA TRAFFICO LIVE:** Rilevato rallentamento dinamico sulla tratta. I passaggi a livello potrebbero rimanere chiusi più a lungo per possibili incroci o treni merci non in orario.")
 
-st.write("### 🚊 STATO DEI PASSAGGI A LIVELLO")
+st.markdown("---")
 
 pl_lista = [
     {"nome": "San Giuliano Terme", "ind_pisa": 0, "ind_lucca": 4},
@@ -121,13 +116,14 @@ pl_lista = [
     {"nome": "Via Ugo Rindi (Pisa)", "ind_pisa": 7, "ind_lucca": 0}
 ]
 
-# --- RENDERING DELLA DASHBOARD A CONTAINER ---
+st.write("### 🚊 LINEA PISA ↔ LUCCA")
+
 for i, pl in enumerate(pl_lista):
     if i > 0:
-        st.markdown("<div style='text-align: center; color: #555555; margin: -5px 0 5px 0; font-size: 14px;'>⋮</div>", unsafe_allow_html=True)
+        st.markdown("<div style='text-align: center; font-size: 16px; margin: 1px 0;'>│<br>▼</div>", unsafe_allow_html=True)
     
     stato_chiuso = False
-    info_segnaletica = "Strada libera da treni passeggeri"
+    info_segnaletica = "Strada libera"
     
     if lista_treni_fs:
         for treno in lista_treni_fs:
@@ -135,4 +131,5 @@ for i, pl in enumerate(pl_lista):
             durata_viaggio = 10 if (treno["ora_p"] == 21 and treno["min_p"] == 58) else 6
             
             if treno["direzione"] == "PISA":
-                inizio_chiusura = min_partenza_reale - 6 + pl
+                inizio_chiusura = min_partenza_reale - 6 + pl["ind_pisa"]
+                fine_chiusura = min_partenza_reale + durata_viaggio + 1 +
