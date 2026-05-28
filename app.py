@@ -4,7 +4,6 @@ import pytz
 import requests
 from streamlit_autorefresh import st_autorefresh
 import os
-import base64
 
 # 1. Configurazione della pagina
 st.set_page_config(page_title="Pisa ⇄ Lucca RailFlow", page_icon="🚦", layout="centered")
@@ -115,30 +114,40 @@ if ritardo_rilevato_linea:
 
 st.markdown("---")
 
-# --- BANNER SPONSOR DIGITALE SICURO ---
+# --- SEZIONE SPONSOR PULITA E SICURA ---
+st.caption("✨ IN COLLABORAZIONE CON LO SPONSOR UFFICIALE")
+
 LINK_FACEBOOK = "https://www.facebook.com/ilcappellaiomatto"
 
-if os.path.exists("sponsor.jpg"):
-    # Convertiamo l'immagine locale in formato sicuro per il browser
-    with open("sponsor.jpg", "rb") as img_file:
-        img_encoded = base64.b64encode(img_file.read()).decode()
+# Creiamo un contenitore grafico per lo sponsor
+with st.container(border=True):
+    if os.path.exists("sponsor.jpg"):
+        st.image("sponsor.jpg", use_container_width=True)
     
-    st.markdown(f"""
-        <div style="text-align: center; margin: 5px 0 20px 0; background-color: #ffffff; padding: 15px; border-radius: 12px; border: 1px solid #eaeaea; box-shadow: 0 4px 10px rgba(0,0,0,0.03);">
-            <p style="color: #777777; font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; margin: 0 0 12px 0; font-weight: bold;">In collaborazione con lo Sponsor Ufficiale</p>
-            <a href="{LINK_FACEBOOK}" target="_blank" style="text-decoration: none; display: inline-block; width: 100%; max-width: 500px;">
-                <img src="data:image/jpeg;base64,{img_encoded}" alt="Il Cappellaio Matto" style="width: 100%; max-width: 450px; height: auto; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.08);">
-                <div style="margin-top: 10px; text-align: center;">
-                    <h4 style="margin: 0; color: #111; font-size: 16px; font-weight: bold;">Il Cappellaio Matto Pisa</h4>
-                    <p style="margin: 4px 0 0 0; color: #555; font-size: 12.5px; line-height: 1.4;">
-                        Progetti grafici loghi per attività, gruppi stadio e associazioni.<br>
-                        Personalizzazioni di ogni genere: T-shirt, felpe, k-way, tazze, cappellini e allestimenti in palloncini.
-                    </p>
-                </div>
-            </a>
-        </div>
-    """, unsafe_allow_html=True)
-else:
-    st.markdown(f"""
-        <div style="text-align: center; margin: 5px 0 20px 0; padding: 15px; border-radius: 10px; border: 1px solid #eaeaea; background-color: #ffffff;">
-            <p style="color: #777777; font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 6px; font-weight: bold;">
+    st.markdown(f"**[Il Cappellaio Matto Pisa]({LINK_FACEBOOK})**")
+    st.markdown(
+        "Progetti grafici loghi per attività commerciali, gruppi stadio e associazioni sportive. "
+        "Personalizzazioni di ogni genere: T-shirt, felpe, k-way, tazze, cappellini e allestimenti in palloncini."
+    )
+    st.link_button("🌐 Visita la Pagina Facebook", LINK_FACEBOOK)
+
+st.markdown("---")
+
+pl_lista = [
+    {"nome": "San Giuliano Terme", "ind_pisa": 0, "ind_lucca": 4},
+    {"nome": "Via Ulisse Dini (Gello)", "ind_pisa": 2, "ind_lucca": 3},
+    {"nome": "Via di Gagno (Pisa)", "ind_pisa": 5, "ind_lucca": 2},
+    {"nome": "Via Ugo Rindi (Pisa)", "ind_pisa": 7, "ind_lucca": 0}
+]
+
+st.write("### 🚊 STATO VARCHI FERROVIARI")
+
+for i, pl in enumerate(pl_lista):
+    if i > 0:
+        st.markdown("<div style='text-align: center; font-size: 16px; margin: 1px 0;'>│<br>▼</div>", unsafe_allow_html=True)
+    
+    stato_chiuso = False
+    info_segnaletica = "Strada libera"
+    
+    if lista_treni_fs:
+        for treno in lista_treni_fs
