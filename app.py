@@ -135,43 +135,4 @@ for i, pl in enumerate(pl_lista):
             durata_viaggio = 10 if (treno["ora_p"] == 21 and treno["min_p"] == 58) else 6
             
             if treno["direzione"] == "PISA":
-                inizio_chiusura = min_partenza_reale - 6 + pl["ind_pisa"]
-                fine_chiusura = min_partenza_reale + durata_viaggio + 1 + minutes_estensione_blocco if 'minutes_estensione_blocco' in locals() else min_partenza_reale + durata_viaggio + 1 + minuti_estensione_blocco
-                if inizio_chiusura <= minuti_assoluti_ora <= fine_chiusura:
-                    stato_chiuso = True
-                    ora_c = f"{inizio_chiusura // 60:02d}:{inizio_chiusura % 60:02d}"
-                    ora_r = f"{fine_chiusura // 60:02d}:{fine_chiusura % 60:02d}"
-                    info_segnaletica = f"{treno['info']}\n\n⏱️ Chiusura stimata: {ora_c} ↔ {ora_r}"
-                    break
-                    
-            elif treno["direzione"] == "LUCCA":
-                inizio_chiusura = min_partenza_reale - 6 + pl["ind_lucca"]
-                fine_chiusura = min_partenza_reale + 5 + 2 + minuti_estensione_blocco
-                if inizio_chiusura <= minuti_assoluti_ora <= fine_chiusura:
-                    stato_chiuso = True
-                    ora_c = f"{inizio_chiusura // 60:02d}:{inizio_chiusura % 60:02d}"
-                    ora_r = f"{fine_chiusura // 60:02d}:{fine_chiusura % 60:02d}"
-                    info_segnaletica = f"{treno['info']}\n\n⏱️ Chiusura stimata: {ora_c} ↔ {ora_r}"
-                    break
-
-    if stato_chiuso:
-        st.error(f"🔴 **CHIUSO / IN CHIUSURA** - {pl['nome']}\n\n{info_segnaletica}")
-    else:
-        st.success(f"🟢 **APERTO** - {pl['nome']}\n\n{info_segnaletica}")
-
-st.markdown("---")
-st.success("🛰️ **Analisi Correlata Attiva**: Rilevamento indiretto delle ostruzioni merci tramite calcolo dei ritardi di tratta.")
-
-# --- SEZIONE CONTRIBUTO VOLONTARIO CON QR CODE ---
-st.write("### ☕ Sostieni il Progetto")
-st.info("Questo servizio è gratuito e gestito in modo indipendente. Se ti è utile per evitare le code e vuoi supportare il mio lavoro, puoi fare una donazione libera tramite il pulsante o scansionando il codice QR qui sotto.")
-
-LINK_DONAZIONE = "https://www.paypal.com/paypalme/rebolo73"
-
-# Mostra il QR Code ufficiale estratto direttamente dalla tua immagine PayPal
-st.markdown(f"""
-    <div style="text-align: center; margin: 15px 0;">
-        <a href="{LINK_DONAZIONE}" target="_blank" style="text-decoration: none;">
-            <button style="background-color: #FF813F; color: white; border: none; padding: 12px 24px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; box-shadow: 0px 4px 6px rgba(0,0,0,0.1); margin-bottom: 15px;">
-                ☕ Clicca qui per offrimi un caffè
-            </button
+                inizio_chiusura = min_partenza_reale - 6 + pl
