@@ -38,27 +38,27 @@ pl_lista = [
     {"nome": "Via Ugo Rindi (Pisa)", "ind_pisa": 3, "ind_lucca": 0}
 ]
 
-st.write("### 🚊 STATO BINARIO UNICO IN TEMPO REALE")
-st.caption("I passaggi a livello sono mostrati in ordine geografico sequenziale.")
+st.write("### 🚊 MAPPA BINARIO UNICO")
+st.caption("Visualizzazione lineare sequenziale da Nord (Lucca) a Sud (Pisa).")
 
-# Generiamo l'unica mappa lineare
+# Generiamo l'unica mappa lineare geografica
 for pl in pl_lista:
     st.markdown("<div style='text-align: center; font-size: 16px; margin: 1px 0;'>│<br>▼</div>", unsafe_allow_html=True)
     
     stato_chiuso = False
     info_segnaletica = "🟢 **APERTO**\n\nStrada libera"
     
-    # 1. Controllo treni verso PISA (il treno scende: sfasamento progressivo 0, 1, 2, 3)
+    # 1. Controllo treni verso PISA (il treno scende lungo la lista)
     for min_t in MINUTI_PISA:
         min_reale = min_t + ritardo_stimato + pl["ind_pisa"]
         if (min_reale - 6) <= minuto_attuale <= (min_reale + 2):
             stato_chiuso = True
             ora_c = ora_adesso.replace(minute=max(0, min_reale - 6)).strftime('%H:%M')
             ora_r = ora_adesso.replace(minute=min(59, min_reale + 2)).strftime('%H:%M')
-            info_segnaletica = f"🔴 **CHIUSO / IN CHIUSURA**\n\n➔ Treno in arrivo da Lucca **[VERSO PISA]**\n\n⏱️ Sbarre giù: {ora_c} ↔ {ora_r}"
+            info_segnaletica = f"🔴 **CHIUSO / IN CHIUSURA**\n\n➔ Treno in transito da Lucca **[VERSO PISA]**\n\n⏱️ Sbarre giù: {ora_c} ↔ {ora_r}"
             break
             
-    # 2. Controllo treni verso LUCCA (il treno sale: sfasamento progressivo invertito)
+    # 2. Controllo treni verso LUCCA (il treno risale la lista)
     if not stato_chiuso:
         for min_t in MINUTI_LUCCA:
             min_reale = min_t + ritardo_stimato + pl["ind_lucca"]
@@ -66,17 +66,17 @@ for pl in pl_lista:
                 stato_chiuso = True
                 ora_c = ora_adesso.replace(minute=max(0, min_reale - 6)).strftime('%H:%M')
                 ora_r = ora_adesso.replace(minute=min(59, min_reale + 2)).strftime('%H:%M')
-                info_segnaletica = f"🔴 **CHIUSO / IN CHIUSURA**\n\n🡨 Treno in partenza da Pisa **[VERSO LUCCA]**\n\n⏱️ Sbarre giù: {ora_c} ↔ {ora_r}"
+                info_segnaletica = f"🔴 **CHIUSO / IN CHIUSURA**\n\n🡨 Treno in transito da Pisa **[VERSO LUCCA]**\n\n⏱️ Sbarre giù: {ora_c} ↔ {ora_r}"
                 break
 
-    # Mostriamo il box colorato finale per questo passaggio a livello
+    # Mostriamo il box colorato finale per questo specifico passaggio a livello
     if stato_chiuso:
         st.error(f"### {pl['nome']}\n{info_segnaletica}")
     else:
-        st.success(f"### {pl['nome']}\n{info_snellita if 'info_snellita' in locals() else info_segnaletica}")
+        st.success(f"### {pl['nome']}\n{info_segnaletica}")
 
 st.markdown("---")
-# Nota informativa dinamica in fondo
+# Nota informativa in fondo alla pagina
 if ritardo_stimato > 0:
     st.warning(f"⚠️ **Fascia di punta:** Calcolati +{ritardo_stimato} min di tolleranza sul traffico ferroviario.")
 else:
