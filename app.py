@@ -35,7 +35,7 @@ def recupera_treni():
                 h, m = map(int, t.get('orarioProgrammato', '').split(':'))
                 rit = t.get('ritardo', 0)
                 if rit == "---" or rit is None: rit = 0
-                treni.append({"ora_p": h, "min_p": m, "ritardo": int(rit), "direzione": "PISA", "info": f"➔ **REG {t.get('numeroTreno')}**"})
+                treni.append({"ora_p": h, "min_p": m, "ritardo": int(rit), "direzione": "PISA", "num": t.get('numeroTreno'), "info": f"➔ **REG {t.get('numeroTreno')}**"})
     except: pass
 
     try:
@@ -47,7 +47,7 @@ def recupera_treni():
                 h, m = map(int, t.get('orarioProgrammato', '').split(':'))
                 rit = t.get('ritardo', 0)
                 if rit == "---" or rit is None: rit = 0
-                treni.append({"ora_p": h, "min_p": m, "ritardo": int(rit), "direzione": "LUCCA", "info": f"🡨 **REG {t.get('numeroTreno')}**"})
+                treni.append({"ora_p": h, "min_p": m, "ritardo": int(rit), "direzione": "LUCCA", "num": t.get('numeroTreno'), "info": f"🡨 **REG {t.get('numeroTreno')}**"})
     except: pass
     return treni
 
@@ -69,11 +69,15 @@ if lista_treni_fs:
 if treni_futuri:
     _, prox = min(treni_futuri, key=lambda x: x[0])
     m_tot = prox["ora_p"] * 60 + prox["min_p"] + prox["ritardo"]
-    prossimo_treno_testo = f"Prossimo: {prox['info']} alle **{m_tot // 60:02d}:{m_tot % 60:02d}**"
+    dir_testo = "direzione Pisa" if prox["direzione"] == "PISA" else "direzione Lucca"
+    prossimo_treno_testo = f"Prossimo treno in partenza: **REG N. {prox['num']}** ({dir_testo}) alle ore **{m_tot // 60:02d}:{m_tot % 60:02d}**"
 else:
-    prossimo_treno_testo = "Nessun transito imminente rilevato."
+    if ora_adesso.hour >= 22 or ora_adesso.hour < 5:
+        prossimo_treno_testo = "Servizio giornaliero terminato. 🌅 Primo treno alle 05:30."
+    else:
+        prossimo_treno_testo = "Nessun transito imminente rilevato dalle stazioni."
 
-st.info(f"📋 {prossimo_treno_testo}")
+st.info(f"📋 **STATO LINEA LIVE:** {prossimo_treno_testo}")
 st.markdown("---")
 
 col1, col2, col3 = st.columns(3)
