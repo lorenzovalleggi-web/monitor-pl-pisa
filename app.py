@@ -6,10 +6,10 @@ from streamlit_autorefresh import st_autorefresh
 import os
 
 # 1. Configurazione della pagina
-st.set_page_config(page_title="Pisa ⇄ San Giuliano RailFlow", page_icon="🚦", layout="centered")
+st.set_page_config(page_title="Pisa ⇄ San Giuliano Terme RailFlow", page_icon="🚦", layout="centered")
 
 # --- TITOLO SEMPLIFICATO ---
-st.title("Pisa ⇄ San Giuliano RailFlow")
+st.title("Pisa ⇄ San Giuliano Terme RailFlow")
 st.subheader("Stato dei passaggi a livello in tempo reale")
 
 # Aggiornamento automatico ogni 15 secondi
@@ -165,37 +165,4 @@ for i, pl in enumerate(pl_lista):
                 if inizio_chiusura <= minuti_assoluti_ora <= fine_chiusura:
                     stato_chiuso = True
                     ora_c = f"{inizio_chiusura // 60:02d}:{inizio_chiusura % 60:02d}"
-                    ora_r = f"{fine_chiusura // 60:02d}:{fine_chiusura % 60:02d}"
-                    info_segnaletica = f"{treno['info']}\n\n⏱️ Chiusura stimata: {ora_c} ↔ {ora_r}"
-                    break
-
-    if stato_chiuso:
-        st.error(f"🔴 **CHIUSO / IN CHIUSURA** - {pl['nome']}\n\n{info_segnaletica}")
-    else:
-        st.success(f"🟢 **APERTO** - {pl['nome']}\n\n{info_segnaletica}")
-
-st.markdown("---")
-st.success("🛰️ **Analisi Correlata Attiva**: Rilevamento indiretto delle ostruzioni merci tramite calcolo dei ritardi di tratta.")
-
-# --- SEZIONE CONTRIBUTO VOLONTARIO BRANDIZZATA ---
-st.write("### ☕ Sostieni il Progetto")
-st.info("Questo servizio è gratuito e gestito in modo indipendente dallo staff di RailFlow. Se ti è utile per evitare le code ai passaggi a livello e vuoi supportare lo sviluppo di nuove funzioni, puoi fare una piccola donazione libera.")
-
-LINK_DONAZIONE = "https://www.paypal.com/paypalme/rebolo73" 
-
-st.markdown(f"""
-    <div style="text-align: center; margin: 15px 0;">
-        <a href="{LINK_DONAZIONE}" target="_blank" style="text-decoration: none;">
-            <button style="background-color: #FF813F; color: white; border: none; padding: 12px 24px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; box-shadow: 0px 4px 6px rgba(0,0,0,0.1);">
-                ☕ Clicca qui per offrirmi un caffè (PayPal)
-            </button>
-        </a>
-    </div>
-""", unsafe_allow_html=True)
-
-# --- FOOTER CON CREDITI BRANDIZZATI E CONTATORE ---
-st.markdown("<br><hr>", unsafe_allow_html=True)
-col_copy, col_counter = st.columns([2, 1])
-
-with col_copy:
-    st.markdown("<p style='color: #777777; font-size: 12px; margin:0;'>© 2026 Pisa ⇄ San
+                    ora_r = f"{fine_chiusura // 60
