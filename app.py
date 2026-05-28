@@ -20,9 +20,10 @@ st.write(f"Ultimo aggiornamento automatico: **{ora_adesso.strftime('%H:%M:%S')}*
 
 st.markdown("---")
 
-# DATABASE 24H (Orari di linea cadenzati)
-MINUTI_PISA = [5, 35]   # Treni che scendono verso Pisa
-MINUTI_LUCCA = [22, 52] # Treni che risalgono verso Lucca
+# DATABASE 24H CON NUMERO TRENO ASSOCIATO AI MINUTI DI PASSAGGIO
+# Struttura: { minuto_di_passaggio: "Numero_Treno" }
+TRENI_PISA = {5: "REG 18521", 35: "REG 18525"}    # Verso Pisa
+TRENI_LUCCA = {22: "REG 18522", 52: "REG 18526"}  # Verso Lucca
 
 minuto_attuale = ora_adesso.minute
 ora_attuale_h = ora_adesso.hour
@@ -30,7 +31,7 @@ ora_attuale_h = ora_adesso.hour
 # Calcolo del ritardo statistico nelle ore di punta
 ritardo_stimato = 3 if ((7 <= ora_attuale_h <= 9) or (17 <= ora_attuale_h <= 19)) else 0
 
-# Lista dei Passaggi a Livello in ordine geografico da Nord (Lucca) a Sud (Pisa)
+# Lista dei Passaggi a Livello in un UNICO ORDINE GEOGRAFICO (Da Nord a Sud)
 pl_lista = [
     {"nome": "San Giuliano Terme", "ind_pisa": 0, "ind_lucca": 3},
     {"nome": "Via Ulisse Dini (Gello)", "ind_pisa": 1, "ind_lucca": 2},
@@ -38,46 +39,45 @@ pl_lista = [
     {"nome": "Via Ugo Rindi (Pisa)", "ind_pisa": 3, "ind_lucca": 0}
 ]
 
-st.write("### 🚊 MAPPA BINARIO UNICO")
-st.caption("Visualizzazione lineare sequenziale da Nord (Lucca) a Sud (Pisa).")
+st.write("### 🚊 UNICO BINARIO GEOGRAFICO")
+st.caption("Visualizzazione sequenziale da Lucca (Nord) verso Pisa (Sud)")
 
-# Generiamo l'unica mappa lineare geografica
+# Generiamo l'unica mappa lineare senza sdoppiamenti
 for pl in pl_lista:
     st.markdown("<div style='text-align: center; font-size: 16px; margin: 1px 0;'>│<br>▼</div>", unsafe_allow_html=True)
     
     stato_chiuso = False
-    info_segnaletica = "🟢 **APERTO**\n\nStrada libera"
+    info_segnaletica = "Strada libera"
     
     # 1. Controllo treni verso PISA (il treno scende lungo la lista)
-    for min_t in MINUTI_PISA:
+    for min_t, num_treno in TRENI_PISA.items():
         min_reale = min_t + ritardo_stimato + pl["ind_pisa"]
         if (min_reale - 6) <= minuto_attuale <= (min_reale + 2):
             stato_chiuso = True
             ora_c = ora_adesso.replace(minute=max(0, min_reale - 6)).strftime('%H:%M')
             ora_r = ora_adesso.replace(minute=min(59, min_reale + 2)).strftime('%H:%M')
-            info_segnaletica = f"🔴 **CHIUSO / IN CHIUSURA**\n\n➔ Treno in transito da Lucca **[VERSO PISA]**\n\n⏱️ Sbarre giù: {ora_c} ↔ {ora_r}"
+            info_segnaletica = f"➔ **{num_treno}** da Lucca **[VERSO PISA]**\n\n⏱️ Chiusura: {ora_c} ↔ {ora_r}"
             break
             
     # 2. Controllo treni verso LUCCA (il treno risale la lista)
     if not stato_chiuso:
-        for min_t in MINUTI_LUCCA:
+        for min_t, num_treno in TRENI_LUCCA.items():
             min_reale = min_t + ritardo_stimato + pl["ind_lucca"]
             if (min_reale - 6) <= minuto_attuale <= (min_reale + 2):
                 stato_chiuso = True
                 ora_c = ora_adesso.replace(minute=max(0, min_reale - 6)).strftime('%H:%M')
                 ora_r = ora_adesso.replace(minute=min(59, min_reale + 2)).strftime('%H:%M')
-                info_segnaletica = f"🔴 **CHIUSO / IN CHIUSURA**\n\n🡨 Treno in transito da Pisa **[VERSO LUCCA]**\n\n⏱️ Sbarre giù: {ora_c} ↔ {ora_r}"
+                info_segnaletica = f"🡨 **{num_treno}** da Pisa **[VERSO LUCCA]**\n\n⏱️ Chiusura: {ora_c} ↔ {ora_r}"
                 break
 
-    # Mostriamo il box colorato finale per questo specifico passaggio a livello
+    # Mostriamo il box colorato finale (Singolo PL)
     if stato_chiuso:
-        st.error(f"### {pl['nome']}\n{info_segnaletica}")
+        st.error(f"🔴 **CHIUSO / IN CHIUSURA** - {pl['nome']}\n\n{info_segnaletica}")
     else:
-        st.success(f"### {pl['nome']}\n{info_segnaletica}")
+        st.success(f"🟢 **APERTO** - {pl['nome']}\n\n{info_segnaletica}")
 
 st.markdown("---")
-# Nota informativa in fondo alla pagina
 if ritardo_stimato > 0:
-    st.warning(f"⚠️ **Fascia di punta:** Calcolati +{ritardo_stimato} min di tolleranza sul traffico ferroviario.")
+    st.warning(f"⚠️ **Fascia di punta:** Calcolati +{ritardo_stimato} min di tolleranza traffico.")
 else:
-    st.info("ℹ️ **Fascia regolare:** Rilevamento basato sugli orari ufficiali di linea 24h.")
+    st.info("ℹ️ **Fascia regolare:** Monitoraggio basato su orari ufficiali 24h.")
