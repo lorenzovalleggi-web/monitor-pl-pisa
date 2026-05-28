@@ -7,11 +7,11 @@ from streamlit_autorefresh import st_autorefresh
 # 1. Configurazione della pagina
 st.set_page_config(page_title="Pisa ⇄ Lucca RailFlow", page_icon="🚦", layout="centered")
 
-# --- NUOVO TITOLO MODERNO SELEZIONATO ---
+# --- TITOLO MODERNO ---
 st.title("Pisa ⇄ Lucca RailFlow")
 st.subheader("Monitoraggio predittivo barriere in tempo reale")
 
-# Aggiornamento automatico ogni 15 seconds
+# Aggiornamento automatico ogni 15 secondi
 st_autorefresh(interval=15000, key="datarefresh")
 
 if st.button("🔄 Aggiorna Stato Ora"):
@@ -56,3 +56,43 @@ def recupera_treni_reali():
         for t in res.get('tabellone', []):
             dest = t.get('destinazione', '').upper()
             if "LUCCA" in dest or "PISTOIA" in dest or "FIRENZE" in dest:
+                orario_prog = t.get('orarioProgrammato', '')
+                if orario_prog:
+                    h, m = map(int, orario_prog.split(':'))
+                    ritardo = t.get('ritardo', 0)
+                    if ritardo == "---" or ritardo is None: ritardo = 0
+                    treni_attivi.append({
+                        "ora_p": h, "min_p": m, "ritardo": int(ritardo), "direzione": "LUCCA",
+                        "info": f"🡨 **REG {t.get('numeroTreno')}** per {t.get('destinazione')}"
+                    })
+    except:
+        pass
+    return treni_attivi
+
+lista_treni_fs = recupera_treni_reali()
+
+# --- DETECTOR ANOMALIE LINEA ---
+ritardo_rilevato_linea = False
+minuti_estensione_blocco = 0
+if lista_treni_fs:
+    for t in lista_treni_fs:
+        if t.get("ritardo", 0) >= 4:
+            ritardo_rilevato_linea = True
+            minuti_estensione_blocco = min(t["ritardo"], 12)
+
+# --- TROVA PROSSIMO TRENO ---
+prossimo_treno_testo = ""
+treni_futuri = []
+if lista_treni_fs:
+    for t in lista_treni_fs:
+        min_ass_treno = t["ora_p"] * 60 + t["min_p"] + t["ritardo"]
+        if min_ass_treno > minuti_assoluti_ora:
+            treni_futuri.append((min_ass_treno, t))
+
+if treni_futuri:
+    _, prox = min(treni_futuri, key=lambda x: x[0])
+    min_totale = prox["ora_p"] * 60 + prox["min_p"] + prox["ritardo"]
+    ora_effettiva = min_totale // 60
+    min_effettiva = min_totale % 60
+    stringa_ora = f"{ora_effettiva:02d}:{min_effettiva:02d}"
+    nota_ritardo = f" (+{prox['ritardo']} min ritardo)"
