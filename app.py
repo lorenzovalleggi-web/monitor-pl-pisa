@@ -20,8 +20,7 @@ st.write(f"Ultimo aggiornamento automatico: **{ora_adesso.strftime('%H:%M:%S')}*
 
 st.markdown("---")
 
-# DATABASE 24H CON NUMERO TRENO ASSOCIATO AI MINUTI DI PASSAGGIO
-# Struttura: { minuto_di_passaggio: "Numero_Treno" }
+# DATABASE 24H (Orari di linea cadenzati)
 TRENI_PISA = {5: "REG 18521", 35: "REG 18525"}    # Verso Pisa
 TRENI_LUCCA = {22: "REG 18522", 52: "REG 18526"}  # Verso Lucca
 
@@ -39,7 +38,7 @@ pl_lista = [
     {"nome": "Via Ugo Rindi (Pisa)", "ind_pisa": 3, "ind_lucca": 0}
 ]
 
-st.write("### 🚊 UNICO BINARIO GEOGRAFICO")
+st.write("### 🚊 LINEA PISA ↔ LUCCA")
 st.caption("Visualizzazione sequenziale da Lucca (Nord) verso Pisa (Sud)")
 
 # Generiamo l'unica mappa lineare senza sdoppiamenti
