@@ -6,11 +6,11 @@ from streamlit_autorefresh import st_autorefresh
 import os
 
 # 1. Configurazione della pagina
-st.set_page_config(page_title="Pisa ⇄ Lucca RailFlow", page_icon="🚦", layout="centered")
+st.set_page_config(page_title="Pisa ⇄ San Giuliano RailFlow", page_icon="🚦", layout="centered")
 
-# --- TITOLO MODERNO ---
-st.title("Pisa ⇄ Lucca RailFlow")
-st.subheader("Monitoraggio predittivo barriere in tempo reale")
+# --- TITOLO SEMPLIFICATO ---
+st.title("Pisa ⇄ San Giuliano RailFlow")
+st.subheader("Stato dei passaggi a livello in tempo reale")
 
 # Aggiornamento automatico ogni 15 secondi
 st_autorefresh(interval=15000, key="datarefresh")
@@ -114,22 +114,17 @@ if ritardo_rilevato_linea:
 
 st.markdown("---")
 
-# --- SEZIONE SPONSOR PULITA E SICURA ---
+# --- SEZIONE SPONSOR AUTOMATICA ---
 st.caption("✨ IN COLLABORAZIONE CON LO SPONSOR UFFICIALE")
 
-LINK_FACEBOOK = "https://www.facebook.com/ilcappellaiomatto"
+LINK_FB = "https://www.facebook.com/ilcappellaiomatto"
 
-# Creiamo un contenitore grafico per lo sponsor
 with st.container(border=True):
     if os.path.exists("sponsor.jpg"):
         st.image("sponsor.jpg", use_container_width=True)
-    
-    st.markdown(f"**[Il Cappellaio Matto Pisa]({LINK_FACEBOOK})**")
-    st.markdown(
-        "Progetti grafici loghi per attività commerciali, gruppi stadio e associazioni sportive. "
-        "Personalizzazioni di ogni genere: T-shirt, felpe, k-way, tazze, cappellini e allestimenti in palloncini."
-    )
-    st.link_button("🌐 Visita la Pagina Facebook", LINK_FACEBOOK)
+    st.markdown(f"**[Il Cappellaio Matto Pisa]({LINK_FB})**")
+    st.write("Progetti grafici loghi per attività commerciali, gruppi stadio e associazioni sportive. Personalizzazioni di ogni genere: T-shirt, felpe, k-way, tazze, cappellini e allestimenti in palloncini.")
+    st.link_button("🌐 Visita la Pagina Facebook", LINK_FB)
 
 st.markdown("---")
 
@@ -203,7 +198,4 @@ st.markdown("<br><hr>", unsafe_allow_html=True)
 col_copy, col_counter = st.columns([2, 1])
 
 with col_copy:
-    st.markdown("<p style='color: #777777; font-size: 12px; margin:0;'>© 2026 Pisa ⇄ Lucca RailFlow.<br>Sviluppato da Team RailFlow.<br>Tutti i diritti riservati intellettuali.</p>", unsafe_allow_html=True)
-
-with col_counter:
-    st.markdown("<p style='text-align:right; margin:0;'><img src='https://counter.moe/badge.svg?id=monitor-pl-pisa-railflow&color=green&style=flat' alt='Visite'></p>", unsafe_allow_html=True)
+    st.markdown("<p style='color: #777777; font-size: 12px; margin:0;'>© 2026 Pisa ⇄ San
