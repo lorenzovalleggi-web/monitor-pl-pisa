@@ -18,9 +18,7 @@ fuso_italia = pytz.timezone('Europe/Rome')
 ora_adesso = datetime.datetime.now(fuso_italia)
 st.write(f"Ultimo aggiornamento automatico: **{ora_adesso.strftime('%H:%M:%S')}**")
 
-st.markdown("---")
-
-# DATABASE 24H (Orari di linea cadenzati)
+# DATABASE 24H (Orari di linea cadenzati e numeri treno)
 TRENI_PISA = {5: "REG 18521", 35: "REG 18525"}    # Verso Pisa
 TRENI_LUCCA = {22: "REG 18522", 52: "REG 18526"}  # Verso Lucca
 
@@ -29,6 +27,43 @@ ora_attuale_h = ora_adesso.hour
 
 # Calcolo del ritardo statistico nelle ore di punta
 ritardo_stimato = 3 if ((7 <= ora_attuale_h <= 9) or (17 <= ora_attuale_h <= 19)) else 0
+
+# --- NUOVA LOGICA: CALCOLO DEL PROSSIMO TRENO IN ARRIVO ---
+prossimo_treno_testo = ""
+minuti_tutti = []
+
+# Uniamo tutti i treni pianificati nell'ora con la loro direzione e codice
+for m, n in TRENI_PISA.items():
+    minuti_tutti.append({"minuto": m + ritardo_stimato, "info": f"➔ **{n}** [VERSO PISA]"})
+for m, n in TRENI_LUCCA.items():
+    minuti_tutti.append({"minuto": m + ritardo_stimato, "info": f"🡨 **{n}** [VERSO LUCCA]"})
+
+# Ordiniamo i passaggi cronologicamente (0-59 minuti)
+minuti_tutti = sorted(minuti_tutti, key=lambda x: x["minuto"])
+
+# Cerchiamo il primo treno che passerà dopo il minuto attuale
+trovato = False
+for t inGrid in minuti_tutti:
+    if t["minuto"] > minuto_attuale:
+        ora_prevista = ora_adesso.replace(minute=t["minuto"]).strftime('%H:%M')
+        prossimo_treno_testo = f"Prossimo transito: {t['info']} stimato alle ore **{ora_prevista}**"
+        trovato = True
+        break
+
+# Se non troviamo treni nel resto di questa ora, prendiamo il primo della prossima ora
+if not trovato:
+    primo_treno = minuti_tutti[0]
+    prossima_ora = (ora_adesso + datetime.timedelta(hours=1))
+    # Gestione del cambio d'ora per i minuti bassi
+    try:
+        ora_prevista = prossima_ora.replace(minute=primo_treno["minuto"]).strftime('%H:%M')
+    except:
+        ora_prevista = "--:--"
+    prossimo_treno_testo = f"Prossimo transito: {primo_treno['info']} stimato alle ore **{ora_prevista}**"
+
+# Mostriamo il box informativo in evidenza
+st.info(f"📋 **INFO LINEA:** {prossimo_treno_testo}")
+st.markdown("---")
 
 # Lista dei Passaggi a Livello in un UNICO ORDINE GEOGRAFICO (Da Nord a Sud)
 pl_lista = [
