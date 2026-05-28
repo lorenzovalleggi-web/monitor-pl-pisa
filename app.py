@@ -113,6 +113,23 @@ if ritardo_rilevato_linea:
 
 st.markdown("---")
 
+# =========================================================================
+# --- SPAZIO PUBBLICITARIO PER IL TUO AMICO ---
+# Sostituisci i due link qui sotto con quelli reali del negozio del tuo amico
+# =========================================================================
+LINK_NEGOZIO_AMICO = "https://www.google.it"  # Metti qui il suo sito, pagina Facebook o Instagram
+URL_IMMAGINE_BANNER = "https://placehold.co/600x120/ff813f/white?text=Spazio+Sponsor+Disponibile"  # Link del suo logo/volantino
+
+st.markdown(f"""
+    <div style="text-align: center; margin: 5px 0 20px 0; background-color: #f9f9f9; padding: 10px; border-radius: 8px; border: 1px dashed #cccccc;">
+        <span style="color: #888888; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 8px;">In collaborazione con</span>
+        <a href="{LINK_NEGOZIO_AMICO}" target="_blank">
+            <img src="{URL_IMMAGINE_BANNER}" alt="Sponsor" style="width: 100%; max-width: 600px; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+        </a>
+    </div>
+""", unsafe_allow_html=True)
+# =========================================================================
+
 pl_lista = [
     {"nome": "San Giuliano Terme", "ind_pisa": 0, "ind_lucca": 4},
     {"nome": "Via Ulisse Dini (Gello)", "ind_pisa": 2, "ind_lucca": 3},
@@ -122,7 +139,6 @@ pl_lista = [
 
 st.write("### 🚊 STATO VARCHI FERROVIARI")
 
-# Ciclo corretto: stampa sempre i varchi, anche se la lista treni è vuota
 for i, pl in enumerate(pl_lista):
     if i > 0:
         st.markdown("<div style='text-align: center; font-size: 16px; margin: 1px 0;'>│<br>▼</div>", unsafe_allow_html=True)
@@ -130,7 +146,6 @@ for i, pl in enumerate(pl_lista):
     stato_chiuso = False
     info_segnaletica = "Strada libera"
     
-    # Controlla lo stato solo se ci sono treni attivi
     if lista_treni_fs:
         for treno in lista_treni_fs:
             min_partenza_reale = treno["ora_p"] * 60 + treno["min_p"] + treno["ritardo"]
