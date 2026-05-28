@@ -28,7 +28,7 @@ ora_attuale_h = ora_adesso.hour
 # Calcolo del ritardo statistico nelle ore di punta
 ritardo_stimato = 3 if ((7 <= ora_attuale_h <= 9) or (17 <= ora_attuale_h <= 19)) else 0
 
-# --- NUOVA LOGICA: CALCOLO DEL PROSSIMO TRENO IN ARRIVO ---
+# --- CALCOLO DEL PROSSIMO TRENO IN ARRIVO ---
 prossimo_treno_testo = ""
 minuti_tutti = []
 
@@ -43,7 +43,7 @@ minuti_tutti = sorted(minuti_tutti, key=lambda x: x["minuto"])
 
 # Cerchiamo il primo treno che passerà dopo il minuto attuale
 trovato = False
-for t inGrid in minuti_tutti:
+for t in minuti_tutti:
     if t["minuto"] > minuto_attuale:
         ora_prevista = ora_adesso.replace(minute=t["minuto"]).strftime('%H:%M')
         prossimo_treno_testo = f"Prossimo transito: {t['info']} stimato alle ore **{ora_prevista}**"
@@ -54,7 +54,6 @@ for t inGrid in minuti_tutti:
 if not trovato:
     primo_treno = minuti_tutti[0]
     prossima_ora = (ora_adesso + datetime.timedelta(hours=1))
-    # Gestione del cambio d'ora per i minuti bassi
     try:
         ora_prevista = prossima_ora.replace(minute=primo_treno["minuto"]).strftime('%H:%M')
     except:
