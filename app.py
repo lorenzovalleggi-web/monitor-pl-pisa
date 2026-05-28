@@ -150,4 +150,20 @@ for i, pl in enumerate(pl_lista):
     info_segnaletica = "Strada libera"
     
     if lista_treni_fs:
-        for treno in lista_treni_fs
+        for treno in lista_treni_fs:
+            min_partenza_reale = treno["ora_p"] * 60 + treno["min_p"] + treno["ritardo"]
+            durata_viaggio = 10 if (treno["ora_p"] == 21 and treno["min_p"] == 58) else 6
+            
+            if treno["direzione"] == "PISA":
+                inizio_chiusura = min_partenza_reale - 6 + pl["ind_pisa"]
+                fine_chiusura = min_partenza_reale + durata_viaggio + 1 + minutes_estensione_blocco = 0
+                # Nota: la riga sopra usa i parametri calcolati in alto
+                fine_chiusura = min_partenza_reale + durata_viaggio + 1 + minuti_estensione_blocco
+                if inizio_chiusura <= minuti_assoluti_ora <= fine_chiusura:
+                    stato_chiuso = True
+                    ora_c = f"{inizio_chiusura // 60:02d}:{inizio_chiusura % 60:02d}"
+                    ora_r = f"{fine_chiusura // 60:02d}:{fine_chiusura % 60:02d}"
+                    info_segnaletica = f"{treno['info']}\n\n⏱️ Chiusura stimata: {ora_c} ↔ {ora_r}"
+                    break
+                    
+            elif treno["direzione"] == "LU
