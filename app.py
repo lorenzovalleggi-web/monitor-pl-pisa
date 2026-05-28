@@ -7,6 +7,10 @@ from streamlit_autorefresh import st_autorefresh
 # 1. Configurazione della pagina
 st.set_page_config(page_title="Pisa ⇄ Lucca RailFlow", page_icon="🚦", layout="centered")
 
+# --- LOGO UFFICIALE IN TESTATA ---
+# Carica il logo generato direttamente in cima alla pagina
+st.image("https://i.ibb.co/b3mF8gq/Gemini-Generated-Image-7l8ta87l8ta87l8t.png", use_container_width=True)
+
 # --- TITOLO MODERNO ---
 st.title("Pisa ⇄ Lucca RailFlow")
 st.subheader("Monitoraggio predittivo barriere in tempo reale")
@@ -191,7 +195,7 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-# --- FOOTER CON CREDITI BRANDIZZATI ---
+# --- FOOTER CON NUOVO CONTATORE AD ALTA COMPATIBILITÀ ---
 st.markdown("<br><hr>", unsafe_allow_html=True)
 col_copy, col_counter = st.columns([2, 1])
 
@@ -199,4 +203,5 @@ with col_copy:
     st.markdown("<p style='color: #777777; font-size: 12px; margin:0;'>© 2026 Pisa ⇄ Lucca RailFlow.<br>Sviluppato da Team RailFlow.<br>Tutti i diritti riservati intellettuali.</p>", unsafe_allow_html=True)
 
 with col_counter:
-    st.markdown("<p style='text-align:right; margin:0;'><img src='https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fmonitor-pl-pisa.streamlit.app&count_bg=%234CAF50&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=Visite+Totali&edge_flat=false' alt='Contatore'></p>", unsafe_allow_html=True)
+    # Nuovo endpoint contatore indipendente ad aggiornamento garantito per Streamlit Cloud
+    st.markdown("<p style='text-align:right; margin:0;'><img src='https://counter.moe/badge.svg?id=monitor-pl-pisa-railflow&color=green&style=flat' alt='Visite'></p>", unsafe_allow_html=True)
