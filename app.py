@@ -5,26 +5,24 @@ import requests
 from streamlit_autorefresh import st_autorefresh
 import os
 
-st.set_page_config(page_title="Pisa ⇄ San Giuliano Terme RailFlow", page_icon="🚦", layout="centered")
-
-st.title("Pisa ⇄ San Giuliano Terme RailFlow")
-st.subheader("Stato dei passaggi a livello in tempo reale")
+st.set_page_config(page_title="RailFlow", page_icon="🚦", layout="centered")
+st.title("Pisa - San Giuliano RailFlow")
+st.subheader("Stato passaggi a livello")
 
 st_autorefresh(interval=15000, key="datarefresh")
 
-if st.button("🔄 Aggiorna Stato Ora"):
+if st.button("🔄 Aggiorna"):
     st.rerun()
 
-fuso_italia = pytz.timezone('Europe/Rome')
-ora_adesso = datetime.datetime.now(fuso_italia)
-st.write(f"Ultimo aggiornamento automatico: **{ora_adesso.strftime('%H:%M:%S')}**")
+fuso = pytz.timezone('Europe/Rome')
+ora_adesso = datetime.datetime.now(fuso)
+st.write(f"Aggiornato: **{ora_adesso.strftime('%H:%M:%S')}**")
 
-minuti_assoluti_ora = ora_adesso.hour * 60 + ora_adesso.minute
-ID_SAN_GIULIANO = "S06411"
-ID_PISA_ROSSORE = "S06501"
+minuti_ora = ora_adesso.hour * 60 + ora_adesso.minute
+ID_SG = "S06411"
+ID_PR = "S06501"
 
-# --- TABELLA ORARIA UFFICIALE PROGRAMMATA (ORARIO TEORICO DI RISERVA) ---
-ORARIO_PROGRAMMATO = [
+ORARIO_TABELLA = [
     {"ora": 5, "min": 30, "dir": "LUCCA", "num": "18502"}, {"ora": 5, "min": 51, "dir": "PISA", "num": "18501"},
     {"ora": 6, "min": 23, "dir": "LUCCA", "num": "18504"}, {"ora": 6, "min": 35, "dir": "PISA", "num": "18503"},
     {"ora": 6, "min": 54, "dir": "LUCCA", "num": "18506"}, {"ora": 7, "min": 17, "dir": "PISA", "num": "6915"},
@@ -36,7 +34,7 @@ ORARIO_PROGRAMMATO = [
     {"ora": 12, "min": 23, "dir": "LUCCA", "num": "18522"}, {"ora": 12, "min": 43, "dir": "PISA", "num": "18521"},
     {"ora": 13, "min": 13, "dir": "LUCCA", "num": "18524"}, {"ora": 13, "min": 36, "dir": "PISA", "num": "18523"},
     {"ora": 13, "min": 53, "dir": "LUCCA", "num": "18526"}, {"ora": 14, "min": 13, "dir": "PISA", "num": "18525"},
-    {"ora": 14, "min": 35, "dir": "LUCCA", "num": "18528"}, {"ora": 14, "min": 51, "dir": "PISA", "num": "18527"},
+    {"ora": 14, "min": 35, "dir": "LUCCA", "num": "18528"}, {"ora": 14, "min": 43, "dir": "PISA", "num": "18527"},
     {"ora": 15, "min": 23, "dir": "LUCCA", "num": "18532"}, {"ora": 15, "min": 51, "dir": "PISA", "num": "18531"},
     {"ora": 16, "min": 23, "dir": "LUCCA", "num": "18534"}, {"ora": 16, "min": 51, "dir": "PISA", "num": "18533"},
     {"ora": 17, "min": 23, "dir": "LUCCA", "num": "18536"}, {"ora": 17, "min": 46, "dir": "PISA", "num": "18535"},
@@ -47,95 +45,93 @@ ORARIO_PROGRAMMATO = [
 ]
 
 @st.cache_data(ttl=10)
-def recupera_treni_reali():
-    treni_attivi = []
+def recupera_treni():
+    treni = []
     try:
-        url_sg = f"http://www.viaggiatreno.it/viaggiatrenonew/api/esitoPartenze/{ID_SAN_GIULIANO}/{ora_adesso.strftime('%Y-%m-%dT00:00:00')}"
-        res = requests.get(url_sg, timeout=5).json()
+        url = f"http://www.viaggiatreno.it/viaggiatrenonew/api/esitoPartenze/{ID_SG}/{ora_adesso.strftime('%Y-%m-%dT00:00:00')}"
+        res = requests.get(url, timeout=5).json()
         for t in res.get('tabellone', []):
             dest = t.get('destinazione', '').upper()
             if "PISA" in dest or "LIVORNO" in dest:
-                orario_prog = t.get('orarioProgrammato', '')
-                if orario_prog:
-                    h, m = map(int, orario_prog.split(':'))
-                    ritardo = t.get('ritardo', 0)
-                    if ritardo == "---" or ritardo is None: ritardo = 0
-                    treni_attivi.append({
-                        "ora_p": h, "min_p": m, "ritardo": int(ritardo), "direzione": "PISA", "num": t.get('numeroTreno'),
-                        "info": f"➔ **REG {t.get('numeroTreno')}** per {t.get('destinazione')}", "fonte": "LIVE"
-                    })
+                h, m = map(int, t.get('orarioProgrammato', '').split(':'))
+                rit = t.get('ritardo', 0)
+                if rit == "---" or rit is None: rit = 0
+                treni.append({"ora_p": h, "min_p": m, "ritardo": int(rit), "direzione": "PISA", "num": t.get('numeroTreno'), "fonte": "LIVE"})
     except: pass
 
     try:
-        url_pr = f"http://www.viaggiatreno.it/viaggiatrenonew/api/esitoPartenze/{ID_PISA_ROSSORE}/{ora_adesso.strftime('%Y-%m-%dT00:00:00')}"
-        res = requests.get(url_pr, timeout=5).json()
+        url = f"http://www.viaggiatreno.it/viaggiatrenonew/api/esitoPartenze/{ID_PR}/{ora_adesso.strftime('%Y-%m-%dT00:00:00')}"
+        res = requests.get(url, timeout=5).json()
         for t in res.get('tabellone', []):
             dest = t.get('destinazione', '').upper()
             if "LUCCA" in dest or "PISTOIA" in dest or "FIRENZE" in dest:
-                orario_prog = t.get('orarioProgrammato', '')
-                if orario_prog:
-                    h, m = map(int, orario_prog.split(':'))
-                    ritardo = t.get('ritardo', 0)
-                    if ritardo == "---" or ritardo is None: ritardo = 0
-                    treni_attivi.append({
-                        "ora_p": h, "min_p": m, "ritardo": int(ritardo), "direzione": "LUCCA", "num": t.get('numeroTreno'),
-                        "info": f"🡨 **REG {t.get('numeroTreno')}** per {t.get('destinazione')}", "fonte": "LIVE"
-                    })
+                h, m = map(int, t.get('orarioProgrammato', '').split(':'))
+                rit = t.get('ritardo', 0)
+                if rit == "---" or rit is None: rit = 0
+                treni.append({"ora_p": h, "min_p": m, "ritardo": int(rit), "direzione": "LUCCA", "num": t.get('numeroTreno'), "fonte": "LIVE"})
     except: pass
-    return treni_attivi
+    return treni
 
-lista_treni_fs = recupera_treni_reali()
+lista_treni = recupera_treni()
+if not lista_treni:
+    for tp in ORARIO_TABELLA:
+        if (tp["ora"] * 60 + tp["min"]) > minuti_ora:
+            lista_treni.append({"ora_p": tp["ora"], "min_p": tp["min"], "ritardo": 0, "direzione": tp["dir"], "num": tp["num"], "fonte": "TABELLA"})
 
-# SE I SISTEMI LIVE SONO VUOTI, CARICA IL PROSSIMO TRENO DA ORARIO PROGRAMMATO DA ADESSO IN POI
-usa_programmati_di_riserva = False
-if not lista_treni_fs:
-    usa_programmati_di_riserva = True
-    for tp in ORARIO_PROGRAMMATO:
-        min_tp = tp["ora"] * 60 + tp["min"]
-        if min_tp > minuti_assoluti_ora:
-            freccia = "➔" if tp["dir"] == "PISA" else "🡨"
-            lista_treni_fs.append({
-                "ora_p": tp["ora"], "min_p": tp["min"], "ritardo": 0, "direzione": tp["dir"], "num": tp["num"],
-                "info": f"{freccia} **REG {tp['num']}** (Orario Programmato)", "fonte": "TABELLA"
-            })
-
-ritardo_rilevato_linea = False
-minuti_estensione_blocco = 0
-for t in lista_treni_fs:
+ritardo_rilevato = False
+estensione = 0
+for t in lista_treni:
     if t.get("fonte") == "LIVE" and t.get("ritardo", 0) >= 4:
-        ritardo_rilevato_linea = True
-        minuti_estensione_blocco = min(t["ritardo"], 12)
+        ritardo_rilevato = True
+        estensione = min(t["ritardo"], 12)
 
-prossimo_treno_testo = ""
 treni_futuri = []
-for t in lista_treni_fs:
-    min_ass_treno = t["ora_p"] * 60 + t["min_p"] + t["ritardo"]
-    if min_ass_treno > minuti_assoluti_ora:
-        treni_futuri.append((min_ass_treno, t))
+for t in lista_treni:
+    m_ass = t["ora_p"] * 60 + t["min_p"] + t["ritardo"]
+    if m_ass > minuti_ora:
+        treni_futuri.append((m_ass, t))
 
 if treni_futuri:
     _, prox = min(treni_futuri, key=lambda x: x[0])
-    min_totale = prox["ora_p"] * 60 + prox["min_p"] + prox["ritardo"]
-    stringa_ora = f"{min_totale // 60:02d}:{min_totale % 60:02d}"
-    
-    if prox.get("fonte") == "LIVE":
-        nota_ritardo = f" (+{prox['ritardo']} min ritardo)" if prox['ritardo'] > 0 else " (In orario)"
-    else:
-        nota_ritardo = " (Da orario ufficiale)"
-        
-    dir_t = "direzione Pisa" if prox["direzione"] == "PISA" else "direzione Lucca"
-    prossimo_treno_testo = f"Prossimo treno previsto: **REG N. {prox['num']}** ({dir_t}) alle **{stringa_ora}**{nota_ritardo}"
+    m_tot = prox["ora_p"] * 60 + prox["min_p"] + prox["ritardo"]
+    nota = f" (+{prox['ritardo']} min)" if prox.get("fonte") == "LIVE" and prox['ritardo'] > 0 else " (Da orario)"
+    dir_t = "Pisa" if prox["direzione"] == "PISA" else "Lucca"
+    txt_treno = f"Prossimo treno: **REG N. {prox['num']}** dir. {dir_t} alle **{m_tot // 60:02d}:{m_tot % 60:02d}**{nota}"
 else:
-    if ora_adesso.hour >= 22 or ora_adesso.hour < 5:
-        prossimo_treno_testo = "Servizio giornaliero terminato. 🌅 Primo treno della mattina: **REG delle 05:30 per Lucca** / **05:51 per Pisa**."
-    else:
-        prossimo_treno_testo = "Nessun transito pianificato nelle prossime ore."
+    txt_treno = "Servizio terminato o nessun transito pianificato."
 
-st.info(f"📋 **STATO LINEA LIVE:** {prossimo_treno_testo}")
-st.caption("ℹ️ **Nota sul traffico merci:** I sistemi pubblici monitorano esclusivamente i treni passeggeri. I transiti di treni merci e convogli straordinari non sono programmati e potrebbero causare chiusure estemporanee non segnalate dall'app.")
-
-if ritardo_rilevato_linea:
-    st.warning("⚠️ **ANOMALIA TRAFFICO LIVE:** Rilevato rallentamento dinamico sulla tratta. I passaggi a livello potrebbero rimanere chiusi più a lungo per possibili incroci o treni merci non in orario.")
+st.info(f"📋 {txt_treno}")
+if ritardo_rilevato:
+    st.warning("⚠️ Rallentamenti sulla linea. Chiusure prolungate.")
 
 st.markdown("---")
-st.caption("✨ IN COLLABORAZIONE
+c1, c2, c3 = st.columns(3)
+with c1:
+    if os.path.exists("sponsor1.jpg"): st.image("sponsor1.jpg", use_container_width=True)
+    st.markdown("[Il Cappellaio Matto](https://www.facebook.com/ilcappellaiomatto)")
+with c2:
+    if os.path.exists("sponsor2.jpg"): st.image("sponsor2.jpg", use_container_width=True)
+    st.markdown("[Sponsor 2]")
+with c3:
+    if os.path.exists("sponsor3.jpg"): st.image("sponsor3.jpg", use_container_width=True)
+    st.markdown("[Sponsor 3]")
+
+st.link_button("📩 Diventa Sponsor", "mailto:info.railflow@gmail.com?subject=Sponsor")
+st.markdown("---")
+st.write("### 🚊 STATO VARCHI")
+
+varchi = [
+    {"nome": "San Giuliano Terme", "pisa": 0, "lucca": 4},
+    {"nome": "Via Ulisse Dini (Gello)", "pisa": 2, "lucca": 3},
+    {"nome": "Via di Gagno (Pisa)", "pisa": 5, "lucca": 2},
+    {"nome": "Via Ugo Rindi (Pisa)", "pisa": 7, "lucca": 0}
+]
+
+for i, pl in enumerate(varchi):
+    if i > 0: st.write("### :arrow_down:")
+    chiuso = False
+    info_pl = "Strada libera"
+    
+    for tr in lista_treni:
+        m_p = tr["ora_p"] * 60 + tr["min_p"] + tr["ritardo"]
+        durata = 10 if (tr["ora_p"]
