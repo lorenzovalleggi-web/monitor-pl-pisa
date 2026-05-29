@@ -117,24 +117,4 @@ with c3:
     st.markdown("[Sponsor 3]")
 
 st.link_button("📩 Diventa Sponsor", "mailto:info.railflow@gmail.com?subject=Sponsor")
-st.markdown("---")
-st.write("### 🚊 STATO VARCHI")
-
-varchi = [
-    {"nome": "San Giuliano Terme", "pisa": 0, "lucca": 4},
-    {"nome": "Via Ulisse Dini (Gello)", "pisa": 2, "lucca": 3},
-    {"nome": "Via di Gagno (Pisa)", "pisa": 5, "lucca": 2},
-    {"nome": "Via Ugo Rindi (Pisa)", "pisa": 7, "lucca": 0}
-]
-
-for i, pl in enumerate(varchi):
-    if i > 0: st.write("### :arrow_down:")
-    chiuso = False
-    info_pl = "Strada libera"
-    
-    for tr in lista_treni:
-        m_p = tr["ora_p"] * 60 + tr["min_p"] + tr["ritardo"]
-        durata = 10 if tr["ora_p"] == 21 and tr["min_p"] == 58 else 6
-        
-        if tr["direzione"] == "PISA":
-            ini = m_p - 6 + pl["pisa"]
+st.markdown
