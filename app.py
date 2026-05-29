@@ -158,4 +158,9 @@ st.success("🛰️ **Analisi Correlata Attiva**: Rilevamento indiretto delle os
 
 st.write("### ☕ Sostieni il Progetto")
 st.info("Questo servizio è gratuito e gestito in modo indipendente dallo staff di RailFlow. Se ti è utile per evitare le code ai passaggi a livello e vuoi supportare lo sviluppo di nuove funzioni, puoi fare una piccola donazione libera.")
-st.markdown('<div style="text-align: center; margin: 15px 0;"><a href="https://www.paypal.com/paypalme/rebolo73" target="_blank" style="text-decoration: none;"><button style="background-color: #FF813F; color: white; border: none; padding: 12px 24px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; box-shadow: 0px 4px 6px rgba(0
+st.markdown('<div style="text-align: center; margin: 15px 0;"><a href="https://www.paypal.com/paypalme/rebolo73" target="_blank" style="text-decoration: none;"><button style="background-color: #FF813F; color: white; border: none; padding: 12px 24px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; box-shadow: 0px 4px 6px rgba(0,0,0,0.1);">☕ Clicca qui per offrirmi un caffè (PayPal)</button></a></div>', unsafe_allow_html=True)
+
+st.markdown("<br><hr>", unsafe_allow_html=True)
+st.write("© 2026 RailFlow Pisa-San Giuliano Terme.")
+st.markdown("📧 Contatto supporto e pubblicità: [info.railflow@gmail.com](mailto:info.railflow@gmail.com)")
+st.caption("Sviluppato da Team RailFlow. Servizio indipendente non affiliato a FS.")
