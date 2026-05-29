@@ -23,6 +23,29 @@ minuti_assoluti_ora = ora_adesso.hour * 60 + ora_adesso.minute
 ID_SAN_GIULIANO = "S06411"
 ID_PISA_ROSSORE = "S06501"
 
+# --- TABELLA ORARIA UFFICIALE PROGRAMMATA (ORARIO TEORICO DI RISERVA) ---
+ORARIO_PROGRAMMATO = [
+    {"ora": 5, "min": 30, "dir": "LUCCA", "num": "18502"}, {"ora": 5, "min": 51, "dir": "PISA", "num": "18501"},
+    {"ora": 6, "min": 23, "dir": "LUCCA", "num": "18504"}, {"ora": 6, "min": 35, "dir": "PISA", "num": "18503"},
+    {"ora": 6, "min": 54, "dir": "LUCCA", "num": "18506"}, {"ora": 7, "min": 17, "dir": "PISA", "num": "6915"},
+    {"ora": 7, "min": 30, "dir": "LUCCA", "num": "18508"}, {"ora": 7, "min": 47, "dir": "PISA", "num": "18505"},
+    {"ora": 8, "min": 23, "dir": "LUCCA", "num": "18514"}, {"ora": 8, "min": 51, "dir": "PISA", "num": "18511"},
+    {"ora": 9, "min": 23, "dir": "LUCCA", "num": "18516"}, {"ora": 9, "min": 51, "dir": "PISA", "num": "18515"},
+    {"ora": 10, "min": 23, "dir": "LUCCA", "num": "18518"}, {"ora": 10, "min": 51, "dir": "PISA", "num": "18517"},
+    {"ora": 11, "min": 23, "dir": "LUCCA", "num": "18520"}, {"ora": 11, "min": 51, "dir": "PISA", "num": "18519"},
+    {"ora": 12, "min": 23, "dir": "LUCCA", "num": "18522"}, {"ora": 12, "min": 43, "dir": "PISA", "num": "18521"},
+    {"ora": 13, "min": 13, "dir": "LUCCA", "num": "18524"}, {"ora": 13, "min": 36, "dir": "PISA", "num": "18523"},
+    {"ora": 13, "min": 53, "dir": "LUCCA", "num": "18526"}, {"ora": 14, "min": 13, "dir": "PISA", "num": "18525"},
+    {"ora": 14, "min": 35, "dir": "LUCCA", "num": "18528"}, {"ora": 14, "min": 51, "dir": "PISA", "num": "18527"},
+    {"ora": 15, "min": 23, "dir": "LUCCA", "num": "18532"}, {"ora": 15, "min": 51, "dir": "PISA", "num": "18531"},
+    {"ora": 16, "min": 23, "dir": "LUCCA", "num": "18534"}, {"ora": 16, "min": 51, "dir": "PISA", "num": "18533"},
+    {"ora": 17, "min": 23, "dir": "LUCCA", "num": "18536"}, {"ora": 17, "min": 46, "dir": "PISA", "num": "18535"},
+    {"ora": 18, "min": 23, "dir": "LUCCA", "num": "18540"}, {"ora": 18, "min": 51, "dir": "PISA", "num": "18537"},
+    {"ora": 19, "min": 23, "dir": "LUCCA", "num": "18542"}, {"ora": 19, "min": 51, "dir": "PISA", "num": "18541"},
+    {"ora": 20, "min": 23, "dir": "LUCCA", "num": "18544"}, {"ora": 20, "min": 46, "dir": "PISA", "num": "18543"},
+    {"ora": 21, "min": 23, "dir": "LUCCA", "num": "18546"}, {"ora": 21, "min": 58, "dir": "PISA", "num": "18545"}
+]
+
 @st.cache_data(ttl=10)
 def recupera_treni_reali():
     treni_attivi = []
@@ -39,7 +62,7 @@ def recupera_treni_reali():
                     if ritardo == "---" or ritardo is None: ritardo = 0
                     treni_attivi.append({
                         "ora_p": h, "min_p": m, "ritardo": int(ritardo), "direzione": "PISA", "num": t.get('numeroTreno'),
-                        "info": f"➔ **REG {t.get('numeroTreno')}** per {t.get('destinazione')}"
+                        "info": f"➔ **REG {t.get('numeroTreno')}** per {t.get('destinazione')}", "fonte": "LIVE"
                     })
     except: pass
 
@@ -56,40 +79,57 @@ def recupera_treni_reali():
                     if ritardo == "---" or ritardo is None: ritardo = 0
                     treni_attivi.append({
                         "ora_p": h, "min_p": m, "ritardo": int(ritardo), "direzione": "LUCCA", "num": t.get('numeroTreno'),
-                        "info": f"🡨 **REG {t.get('numeroTreno')}** per {t.get('destinazione')}"
+                        "info": f"🡨 **REG {t.get('numeroTreno')}** per {t.get('destinazione')}", "fonte": "LIVE"
                     })
     except: pass
     return treni_attivi
 
 lista_treni_fs = recupera_treni_reali()
+
+# SE I SISTEMI LIVE SONO VUOTI, CARICA IL PROSSIMO TRENO DA ORARIO PROGRAMMATO DA ADESSO IN POI
+usa_programmati_di_riserva = False
+if not lista_treni_fs:
+    usa_programmati_di_riserva = True
+    for tp in ORARIO_PROGRAMMATO:
+        min_tp = tp["ora"] * 60 + tp["min"]
+        if min_tp > minuti_assoluti_ora:
+            freccia = "➔" if tp["dir"] == "PISA" else "🡨"
+            lista_treni_fs.append({
+                "ora_p": tp["ora"], "min_p": tp["min"], "ritardo": 0, "direzione": tp["dir"], "num": tp["num"],
+                "info": f"{freccia} **REG {tp['num']}** (Orario Programmato)", "fonte": "TABELLA"
+            })
+
 ritardo_rilevato_linea = False
 minuti_estensione_blocco = 0
-if lista_treni_fs:
-    for t in lista_treni_fs:
-        if t.get("ritardo", 0) >= 4:
-            ritardo_rilevato_linea = True
-            minuti_estensione_blocco = min(t["ritardo"], 12)
+for t in lista_treni_fs:
+    if t.get("fonte") == "LIVE" and t.get("ritardo", 0) >= 4:
+        ritardo_rilevato_linea = True
+        minuti_estensione_blocco = min(t["ritardo"], 12)
 
 prossimo_treno_testo = ""
 treni_futuri = []
-if lista_treni_fs:
-    for t in lista_treni_fs:
-        min_ass_treno = t["ora_p"] * 60 + t["min_p"] + t["ritardo"]
-        if min_ass_treno > minuti_assoluti_ora:
-            treni_futuri.append((min_ass_treno, t))
+for t in lista_treni_fs:
+    min_ass_treno = t["ora_p"] * 60 + t["min_p"] + t["ritardo"]
+    if min_ass_treno > minuti_assoluti_ora:
+        treni_futuri.append((min_ass_treno, t))
 
 if treni_futuri:
     _, prox = min(treni_futuri, key=lambda x: x[0])
     min_totale = prox["ora_p"] * 60 + prox["min_p"] + prox["ritardo"]
     stringa_ora = f"{min_totale // 60:02d}:{min_totale % 60:02d}"
-    nota_ritardo = f" (+{prox['ritardo']} min ritardo)" if prox['ritardo'] > 0 else " (In orario)"
+    
+    if prox.get("fonte") == "LIVE":
+        nota_ritardo = f" (+{prox['ritardo']} min ritardo)" if prox['ritardo'] > 0 else " (In orario)"
+    else:
+        nota_ritardo = " (Da orario ufficiale)"
+        
     dir_t = "direzione Pisa" if prox["direzione"] == "PISA" else "direzione Lucca"
-    prossimo_treno_testo = f"Prossimo treno in partenza: **REG N. {prox['num']}** ({dir_t}) alle **{stringa_ora}**{nota_ritardo}"
+    prossimo_treno_testo = f"Prossimo treno previsto: **REG N. {prox['num']}** ({dir_t}) alle **{stringa_ora}**{nota_ritardo}"
 else:
     if ora_adesso.hour >= 22 or ora_adesso.hour < 5:
         prossimo_treno_testo = "Servizio giornaliero terminato. 🌅 Primo treno della mattina: **REG delle 05:30 per Lucca** / **05:51 per Pisa**."
     else:
-        prossimo_treno_testo = "Nessun transito imminente rilevato dai sistemi di stazione."
+        prossimo_treno_testo = "Nessun transito pianificato nelle prossime ore."
 
 st.info(f"📋 **STATO LINEA LIVE:** {prossimo_treno_testo}")
 st.caption("ℹ️ **Nota sul traffico merci:** I sistemi pubblici monitorano esclusivamente i treni passeggeri. I transiti di treni merci e convogli straordinari non sono programmati e potrebbero causare chiusure estemporanee non segnalate dall'app.")
@@ -98,69 +138,4 @@ if ritardo_rilevato_linea:
     st.warning("⚠️ **ANOMALIA TRAFFICO LIVE:** Rilevato rallentamento dinamico sulla tratta. I passaggi a livello potrebbero rimanere chiusi più a lungo per possibili incroci o treni merci non in orario.")
 
 st.markdown("---")
-st.caption("✨ IN COLLABORAZIONE CON GLI SPONSOR UFFICIALI")
-
-col_sp1, col_sp2, col_sp3 = st.columns(3)
-with col_sp1:
-    if os.path.exists("sponsor1.jpg"): st.image("sponsor1.jpg", use_container_width=True)
-    st.markdown("**[Il Cappellaio Matto](https://www.facebook.com/ilcappellaiomatto)**")
-    st.caption("Personalizzazioni, abbigliamento e grafica.")
-with col_sp2:
-    if os.path.exists("sponsor2.jpg"): st.image("sponsor2.jpg", use_container_width=True)
-    st.markdown("**[Spazio Disponibile 2]**")
-    st.caption("Contattaci per inserire la tua attività commerciale.")
-with col_sp3:
-    if os.path.exists("sponsor3.jpg"): st.image("sponsor3.jpg", use_container_width=True)
-    st.markdown("**[Spazio Disponibile 3]**")
-    st.caption("Contattaci per inserire la tua attività commerciale.")
-
-st.markdown(" ")
-st.write("📢 **Vuoi pubblicizzare la tua attività su RailFlow?**")
-st.link_button("📩 Diventa Sponsor (Invia Email)", "mailto:info.railflow@gmail.com?subject=Richiesta%20Informazioni%20Sponsor%20RailFlow")
-
-st.markdown("---")
-st.write("### 🚊 STATO VARCHI FERROVIARI")
-
-pl_lista = [
-    {"nome": "San Giuliano Terme", "ind_pisa": 0, "ind_lucca": 4},
-    {"nome": "Via Ulisse Dini (Gello)", "ind_pisa": 2, "ind_lucca": 3},
-    {"nome": "Via di Gagno (Pisa)", "ind_pisa": 5, "ind_lucca": 2},
-    {"nome": "Via Ugo Rindi (Pisa)", "ind_pisa": 7, "ind_lucca": 0}
-]
-
-for i, pl in enumerate(pl_lista):
-    if i > 0: st.write("### :arrow_down:")
-    stato_chiuso = False
-    info_segnaletica = "Strada libera"
-    if lista_treni_fs:
-        for treno in lista_treni_fs:
-            min_p = treno["ora_p"] * 60 + treno["min_p"] + treno["ritardo"]
-            durata = 10 if (treno["ora_p"] == 21 and treno["min_p"] == 58) else 6
-            if treno["direzione"] == "PISA":
-                ini = min_p - 6 + pl["ind_pisa"]
-                fin = min_p + durata + 1 + minuti_estensione_blocco
-                if ini <= minuti_assoluti_ora <= fin:
-                    stato_chiuso = True
-                    info_segnaletica = f"{treno['info']}\n\n⏱️ Chiusura stimata: {ini//60:02d}:{ini%60:02d} ↔ {fin//60:02d}:{fin%60:02d}"
-                    break
-            elif treno["direzione"] == "LUCCA":
-                ini = min_p - 6 + pl["ind_lucca"]
-                fin = min_p + 5 + 2 + minuti_estensione_blocco
-                if ini <= minuti_assoluti_ora <= fin:
-                    stato_chiuso = True
-                    info_segnaletica = f"{treno['info']}\n\n⏱️ Chiusura stimata: {ini//60:02d}:{ini%60:02d} ↔ {fin//60:02d}:{fin%60:02d}"
-                    break
-    if stato_chiuso: st.error(f"🔴 **CHIUSO / IN CHIUSURA** - {pl['nome']}\n\n{info_segnaletica}")
-    else: st.success(f"🟢 **APERTO** - {pl['nome']}\n\n{info_segnaletica}")
-
-st.markdown("---")
-st.success("🛰️ **Analisi Correlata Attiva**: Rilevamento indiretto delle ostruzioni merci tramite calcolo dei ritardi di tratta.")
-
-st.write("### ☕ Sostieni il Progetto")
-st.info("Questo servizio è gratuito e gestito in modo indipendente dallo staff di RailFlow. Se ti è utile per evitare le code ai passaggi a livello e vuoi supportare lo sviluppo di nuove funzioni, puoi fare una piccola donazione libera.")
-st.markdown('<div style="text-align: center; margin: 15px 0;"><a href="https://www.paypal.com/paypalme/rebolo73" target="_blank" style="text-decoration: none;"><button style="background-color: #FF813F; color: white; border: none; padding: 12px 24px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; box-shadow: 0px 4px 6px rgba(0,0,0,0.1);">☕ Clicca qui per offrirmi un caffè (PayPal)</button></a></div>', unsafe_allow_html=True)
-
-st.markdown("<br><hr>", unsafe_allow_html=True)
-st.write("© 2026 RailFlow Pisa-San Giuliano Terme.")
-st.markdown("📧 Contatto supporto e pubblicità: [info.railflow@gmail.com](mailto:info.railflow@gmail.com)")
-st.caption("Sviluppato da Team RailFlow. Servizio indipendente non affiliato a FS.")
+st.caption("✨ IN COLLABORAZIONE
