@@ -100,18 +100,8 @@ for i, pl in enumerate(varchi):
         m_p = tr["ora_p"] * 60 + tr["min_p"] + tr["ritardo"]
         durata = 10 if tr["ora_p"] == 21 and tr["min_p"] == 58 else 6
         if tr["direzione"] == "PISA":
-            ini, fin = m_p - 6 + pl["pisa"], m_p + duration + 1 + estensione
+            ini, fin = m_p - 6 + pl["pisa"], m_p + durata + 1 + estensione
         else:
             ini, fin = m_p - 6 + pl["lucca"], m_p + 5 + 2 + estensione
         if ini <= minuti_ora <= fin:
-            chiuso, info_pl = True, f"REG {tr['num']} ⏱️ {ini//60:02d}:{ini%60:02d} - {fin//60:02d}:{fin%60:02d}"
-            break
-    if not chiuso and treni_futuri:
-        _, p_tr = min(treni_futuri, key=lambda x: x[0])
-        info_pl = f"Libero. Prossimo treno REG {p_tr['num']} alle ore {p_tr['ora_p']:02d}:{p_tr['min_p']:02d}"
-    if chiuso: st.error(f"🔴 **CHIUSO** - {pl['nome']}\n\n{info_pl}")
-    else: st.success(f"🟢 **APERTO** - {pl['nome']}\n\n{info_pl}")
-
-st.markdown("---")
-st.markdown('<div style="text-align: center;"><a href="https://www.paypal.com/paypalme/rebolo73" target="_blank"><button style="background-color: #FF813F; color: white; border: none; padding: 10px 20px; font-weight: bold; border-radius: 8px; cursor: pointer;">☕ Offrimi un caffè</button></a></div>', unsafe_allow_html=True)
-st.write("© 2026 RailFlow. info.railflow@gmail.com")
+            chiuso, info_pl = True, f"REG {tr['num']} ⏱️ {ini//60:02d
