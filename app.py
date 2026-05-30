@@ -2,9 +2,9 @@ import streamlit as st
 import datetime, pytz, requests, os
 from streamlit_autorefresh import st_autorefresh
 
-st.set_page_config(page_title="RailFlow", page_icon="🚦", layout="centered")
-st.title("Pisa - San Giuliano RailFlow")
-st.subheader("Stato passaggi a livello")
+st.set_page_config(page_title="BinarioLibero Pisa", page_icon="🚦", layout="centered")
+st.title("⚡ BinarioLibero")
+st.subheader("Meteo passaggi a livello: Pisa - San Giuliano")
 st_autorefresh(interval=15000, key="datarefresh")
 
 if st.button("🔄 Aggiorna"):
@@ -122,4 +122,4 @@ for i, pl in enumerate(varchi):
 
 st.markdown("---")
 st.markdown('<div style="text-align: center;"><a href="https://www.paypal.com/paypalme/rebolo73" target="_blank"><button style="background-color: #FF813F; color: white; border: none; padding: 10px 20px; font-weight: bold; border-radius: 8px; cursor: pointer;">☕ Offrimi un caffè</button></a></div>', unsafe_allow_html=True)
-st.write("© 2026 RailFlow. info.railflow@gmail.com")
+st.write("© 2026 BinarioLibero Pisa. info.railflow@gmail.com")
