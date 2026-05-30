@@ -91,34 +91,69 @@ st.link_button("📩 Diventa Sponsor", "mailto:info.railflow@gmail.com?subject=S
 st.markdown("---")
 st.write("### 🚊 STATO VARCHI")
 
+# Modificati i parametri interni per rispecchiare lo sfasamento in minuti reali
 varchi = [
-    {"nome": "San Giuliano Terme", "pisa": 0, "lucca": 4},
-    {"nome": "Via Ulisse Dini (Gello)", "pisa": 2, "lucca": 3},
-    {"nome": "Via XXIV Maggio (Pisa)", "pisa": 6, "lucca": 1},
-    {"nome": "Via di Gagno (Pisa)", "pisa": 5, "lucca": 2},
-    {"nome": "Via Ugo Rindi (Pisa)", "pisa": 7, "lucca": 0}
+    {"nome": "San Giuliano Terme", "pisa_ant": 0, "pisa_dur": 5, "luc_ant": -2, "luc_dur": 7},
+    {"nome": "Via Ulisse Dini (Gello)", "pisa_ant": 2, "pisa_dur": 5, "luc_ant": -1, "luc_dur": 6},
+    {"nome": "Via XXIV Maggio (Pisa)", "pisa_ant": 6, "pisa_dur": 5, "luc_ant": 0, "luc_dur": 5},
+    {"nome": "Via di Gagno (Pisa)", "pisa_ant": 5, "pisa_dur": 5, "luc_ant": 0, "luc_dur": 5},
+    {"nome": "Via Ugo Rindi (Pisa)", "pisa_ant": 7, "pisa_dur": 5, "luc_ant": 0, "luc_dur": 5}
 ]
 
 for i, pl in enumerate(varchi):
     if i > 0: st.write("⬇️")
-    chiuso, info_pl = False, "Strada libera"
+    chiuso, info_pl = False, ""
+    
+    # 1. Analisi treno in transito immediato
     for tr in lista_treni:
         m_p = tr["ora_p"] * 60 + tr["min_p"] + tr["ritardo"]
-        durata = 10 if tr["ora_p"] == 21 and tr["min_p"] == 58 else 6
         if tr["direzione"] == "PISA":
-            ini, fin = m_p - 6 + pl["pisa"], m_p + durata + 1 + estensione
+            ini = m_p - 6 + pl["pisa_ant"]
+            fin = m_p + pl["pisa_dur"] + estensione
         else:
-            ini, fin = m_p - 6 + pl["lucca"], m_p + 5 + 2 + estensione
+            # Treno verso Lucca: i varchi di Pisa chiudono a -6 dalla partenza, 
+            # quelli successivi scalano in avanti basandosi sulla marcia del treno
+            base_pisa = m_p - 6
+            ini = base_pisa + pl["luc_ant"] if pl["luc_ant"] >= 0 else m_p + pl["luc_ant"]
+            fin = m_p + pl["luc_dur"] + estensione
+            
         if ini <= minuti_ora <= fin:
             t_ini = f"{ini//60:02d}:{ini%60:02d}"
             t_fin = f"{fin//60:02d}:{fin%60:02d}"
-            chiuso, info_pl = True, f"REG {tr['num']} ⏱️ {t_ini} - {t_fin}"
+            chiuso = True
+            info_pl = f"CHIUSO ORA ⏱️ dalle {t_ini} alle {t_fin} (REG {tr['num']} per {tr['direzione'].title()})"
             break
+            
+    # 2. Analisi prossima chiusura programmata
     if not chiuso and treni_futuri:
-        _, p_tr = min(treni_futuri, key=lambda x: x[0])
-        info_pl = f"Libero. Prossimo treno REG {p_tr['num']} alle ore {p_tr['ora_p']:02d}:{p_tr['min_p']:02d}"
-    if chiuso: st.error(f"🔴 **CHIUSO** - {pl['nome']}\n\n{info_pl}")
-    else: st.success(f"🟢 **APERTO** - {pl['nome']}\n\n{info_pl}")
+        prossimi_blocchi = []
+        for _, tr in treni_futuri:
+            m_p = tr["ora_p"] * 60 + tr["min_p"] + tr["ritardo"]
+            if tr["direzione"] == "PISA":
+                ini = m_p - 6 + pl["pisa_ant"]
+                fin = m_p + pl["pisa_dur"] + estensione
+            else:
+                base_pisa = m_p - 6
+                ini = base_pisa + pl["luc_ant"] if pl["luc_ant"] >= 0 else m_p + pl["luc_ant"]
+                fin = m_p + pl["luc_dur"] + estensione
+            if ini > minuti_ora:
+                prossimi_blocchi.append((ini, fin, tr["num"]))
+        
+        if prossimi_blocchi:
+            p_ini, p_fin, p_num = min(prossimi_blocchi, key=lambda x: x[0])
+            t_ini = f"{p_ini//60:02d}:{p_ini%60:02d}"
+            t_fin = f"{p_fin//60:02d}:{p_fin%60:02d}"
+            info_pl = f"Libero. Prossima chiusura prevista: ⏱️ {t_ini} - {t_fin} (REG {p_num})"
+        else:
+            info_pl = "Libero. Nessun transito imminente programmato."
+            
+    elif not chiuso and not treni_futuri:
+        info_pl = "Libero. Servizio terminato per oggi."
+
+    if chiuso: 
+        st.error(f"🔴 **{pl['nome']}**\n\n{info_pl}")
+    else: 
+        st.success(f"🟢 **{pl['nome']}**\n\n{info_pl}")
 
 st.markdown("---")
 st.markdown('<div style="text-align: center;"><a href="https://www.paypal.com/paypalme/rebolo73" target="_blank"><button style="background-color: #FF813F; color: white; border: none; padding: 10px 20px; font-weight: bold; border-radius: 8px; cursor: pointer;">☕ Offrimi un caffè</button></a></div>', unsafe_allow_html=True)
