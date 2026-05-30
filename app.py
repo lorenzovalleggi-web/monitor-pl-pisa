@@ -95,7 +95,8 @@ varchi = [
     {"nome": "San Giuliano Terme", "pisa": 0, "lucca": 4},
     {"nome": "Via Ulisse Dini (Gello)", "pisa": 2, "lucca": 3},
     {"nome": "Via di Gagno (Pisa)", "pisa": 5, "lucca": 2},
-    {"nome": "Via Ugo Rindi (Pisa)", "pisa": 7, "lucca": 0}
+    {"nome": "Via Ugo Rindi (Pisa)", "pisa": 7, "lucca": 0},
+    {"nome": "Via XXIV Maggio (Pisa)", "pisa": 7, "lucca": 0}
 ]
 
 for i, pl in enumerate(varchi):
