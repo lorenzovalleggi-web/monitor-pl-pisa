@@ -58,4 +58,68 @@ lista_treni = recupera_treni()
 if not lista_treni:
     for tp in ORARIO_TABELLA:
         if (tp["ora"] * 60 + tp["min"]) > minuti_ora:
-            lista_treni.append({"ora_p": tp["ora"], "min_p": tp["min"], "ritardo": 0, "direzione": tp
+            lista_treni.append({"ora_p": tp["ora"], "min_p": tp["min"], "ritardo": 0, "direzione": tp["dir"], "num": tp["num"], "fonte": "TABELLA"})
+
+ritardo_rilevato = any(t.get("fonte") == "LIVE" and t.get("ritardo", 0) >= 4 for t in lista_treni)
+estensione = min(max([t.get("ritardo", 0) for t in lista_treni if t.get("fonte") == "LIVE"] + [0]), 12)
+
+treni_futuri = [(t["ora_p"] * 60 + t["min_p"] + t["ritardo"], t) for t in lista_treni if (t["ora_p"] * 60 + t["min_p"] + t["ritardo"]) > minuti_ora]
+
+if treni_futuri:
+    m_tot, prox = min(treni_futuri, key=lambda x: x[0])
+    nota = f" (+{prox['ritardo']} min)" if prox.get("fonte") == "LIVE" and prox['ritardo'] > 0 else " (Da orario)"
+    st.info(f"📋 Prossimo treno: **REG N. {prox['num']}** dir. {prox['direzione'].title()} alle **{m_tot // 60:02d}:{m_tot % 60:02d}**{nota}")
+else:
+    st.info("📋 Servizio terminato o nessun transito pianificato.")
+
+if ritardo_rilevato:
+    st.warning("⚠️ Rallentamenti sulla linea. Chiusure prolungate.")
+
+st.markdown("---")
+c1, c2, c3 = st.columns(3)
+with c1:
+    if os.path.exists("sponsor1.jpg"): st.image("sponsor1.jpg", use_container_width=True)
+    st.markdown("[Il Cappellaio Matto](https://m.facebook.com/ilcappellaiomatto)")
+with c2:
+    if os.path.exists("sponsor2.jpg"): st.image("sponsor2.jpg", use_container_width=True)
+    st.markdown("[Sponsor 2]")
+with c3:
+    if os.path.exists("sponsor3.jpg"): st.image("sponsor3.jpg", use_container_width=True)
+    st.markdown("[Sponsor 3]")
+
+st.link_button("📩 Diventa Sponsor", "mailto:info.railflow@gmail.com?subject=Sponsor")
+st.markdown("---")
+st.write("### 🚊 STATO VARCHI")
+
+varchi = [
+    {"nome": "San Giuliano Terme", "pisa": 0, "lucca": 4},
+    {"nome": "Via Ulisse Dini (Gello)", "pisa": 2, "lucca": 3},
+    {"nome": "Via XXIV Maggio (Pisa)", "pisa": 6, "lucca": 1},
+    {"nome": "Via di Gagno (Pisa)", "pisa": 5, "lucca": 2},
+    {"nome": "Via Ugo Rindi (Pisa)", "pisa": 7, "lucca": 0}
+]
+
+for i, pl in enumerate(varchi):
+    if i > 0: st.write("⬇️")
+    chiuso, info_pl = False, "Strada libera"
+    for tr in lista_treni:
+        m_p = tr["ora_p"] * 60 + tr["min_p"] + tr["ritardo"]
+        durata = 10 if tr["ora_p"] == 21 and tr["min_p"] == 58 else 6
+        if tr["direzione"] == "PISA":
+            ini, fin = m_p - 6 + pl["pisa"], m_p + durata + 1 + estensione
+        else:
+            ini, fin = m_p - 6 + pl["lucca"], m_p + 5 + 2 + estensione
+        if ini <= minuti_ora <= fin:
+            t_ini = f"{ini//60:02d}:{ini%60:02d}"
+            t_fin = f"{fin//60:02d}:{fin%60:02d}"
+            chiuso, info_pl = True, f"REG {tr['num']} ⏱️ {t_ini} - {t_fin}"
+            break
+    if not chiuso and treni_futuri:
+        _, p_tr = min(treni_futuri, key=lambda x: x[0])
+        info_pl = f"Libero. Prossimo treno REG {p_tr['num']} alle ore {p_tr['ora_p']:02d}:{p_tr['min_p']:02d}"
+    if chiuso: st.error(f"🔴 **CHIUSO** - {pl['nome']}\n\n{info_pl}")
+    else: st.success(f"🟢 **APERTO** - {pl['nome']}\n\n{info_pl}")
+
+st.markdown("---")
+st.markdown('<div style="text-align: center;"><a href="https://www.paypal.com/paypalme/rebolo73" target="_blank"><button style="background-color: #FF813F; color: white; border: none; padding: 10px 20px; font-weight: bold; border-radius: 8px; cursor: pointer;">☕ Offrimi un caffè</button></a></div>', unsafe_allow_html=True)
+st.write("© 2026 RailFlow. info.railflow@gmail.com")
