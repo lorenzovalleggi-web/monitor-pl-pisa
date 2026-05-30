@@ -79,7 +79,7 @@ st.markdown("---")
 c1, c2, c3 = st.columns(3)
 with c1:
     if os.path.exists("sponsor1.jpg"): st.image("sponsor1.jpg", use_container_width=True)
-    st.markdown("[Il Cappellaio Matto](https://www.facebook.com/profile.php?id=100063715694364)")
+    st.markdown("[Il Cappellaio Matto](https://www.facebook.com/ilcappellaiomatto)")
 with c2:
     if os.path.exists("sponsor2.jpg"): st.image("sponsor2.jpg", use_container_width=True)
     st.markdown("[Sponsor 2]")
