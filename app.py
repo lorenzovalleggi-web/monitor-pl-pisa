@@ -61,7 +61,8 @@ if not lista_treni:
             lista_treni.append({"ora_p": tp["ora"], "min_p": tp["min"], "ritardo": 0, "direzione": tp["dir"], "num": tp["num"], "fonte": "TABELLA"})
 
 ritardo_rilevato = any(t.get("fonte") == "LIVE" and t.get("ritardo", 0) >= 4 for t in lista_treni)
-estensione = min(max([t.get("ritardo", 0) for t in lista_treni if t.get("fonte") == "LIVE"] + [0]), 12)
+# Estensione dinamica applicata ESCLUSIVAMENTE se c'è un ritardo reale segnalato da Viaggiatreno
+estensione = min(max([t.get("ritardo", 0) for t in lista_treni if t.get("fonte") == "LIVE"] + [0]), 12) if ritardo_rilevato else 0
 
 treni_futuri = [(t["ora_p"] * 60 + t["min_p"] + t["ritardo"], t) for t in lista_treni if (t["ora_p"] * 60 + t["min_p"] + t["ritardo"]) > minuti_ora]
 
@@ -91,28 +92,28 @@ st.link_button("📩 Diventa Sponsor", "mailto:info.railflow@gmail.com?subject=S
 st.markdown("---")
 st.write("### 🚊 STATO VARCHI")
 
+# Ricalibrati i minuti di durata (dur) per riflettere passaggi veloci di 4-5 minuti totali
 varchi = [
-    {"nome": "San Giuliano Terme", "pisa_ant": 0, "pisa_dur": 5, "luc_ant": -2, "luc_dur": 7},
-    {"nome": "Via Ulisse Dini (Gello)", "pisa_ant": 2, "pisa_dur": 5, "luc_ant": -1, "luc_dur": 6},
-    {"nome": "Via XXIV Maggio (Pisa)", "pisa_ant": 6, "pisa_dur": 5, "luc_ant": 0, "luc_dur": 5},
-    {"nome": "Via di Gagno (Pisa)", "pisa_ant": 5, "pisa_dur": 5, "luc_ant": 0, "luc_dur": 5},
-    {"nome": "Via Ugo Rindi (Pisa)", "pisa_ant": 7, "pisa_dur": 5, "luc_ant": 0, "luc_dur": 5}
+    {"nome": "San Giuliano Terme", "pisa_ant": 0, "pisa_dur": 5, "luc_ant": -1, "luc_dur": 5},
+    {"nome": "Via Ulisse Dini (Gello)", "pisa_ant": 2, "pisa_dur": 4, "luc_ant": 0, "luc_dur": 4},
+    {"nome": "Via XXIV Maggio (Pisa)", "pisa_ant": 5, "pisa_dur": 4, "luc_ant": 1, "luc_dur": 4},
+    {"nome": "Via di Gagno (Pisa)", "pisa_ant": 5, "pisa_dur": 4, "luc_ant": 1, "luc_dur": 4},
+    {"nome": "Via Ugo Rindi (Pisa)", "pisa_ant": 6, "pisa_dur": 4, "luc_ant": 2, "luc_dur": 4}
 ]
 
 for i, pl in enumerate(varchi):
     if i > 0: st.write("⬇️")
     chiuso, info_pl = False, ""
     
-    # 1. Calcolo stato attuale (PL Chiuso)
     for tr in lista_treni:
         m_p = tr["ora_p"] * 60 + tr["min_p"] + tr["ritardo"]
         if tr["direzione"] == "PISA":
-            ini = m_p - 6 + pl["pisa_ant"]
-            fin = m_p + pl["pisa_dur"] + estensione
+            ini = m_p - 5 + pl["pisa_ant"]
+            fin = ini + pl["pisa_dur"] + estensione
         else:
-            base_pisa = m_p - 6
-            ini = base_pisa + pl["luc_ant"] if pl["luc_ant"] >= 0 else m_p + pl["luc_ant"]
-            fin = m_p + pl["luc_dur"] + estensione
+            base_pisa = m_p - 5
+            ini = base_pisa + pl["luc_ant"]
+            fin = ini + pl["luc_dur"] + estensione
             
         if ini <= minuti_ora <= fin:
             t_ini = f"{ini//60:02d}:{ini%60:02d}"
@@ -121,18 +122,17 @@ for i, pl in enumerate(varchi):
             info_pl = f"🛑 **CHIUSO** | Inizio: **{t_ini}** ➡️ Riapertura prevista: **{t_fin}**\n\n*(REG {tr['num']} per {tr['direzione'].title()})*"
             break
             
-    # 2. Calcolo avviso futuro (PL Aperto)
     if not chiuso and treni_futuri:
         prossimi_blocchi = []
         for _, tr in treni_futuri:
             m_p = tr["ora_p"] * 60 + tr["min_p"] + tr["ritardo"]
             if tr["direzione"] == "PISA":
-                ini = m_p - 6 + pl["pisa_ant"]
-                fin = m_p + pl["pisa_dur"] + estensione
+                ini = m_p - 5 + pl["pisa_ant"]
+                fin = ini + pl["pisa_dur"] + estensione
             else:
-                base_pisa = m_p - 6
-                ini = base_pisa + pl["luc_ant"] if pl["luc_ant"] >= 0 else m_p + pl["luc_ant"]
-                fin = m_p + pl["luc_dur"] + estensione
+                base_pisa = m_p - 5
+                ini = base_pisa + pl["luc_ant"]
+                fin = ini + pl["luc_dur"] + estensione
             if ini > minuti_ora:
                 prossimi_blocchi.append((ini, fin, tr["num"]))
         
@@ -147,7 +147,6 @@ for i, pl in enumerate(varchi):
     elif not chiuso and not treni_futuri:
         info_pl = "🟢 **APERTO** | Servizio terminato per oggi."
 
-    # Interfaccia grafica pulita
     if chiuso: 
         st.error(f"### {pl['nome']}\n{info_pl}")
     else: 
