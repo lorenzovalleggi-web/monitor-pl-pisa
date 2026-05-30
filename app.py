@@ -79,7 +79,7 @@ st.markdown("---")
 c1, c2, c3 = st.columns(3)
 with c1:
     if os.path.exists("sponsor1.jpg"): st.image("sponsor1.jpg", use_container_width=True)
-    st.markdown("[Il Cappellaio Matto](https://www.facebook.com/ilcappellaiomatto)")
+    st.markdown("[Il Cappellaio Matto](https://m.facebook.com/ilcappellaiomatto)")
 with c2:
     if os.path.exists("sponsor2.jpg"): st.image("sponsor2.jpg", use_container_width=True)
     st.markdown("[Sponsor 2]")
@@ -100,7 +100,7 @@ for i, pl in enumerate(varchi):
         m_p = tr["ora_p"] * 60 + tr["min_p"] + tr["ritardo"]
         durata = 10 if tr["ora_p"] == 21 and tr["min_p"] == 58 else 6
         if tr["direzione"] == "PISA":
-            ini, fin = m_p - 6 + pl["pisa"], m_p + durata + 1 + estensione
+            ini, fin = m_p - 6 + pl["pisa"], m_p + duration + 1 + estensione
         else:
             ini, fin = m_p - 6 + pl["lucca"], m_p + 5 + 2 + estensione
         if ini <= minuti_ora <= fin:
