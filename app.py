@@ -105,19 +105,4 @@ def recupera_treni():
             res = requests.get(f"http://www.viaggiatreno.it/viaggiatrenonew/api/esitoPartenze/{v_id}/{dt_str}", timeout=5).json()
             for t in res.get('tabellone', []):
                 dest = t.get('destinazione', '').upper()
-                if f_key in dest or ("LIVORNO" in dest and f_key == "PISA") or (("PISTOIA" in dest or "FIRENZE" in dest) and f_key == "LUCCA"):
-                    h, m = map(int, t.get('orarioProgrammato', '').split(':'))
-                    rit = t.get('ritardo', 0)
-                    rit = 0 if rit in ["---", None] else int(rit)
-                    treni.append({"ora_p": h, "min_p": m, "ritardo": rit, "direzione": d_name, "num": t.get('numeroTreno'), "fonte": "LIVE"})
-        except: pass
-    return treni
-
-lista_treni = recupera_treni()
-if not lista_treni:
-    for tp in ORARIO_TABELLA:
-        if (tp["ora"] * 60 + tp["min"]) > minuti_ora:
-            lista_treni.append({"ora_p": tp["ora"], "min_p": tp["min"], "ritardo": 0, "direzione": tp["dir"], "num": tp["num"], "fonte": "TABELLA"})
-
-ritardo_rilevato = any(t.get("fonte") == "LIVE" and t.get("ritardo", 0) >= 4 for t in lista_treni)
-estensione = min(max(
+                if f_key in dest or ("LIVORNO" in dest and f_key == "PISA") or (("PISTO
