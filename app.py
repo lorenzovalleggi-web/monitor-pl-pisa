@@ -2,17 +2,58 @@ import streamlit as st
 import datetime, pytz, requests, os
 from streamlit_autorefresh import st_autorefresh
 
+# Configurazione Pagina
 st.set_page_config(page_title="BinarioLibero Pisa", page_icon="🚦", layout="centered")
-st.title("⚡ BinarioLibero")
-st.subheader("Meteo passaggi a livello: Pisa - San Giuliano")
+
+# --- CUSTOM CSS PER CAMBIARE SFONDO E STILE ---
+st.markdown("""
+    <style>
+    /* Sfondo principale dell'app */
+    .stApp {
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        color: #f8fafc;
+    }
+    
+    /* Personalizzazione Titoli e Sottotitoli */
+    h1, h2, h3, p {
+        color: #f8fafc !important;
+    }
+    
+    /* Stile dei riquadri Info/Success/Error (più moderni) */
+    .stAlert {
+        border-radius: 12px !important;
+        border: none !important;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important;
+    }
+
+    /* Rende il pulsante Aggiorna più visibile */
+    .stButton>button {
+        background-color: #334155 !important;
+        color: white !important;
+        border-radius: 8px !important;
+        border: 1px solid #475569 !important;
+        width: 100%;
+    }
+    
+    /* Linea di separazione */
+    hr {
+        border-top: 1px solid #334155 !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+# Autorefresh ogni 15 secondi
 st_autorefresh(interval=15000, key="datarefresh")
 
-if st.button("🔄 Aggiorna"):
+st.title("⚡ BinarioLibero")
+st.subheader("Meteo passaggi a livello: Pisa - San Giuliano")
+
+if st.button("🔄 Aggiorna Stato In Tempo Reale"):
     st.rerun()
 
 fuso = pytz.timezone('Europe/Rome')
 ora_adesso = datetime.datetime.now(fuso)
-st.write(f"Aggiornato: **{ora_adesso.strftime('%H:%M:%S')}**")
+st.write(f"Ultimo controllo: **{ora_adesso.strftime('%H:%M:%S')}**")
 minuti_ora = ora_adesso.hour * 60 + ora_adesso.minute
 
 ORARIO_TABELLA = [
@@ -70,36 +111,34 @@ for t in lista_treni:
     if m_riferimento > minuti_ora:
         treni_futuri.append((m_riferimento, t))
 
+# Info Prossimo Treno
 if treni_futuri:
     m_tot, prox = min(treni_futuri, key=lambda x: x[0])
     h_visualizza = (prox["ora_p"] * 60 + prox["min_p"] + prox["ritardo"])
     nota = f" (+{prox['ritardo']} min)" if prox.get("fonte") == "LIVE" and prox['ritardo'] > 0 else " (Da orario)"
     freccia_info = "➡️ LUCCA" if prox['direzione'] == "LUCCA" else "⬅️ PISA"
-    st.info(f"📋 Prossimo treno: **REG N. {prox['num']}** ({freccia_info}) previsto alle **{h_visualizza // 60:02d}:{h_visualizza % 60:02d}**{nota}\n\n*⚠️ Nota: Eventuali transiti di treni merci o di manutenzione non sono tracciati.*")
+    st.info(f"📋 **PROSSIMO TRENO**: REG {prox['num']} ({freccia_info}) alle **{h_visualizza // 60:02d}:{h_visualizza % 60:02d}**{nota}\n\n*Merci o manutenzione non tracciati.*")
 else:
-    st.info("""📋 Servizio passeggeri terminato o nessun transito imminente.
-
-*⚠️ Nota: I passaggi a livello potrebbero chiudersi fuori orario per transiti straordinari di treni merci o di manutenzione.*""")
+    st.info("📋 **Servizio passeggeri terminato.**\n\n*Possibili chiusure fuori orario per treni merci o lavori.*")
 
 if ritardo_rilevato:
-    st.warning("⚠️ Rallentamenti sulla linea. Chiusure prolungate.")
+    st.warning("⚠️ **RALLENTAMENTI SULLA LINEA.** Chiusure prolungate.")
 
+# Sponsor Section
 st.markdown("---")
 c1, c2, c3 = st.columns(3)
 mail_sponsor = "mailto:info.railflow@gmail.com?subject=Richiesta%20Sponsorizzazione"
 
 with c1:
     if os.path.exists("sponsor1.jpg"): st.image("sponsor1.jpg", use_container_width=True)
-    st.link_button("🎩 Il Cappellaio Matto", "https://www.facebook.com/ilcappellaiomattopisa")
+    st.link_button("🎩 Cappellaio", "https://www.facebook.com/ilcappellaiomattopisa")
 with c2:
     if os.path.exists("sponsor2.jpg"): st.image("sponsor2.jpg", use_container_width=True)
-    st.link_button("🤝 Spazio Libero", mail_sponsor)
+    st.link_button("🤝 Sponsor", mail_sponsor)
 with c3:
     if os.path.exists("sponsor3.jpg"): st.image("sponsor3.jpg", use_container_width=True)
-    st.link_button("🤝 Spazio Libero", mail_sponsor)
+    st.link_button("🤝 Sponsor", mail_sponsor)
 
-st.markdown("---")
-st.link_button("📩 Diventa Sponsor", mail_sponsor)
 st.markdown("---")
 st.write("### 🚊 STATO VARCHI")
 
@@ -130,7 +169,7 @@ for i, pl in enumerate(varchi):
             t_ini = f"{ini//60:02d}:{ini%60:02d}"
             t_fin = f"{fin//60:02d}:{fin%60:02d}"
             chiuso = True
-            info_pl = f"🛑 **CHIUSO** | Inizio: **{t_ini}** ➡️ Riapertura prevista: **{t_fin}**\n\n*Senso di marcia: {senso} (REG {tr['num']})*"
+            info_pl = f"🛑 **CHIUSO** | Fino alle: **{t_fin}**\n\n*Direzione: {senso}*"
             break
             
     if not chiuso and treni_futuri:
@@ -151,38 +190,30 @@ for i, pl in enumerate(varchi):
         if prossimi_blocchi:
             p_ini, p_fin, p_num, p_senso = min(prossimi_blocchi, key=lambda x: x[0])
             t_ini = f"{p_ini//60:02d}:{p_ini%60:02d}"
-            t_fin = f"{p_fin//60:02d}:{p_fin%60:02d}"
-            info_pl = f"🟢 **APERTO** | Prossima chiusura: **{t_ini}** (Riapre alle **{t_fin}**)\n\n*Senso di marcia previsto: {p_senso} (REG {p_num})*"
+            info_pl = f"🟢 **APERTO** | Chiusura: **{t_ini}**\n\n*Direzione: {p_senso}*"
         else:
-            info_pl = "🟢 **APERTO** | Nessun transito imminente rilevato."
+            info_pl = "🟢 **APERTO** | Nessun transito imminente."
             
     elif not chiuso and not treni_futuri:
-        info_pl = "🟢 **APERTO** | Servizio passeggeri terminato."
+        info_pl = "🟢 **APERTO** | Fine servizio."
 
     if chiuso: 
-        st.error(f"### {pl['nome']}\n{info_pl}")
+        st.error(f"#### {pl['nome']}\n{info_pl}")
     else: 
-        st.success(f"### {pl['nome']}\n{info_pl}")
+        st.success(f"#### {pl['nome']}\n{info_pl}")
 
-# --- SEZIONE DONAZIONI AGGIORNATA ED EMOTIVA ---
+# Support Section
 st.markdown("---")
 with st.container():
-    st.write("### ☕ Sostieni BinarioLibero")
-    st.write(
-        "BinarioLibero è un servizio indipendente, gratuito e privo di pubblicità invasiva. "
-        "L'infrastruttura richiede costi vivi mensili per server, traffico dati e interrogazione in tempo reale dei sistemi ferroviari. "
-        "Se l'applicazione ti ha aiutato a evitare una coda e a risparmiare tempo prezioso, considera una piccola donazione libera per mantenerla attiva!"
-    )
-    
-    # Pulsante centrato e accattivante
+    st.write("### ☕ Sostieni il progetto")
+    st.write("Aiutaci a coprire i costi dei server per mantenere i dati attivi 24/7.")
     st.markdown(
-        '<div style="text-align: center; margin-top: 15px; margin-bottom: 15px;">'
+        '<div style="text-align: center; margin-top: 10px;">'
         '<a href="https://www.paypal.com/paypalme/rebolo73" target="_blank">'
-        '<button style="background-color: #FF813F; color: white; border: none; padding: 12px 28px; '
-        'font-weight: bold; border-radius: 8px; cursor: pointer; font-size: 16px; box-shadow: 0px 4px 6px rgba(0,0,0,0.1);">'
-        '☕ Offri un caffè per supportare il server'
+        '<button style="background-color: #FF813F; color: white; border: none; padding: 12px 24px; '
+        'font-weight: bold; border-radius: 8px; cursor: pointer; font-size: 16px;">'
+        '☕ Offri un caffè al server'
         '</button></a></div>', 
         unsafe_allow_html=True
     )
-st.markdown("---")
-st.write("© 2026 BinarioLibero Pisa. info.railflow@gmail.com")
+st.write("© 2026 BinarioLibero Pisa.")
