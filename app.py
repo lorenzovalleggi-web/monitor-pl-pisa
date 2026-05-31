@@ -61,7 +61,6 @@ if not lista_treni:
             lista_treni.append({"ora_p": tp["ora"], "min_p": tp["min"], "ritardo": 0, "direzione": tp["dir"], "num": tp["num"], "fonte": "TABELLA"})
 
 ritardo_rilevato = any(t.get("fonte") == "LIVE" and t.get("ritardo", 0) >= 4 for t in lista_treni)
-# Estensione dinamica applicata ESCLUSIVAMENTE se c'è un ritardo reale segnalato da Viaggiatreno
 estensione = min(max([t.get("ritardo", 0) for t in lista_treni if t.get("fonte") == "LIVE"] + [0]), 12) if ritardo_rilevato else 0
 
 treni_futuri = [(t["ora_p"] * 60 + t["min_p"] + t["ritardo"], t) for t in lista_treni if (t["ora_p"] * 60 + t["min_p"] + t["ritardo"]) > minuti_ora]
@@ -80,7 +79,7 @@ st.markdown("---")
 c1, c2, c3 = st.columns(3)
 with c1:
     if os.path.exists("sponsor1.jpg"): st.image("sponsor1.jpg", use_container_width=True)
-    st.markdown("[Il Cappellaio Matto](https://m.facebook.com/ilcappellaiomatto)")
+    st.markdown("[Il Cappellaio Matto](https://www.facebook.com/ilcappellaiomatto)")
 with c2:
     if os.path.exists("sponsor2.jpg"): st.image("sponsor2.jpg", use_container_width=True)
     st.markdown("[Sponsor 2]")
@@ -92,7 +91,6 @@ st.link_button("📩 Diventa Sponsor", "mailto:info.railflow@gmail.com?subject=S
 st.markdown("---")
 st.write("### 🚊 STATO VARCHI")
 
-# Ricalibrati i minuti di durata (dur) per riflettere passaggi veloci di 4-5 minuti totali
 varchi = [
     {"nome": "San Giuliano Terme", "pisa_ant": 0, "pisa_dur": 5, "luc_ant": -1, "luc_dur": 5},
     {"nome": "Via Ulisse Dini (Gello)", "pisa_ant": 2, "pisa_dur": 4, "luc_ant": 0, "luc_dur": 4},
