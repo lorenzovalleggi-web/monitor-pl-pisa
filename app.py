@@ -66,7 +66,6 @@ estensione = min(max([t.get("ritardo", 0) for t in lista_treni if t.get("fonte")
 treni_futuri = []
 for t in lista_treni:
     m_p = t["ora_p"] * 60 + t["min_p"] + t["ritardo"]
-    # Calcolo inizio onda per capire se il treno è futuro
     m_riferimento = (m_p - 3) if t["direzione"] == "LUCCA" else (m_p + 6)
     if m_riferimento > minuti_ora:
         treni_futuri.append((m_riferimento, t))
@@ -75,7 +74,8 @@ if treni_futuri:
     m_tot, prox = min(treni_futuri, key=lambda x: x[0])
     h_visualizza = (prox["ora_p"] * 60 + prox["min_p"] + prox["ritardo"])
     nota = f" (+{prox['ritardo']} min)" if prox.get("fonte") == "LIVE" and prox['ritardo'] > 0 else " (Da orario)"
-    st.info(f"📋 Prossimo treno: **REG N. {prox['num']}** dir. {prox['direzione'].title()} previsto alle **{h_visualizza // 60:02d}:{h_visualizza % 60:02d}**{nota}\n\n*⚠️ Nota: Eventuali transiti di treni merci o di manutenzione non sono tracciati.*")
+    freccia_info = "➡️ LUCCA" if prox['direzione'] == "LUCCA" else "⬅️ PISA"
+    st.info(f"📋 Prossimo treno: **REG N. {prox['num']}** ({freccia_info}) previsto alle **{h_visualizza // 60:02d}:{h_visualizza % 60:02d}**{nota}\n\n*⚠️ Nota: Eventuali transiti di treni merci o di manutenzione non sono tracciati.*")
 else:
     st.info("""📋 Servizio passeggeri terminato o nessun transito imminente.
 
@@ -103,7 +103,6 @@ st.link_button("📩 Diventa Sponsor", mail_sponsor)
 st.markdown("---")
 st.write("### 🚊 STATO VARCHI")
 
-# Struttura dei tempi riscritta e verificata geograficamente per entrambe le direzioni
 varchi = [
     {"nome": "San Giuliano Terme",     "pisa_ant": 2, "pisa_dur": 4, "luc_ant": 6,  "luc_dur": 4},
     {"nome": "Via Ulisse Dini (Gello)", "pisa_ant": 0, "pisa_dur": 4, "luc_ant": 8,  "luc_dur": 4},
@@ -118,18 +117,20 @@ for i, pl in enumerate(varchi):
     
     for tr in lista_treni:
         m_p = tr["ora_p"] * 60 + tr["min_p"] + tr["ritardo"]
-        if tr["direzione"] == "LUCCA": # Treno da Pisa verso Lucca
+        if tr["direzione"] == "LUCCA":
             ini = m_p + pl["pisa_ant"]
             fin = ini + pl["pisa_dur"] + estensione
-        else: # Treno da Lucca verso Pisa
+            senso = "➡️ LUCCA"
+        else:
             ini = m_p + pl["luc_ant"]
             fin = ini + pl["luc_dur"] + estensione
+            senso = "⬅️ PISA"
             
         if ini <= minuti_ora <= fin:
             t_ini = f"{ini//60:02d}:{ini%60:02d}"
             t_fin = f"{fin//60:02d}:{fin%60:02d}"
             chiuso = True
-            info_pl = f"🛑 **CHIUSO** | Inizio: **{t_ini}** ➡️ Riapertura prevista: **{t_fin}**\n\n*(REG {tr['num']} per {tr['direzione'].title()})*"
+            info_pl = f"🛑 **CHIUSO** | Inizio: **{t_ini}** ➡️ Riapertura prevista: **{t_fin}**\n\n*Senso di marcia: {senso} (REG {tr['num']})*"
             break
             
     if not chiuso and treni_futuri:
@@ -139,17 +140,19 @@ for i, pl in enumerate(varchi):
             if tr["direzione"] == "LUCCA":
                 ini = m_p + pl["pisa_ant"]
                 fin = ini + pl["pisa_dur"] + estensione
+                senso = "➡️ LUCCA"
             else:
                 ini = m_p + pl["luc_ant"]
                 fin = ini + pl["luc_dur"] + estensione
+                senso = "⬅️ PISA"
             if ini > minuti_ora:
-                prossimi_blocchi.append((ini, fin, tr["num"]))
+                prossimi_blocchi.append((ini, fin, tr["num"], senso))
         
         if prossimi_blocchi:
-            p_ini, p_fin, p_num = min(prossimi_blocchi, key=lambda x: x[0])
+            p_ini, p_fin, p_num, p_senso = min(prossimi_blocchi, key=lambda x: x[0])
             t_ini = f"{p_ini//60:02d}:{p_ini%60:02d}"
             t_fin = f"{p_fin//60:02d}:{p_fin%60:02d}"
-            info_pl = f"🟢 **APERTO** | Prossima chiusura: **{t_ini}** (Riapre alle **{t_fin}**)\n\n*Transito programmato: REG {p_num}*"
+            info_pl = f"🟢 **APERTO** | Prossima chiusura: **{t_ini}** (Riapre alle **{t_fin}**)\n\n*Senso di marcia previsto: {p_senso} (REG {p_num})*"
         else:
             info_pl = "🟢 **APERTO** | Nessun transito imminente rilevato."
             
