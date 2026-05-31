@@ -164,6 +164,25 @@ for i, pl in enumerate(varchi):
     else: 
         st.success(f"### {pl['nome']}\n{info_pl}")
 
+# --- SEZIONE DONAZIONI AGGIORNATA ED EMOTIVA ---
 st.markdown("---")
-st.markdown('<div style="text-align: center;"><a href="https://www.paypal.com/paypalme/rebolo73" target="_blank"><button style="background-color: #FF813F; color: white; border: none; padding: 10px 20px; font-weight: bold; border-radius: 8px; cursor: pointer;">☕ Offrimi un caffè</button></a></div>', unsafe_allow_html=True)
+with st.container():
+    st.write("### ☕ Sostieni BinarioLibero")
+    st.write(
+        "BinarioLibero è un servizio indipendente, gratuito e privo di pubblicità invasiva. "
+        "L'infrastruttura richiede costi vivi mensili per server, traffico dati e interrogazione in tempo reale dei sistemi ferroviari. "
+        "Se l'applicazione ti ha aiutato a evitare una coda e a risparmiare tempo prezioso, considera una piccola donazione libera per mantenerla attiva!"
+    )
+    
+    # Pulsante centrato e accattivante
+    st.markdown(
+        '<div style="text-align: center; margin-top: 15px; margin-bottom: 15px;">'
+        '<a href="https://www.paypal.com/paypalme/rebolo73" target="_blank">'
+        '<button style="background-color: #FF813F; color: white; border: none; padding: 12px 28px; '
+        'font-weight: bold; border-radius: 8px; cursor: pointer; font-size: 16px; box-shadow: 0px 4px 6px rgba(0,0,0,0.1);">'
+        '☕ Offri un caffè per supportare il server'
+        '</button></a></div>', 
+        unsafe_allow_html=True
+    )
+st.markdown("---")
 st.write("© 2026 BinarioLibero Pisa. info.railflow@gmail.com")
