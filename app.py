@@ -193,4 +193,20 @@ with c1:
     st.link_button("🎩 Cappellaio Matto", "https://www.facebook.com/ilcappellaiomattopisa")
 
 with c2:
-    if os.path.exists("sponsor2.jpg"):
+    if os.path.exists("sponsor2.jpg"): 
+        st.image("sponsor2.jpg", use_container_width=True)
+    else:
+        st.markdown('<div class="sponsor-box">Spazio Disponibile<br>🤝</div>', unsafe_allow_html=True)
+    st.link_button("📢 Diventa Sponsor", mail_sponsor)
+
+with c3:
+    if os.path.exists("sponsor3.jpg"): 
+        st.image("sponsor3.jpg", use_container_width=True)
+    else:
+        st.markdown('<div class="sponsor-box">Spazio Disponibile<br>🤝</div>', unsafe_allow_html=True)
+    st.link_button("📢 Diventa Sponsor", mail_sponsor)
+
+st.markdown("---")
+st.write("### 🚊 STATO VARCHI")
+
+varchi =
