@@ -77,18 +77,20 @@ if ritardo_rilevato:
 
 st.markdown("---")
 c1, c2, c3 = st.columns(3)
+mail_sponsor = "mailto:info.railflow@gmail.com?subject=Richiesta%20Sponsorizzazione"
+
 with c1:
     if os.path.exists("sponsor1.jpg"): st.image("sponsor1.jpg", use_container_width=True)
     st.link_button("🎩 Il Cappellaio Matto", "https://www.facebook.com/ilcappellaiomatto")
 with c2:
     if os.path.exists("sponsor2.jpg"): st.image("sponsor2.jpg", use_container_width=True)
-    st.link_button("🤝 Sponsor 2", "https://binariolibero-pisa.streamlit.app")
+    st.link_button("🤝 Spazio Libero", mail_sponsor)
 with c3:
     if os.path.exists("sponsor3.jpg"): st.image("sponsor3.jpg", use_container_width=True)
-    st.link_button("🤝 Sponsor 3", "https://binariolibero-pisa.streamlit.app")
+    st.link_button("🤝 Spazio Libero", mail_sponsor)
 
 st.markdown("---")
-st.link_button("📩 Diventa Sponsor", "mailto:info.railflow@gmail.com?subject=Sponsor")
+st.link_button("📩 Diventa Sponsor", mail_sponsor)
 st.markdown("---")
 st.write("### 🚊 STATO VARCHI")
 
