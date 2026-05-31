@@ -63,12 +63,19 @@ if not lista_treni:
 ritardo_rilevato = any(t.get("fonte") == "LIVE" and t.get("ritardo", 0) >= 4 for t in lista_treni)
 estensione = min(max([t.get("ritardo", 0) for t in lista_treni if t.get("fonte") == "LIVE"] + [0]), 12) if ritardo_rilevato else 0
 
-treni_futuri = [(t["ora_p"] * 60 + t["min_p"] + t["ritardo"], t) for t in lista_treni if (t["ora_p"] * 60 + t["min_p"] + t["ritardo"]) > minuti_ora]
+treni_futuri = []
+for t in lista_treni:
+    m_p = t["ora_p"] * 60 + t["min_p"] + t["ritardo"]
+    # Calcolo inizio onda per capire se il treno è futuro
+    m_riferimento = (m_p - 3) if t["direzione"] == "LUCCA" else (m_p + 6)
+    if m_riferimento > minuti_ora:
+        treni_futuri.append((m_riferimento, t))
 
 if treni_futuri:
     m_tot, prox = min(treni_futuri, key=lambda x: x[0])
+    h_visualizza = (prox["ora_p"] * 60 + prox["min_p"] + prox["ritardo"])
     nota = f" (+{prox['ritardo']} min)" if prox.get("fonte") == "LIVE" and prox['ritardo'] > 0 else " (Da orario)"
-    st.info(f"📋 Prossimo treno: **REG N. {prox['num']}** dir. {prox['direzione'].title()} alle **{m_tot // 60:02d}:{m_tot % 60:02d}**{nota}\n\n*⚠️ Nota: Eventuali transiti di treni merci o di manutenzione non sono tracciati.*")
+    st.info(f"📋 Prossimo treno: **REG N. {prox['num']}** dir. {prox['direzione'].title()} previsto alle **{h_visualizza // 60:02d}:{h_visualizza % 60:02d}**{nota}\n\n*⚠️ Nota: Eventuali transiti di treni merci o di manutenzione non sono tracciati.*")
 else:
     st.info("""📋 Servizio passeggeri terminato o nessun transito imminente.
 
@@ -96,12 +103,13 @@ st.link_button("📩 Diventa Sponsor", mail_sponsor)
 st.markdown("---")
 st.write("### 🚊 STATO VARCHI")
 
+# Struttura dei tempi riscritta e verificata geograficamente per entrambe le direzioni
 varchi = [
-    {"nome": "San Giuliano Terme", "pisa_ant": 0, "pisa_dur": 5, "luc_ant": -1, "luc_dur": 5},
-    {"nome": "Via Ulisse Dini (Gello)", "pisa_ant": 2, "pisa_dur": 4, "luc_ant": 0, "luc_dur": 4},
-    {"nome": "Via XXIV Maggio (Pisa)", "pisa_ant": 5, "pisa_dur": 4, "luc_ant": 1, "luc_dur": 4},
-    {"nome": "Via di Gagno (Pisa)", "pisa_ant": 5, "pisa_dur": 4, "luc_ant": 1, "luc_dur": 4},
-    {"nome": "Via Ugo Rindi (Pisa)", "pisa_ant": 6, "pisa_dur": 4, "luc_ant": 2, "luc_dur": 4}
+    {"nome": "San Giuliano Terme",     "pisa_ant": 2, "pisa_dur": 4, "luc_ant": 6,  "luc_dur": 4},
+    {"nome": "Via Ulisse Dini (Gello)", "pisa_ant": 0, "pisa_dur": 4, "luc_ant": 8,  "luc_dur": 4},
+    {"nome": "Via XXIV Maggio (Pisa)",  "pisa_ant": -2, "pisa_dur": 4, "luc_ant": 10, "luc_dur": 4},
+    {"nome": "Via di Gagno (Pisa)",     "pisa_ant": -2, "pisa_dur": 4, "luc_ant": 10, "luc_dur": 4},
+    {"nome": "Via Ugo Rindi (Pisa)",    "pisa_ant": -3, "pisa_dur": 4, "luc_ant": 11, "luc_dur": 4}
 ]
 
 for i, pl in enumerate(varchi):
@@ -110,12 +118,11 @@ for i, pl in enumerate(varchi):
     
     for tr in lista_treni:
         m_p = tr["ora_p"] * 60 + tr["min_p"] + tr["ritardo"]
-        if tr["direzione"] == "PISA":
-            ini = m_p - 5 + pl["pisa_ant"]
+        if tr["direzione"] == "LUCCA": # Treno da Pisa verso Lucca
+            ini = m_p + pl["pisa_ant"]
             fin = ini + pl["pisa_dur"] + estensione
-        else:
-            base_pisa = m_p - 5
-            ini = base_pisa + pl["luc_ant"]
+        else: # Treno da Lucca verso Pisa
+            ini = m_p + pl["luc_ant"]
             fin = ini + pl["luc_dur"] + estensione
             
         if ini <= minuti_ora <= fin:
@@ -129,12 +136,11 @@ for i, pl in enumerate(varchi):
         prossimi_blocchi = []
         for _, tr in treni_futuri:
             m_p = tr["ora_p"] * 60 + tr["min_p"] + tr["ritardo"]
-            if tr["direzione"] == "PISA":
-                ini = m_p - 5 + pl["pisa_ant"]
+            if tr["direzione"] == "LUCCA":
+                ini = m_p + pl["pisa_ant"]
                 fin = ini + pl["pisa_dur"] + estensione
             else:
-                base_pisa = m_p - 5
-                ini = base_pisa + pl["luc_ant"]
+                ini = m_p + pl["luc_ant"]
                 fin = ini + pl["luc_dur"] + estensione
             if ini > minuti_ora:
                 prossimi_blocchi.append((ini, fin, tr["num"]))
