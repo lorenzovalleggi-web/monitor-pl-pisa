@@ -2,37 +2,34 @@ import streamlit as st
 import datetime, pytz, requests, os
 from streamlit_autorefresh import st_autorefresh
 
-# Configurazione Pagina
+# 1. Configurazione Pagina (Deve essere la primissima istruzione)
 st.set_page_config(page_title="BinarioLibero Pisa", page_icon="🚦", layout="centered")
+
+# Autorefresh ogni 15 secondi sicuro
+try:
+    st_autorefresh(interval=15000, key="datarefresh")
+except:
+    pass
 
 # --- CUSTOM CSS PER CAMBIARE SFONDO E STILE ---
 st.markdown("""
     <style>
-    /* Sfondo principale dell'app */
     .stApp {
         background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
         color: #f8fafc;
     }
-    
-    /* Personalizzazione Titoli, Sottotitoli e Testi generici */
     h1, h2, h3, h4, p, span, div {
         color: #f8fafc !important;
     }
-    
-    /* Link ipertestuali tradizionali */
     a {
         color: #38bdf8 !important;
         text-decoration: underline;
     }
-    
-    /* Stile dei riquadri Info/Success/Error */
     .stAlert {
         border-radius: 12px !important;
         border: none !important;
         box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important;
     }
-
-    /* Pulsante Aggiorna */
     .stButton>button {
         background-color: #334155 !important;
         color: white !important;
@@ -40,8 +37,6 @@ st.markdown("""
         border: 1px solid #475569 !important;
         width: 100%;
     }
-    
-    /* Box segnaposto per gli sponsor se manca l'immagine */
     .sponsor-box {
         background-color: #1e293b;
         border: 1px dashed #475569;
@@ -52,16 +47,11 @@ st.markdown("""
         color: #94a3b8 !important;
         font-size: 14px;
     }
-    
-    /* Linea di separazione */
     hr {
         border-top: 1px solid #334155 !important;
     }
     </style>
     """, unsafe_allow_html=True)
-
-# Autorefresh ogni 15 secondi
-st_autorefresh(interval=15000, key="datarefresh")
 
 st.title("⚡ BinarioLibero")
 st.subheader("Meteo passaggi a livello: Pisa - San Giuliano")
@@ -69,12 +59,16 @@ st.subheader("Meteo passaggi a livello: Pisa - San Giuliano")
 if st.button("🔄 Aggiorna Stato In Tempo Reale"):
     st.rerun()
 
-fuso = pytz.timezone('Europe/Rome')
-ora_adesso = datetime.datetime.now(fuso)
+# Gestione Orario Interno ed Errori API
+try:
+    fuso = pytz.timezone('Europe/Rome')
+    ora_adesso = datetime.datetime.now(fuso)
+except:
+    ora_adesso = datetime.datetime.now()
+
 st.write(f"Ultimo controllo: **{ora_adesso.strftime('%H:%M:%S')}**")
 minuti_ora = ora_adesso.hour * 60 + ora_adesso.minute
 
-# Orari formattati in verticale per evitare bug di caratteri invisibili
 ORARIO_TABELLA = [
     {"ora": 5, "min": 30, "dir": "LUCCA", "num": "18502"},
     {"ora": 5, "min": 51, "dir": "PISA", "num": "18501"},
@@ -100,4 +94,31 @@ ORARIO_TABELLA = [
     {"ora": 14, "min": 13, "dir": "PISA", "num": "18525"},
     {"ora": 14, "min": 35, "dir": "LUCCA", "num": "18528"},
     {"ora": 14, "min": 43, "dir": "PISA", "num": "18527"},
-    {"ora": 15, "min": 23, "
+    {"ora": 15, "min": 23, "dir": "LUCCA", "num": "18532"},
+    {"ora": 15, "min": 51, "dir": "PISA", "num": "18531"},
+    {"ora": 16, "min": 23, "dir": "LUCCA", "num": "18534"},
+    {"ora": 16, "min": 51, "dir": "PISA", "num": "18533"},
+    {"ora": 17, "min": 23, "dir": "LUCCA", "num": "18536"},
+    {"ora": 17, "min": 46, "dir": "PISA", "num": "18535"},
+    {"ora": 18, "min": 23, "dir": "LUCCA", "num": "18540"},
+    {"ora": 18, "min": 51, "dir": "PISA", "num": "18537"},
+    {"ora": 19, "min": 23, "dir": "LUCCA", "num": "18542"},
+    {"ora": 19, "min": 51, "dir": "PISA", "num": "18541"},
+    {"ora": 20, "min": 23, "dir": "LUCCA", "num": "18544"},
+    {"ora": 20, "min": 46, "dir": "PISA", "num": "18543"},
+    {"ora": 21, "min": 23, "dir": "LUCCA", "num": "18546"},
+    {"ora": 21, "min": 58, "dir": "PISA", "num": "18545"}
+]
+
+@st.cache_data(ttl=10)
+def recupera_treni():
+    treni = []
+    try:
+        dt_str = ora_adesso.strftime('%Y-%m-%dT00:00:00')
+        stazioni = [("S06411", "PISA", "PISA"), ("S06501", "LUCCA", "LUCCA")]
+        
+        for v_id, d_name, f_key in stazioni:
+            try:
+                url = f"http://www.viaggiatreno.it/viaggiatrenonew/api/esitoPartenze/{v_id}/{dt_str}"
+                res = requests.get(url, timeout=3).json() # Abbassato timeout a 3 secondi
+                for t in res.get('tabellone',
