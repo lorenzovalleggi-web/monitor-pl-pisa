@@ -81,7 +81,8 @@ mail_sponsor = "mailto:info.railflow@gmail.com?subject=Richiesta%20Sponsorizzazi
 
 with c1:
     if os.path.exists("sponsor1.jpg"): st.image("sponsor1.jpg", use_container_width=True)
-    st.link_button("🎩 Il Cappellaio Matto", "https://www.facebook.com/ilcappellaiomatto")
+    # Ecco la riga corretta modificata con il link di condivisione pulito:
+    st.link_button("🎩 Il Cappellaio Matto", "https://www.facebook.com/share/ilcappellaiomatto/")
 with c2:
     if os.path.exists("sponsor2.jpg"): st.image("sponsor2.jpg", use_container_width=True)
     st.link_button("🤝 Spazio Libero", mail_sponsor)
