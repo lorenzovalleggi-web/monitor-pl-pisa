@@ -70,4 +70,91 @@ if treni_futuri:
     nota = f" (+{prox['ritardo']} min)" if prox.get("fonte") == "LIVE" and prox['ritardo'] > 0 else " (Da orario)"
     st.info(f"📋 Prossimo treno: **REG N. {prox['num']}** dir. {prox['direzione'].title()} alle **{m_tot // 60:02d}:{m_tot % 60:02d}**{nota}\n\n*⚠️ Nota: Eventuali transiti di treni merci o di manutenzione non sono tracciati.*")
 else:
-    st.info("📋 Servizio passeggeri terminato o nessun transito imminente.\n\n*⚠️ Nota: I
+    st.info("""📋 Servizio passeggeri terminato o nessun transito imminente.
+
+*⚠️ Nota: I passaggi a livello potrebbero chiudersi fuori orario per transiti straordinari di treni merci o di manutenzione.*""")
+
+if ritardo_rilevato:
+    st.warning("⚠️ Rallentamenti sulla linea. Chiusure prolungate.")
+
+st.markdown("---")
+c1, c2, c3 = st.columns(3)
+mail_sponsor = "mailto:info.railflow@gmail.com?subject=Richiesta%20Sponsorizzazione"
+
+with c1:
+    if os.path.exists("sponsor1.jpg"): st.image("sponsor1.jpg", use_container_width=True)
+    st.link_button("🎩 Il Cappellaio Matto", "https://www.facebook.com/ilcappellaiomattopisa")
+with c2:
+    if os.path.exists("sponsor2.jpg"): st.image("sponsor2.jpg", use_container_width=True)
+    st.link_button("🤝 Spazio Libero", mail_sponsor)
+with c3:
+    if os.path.exists("sponsor3.jpg"): st.image("sponsor3.jpg", use_container_width=True)
+    st.link_button("🤝 Spazio Libero", mail_sponsor)
+
+st.markdown("---")
+st.link_button("📩 Diventa Sponsor", mail_sponsor)
+st.markdown("---")
+st.write("### 🚊 STATO VARCHI")
+
+varchi = [
+    {"nome": "San Giuliano Terme", "pisa_ant": 0, "pisa_dur": 5, "luc_ant": -1, "luc_dur": 5},
+    {"nome": "Via Ulisse Dini (Gello)", "pisa_ant": 2, "pisa_dur": 4, "luc_ant": 0, "luc_dur": 4},
+    {"nome": "Via XXIV Maggio (Pisa)", "pisa_ant": 5, "pisa_dur": 4, "luc_ant": 1, "luc_dur": 4},
+    {"nome": "Via di Gagno (Pisa)", "pisa_ant": 5, "pisa_dur": 4, "luc_ant": 1, "luc_dur": 4},
+    {"nome": "Via Ugo Rindi (Pisa)", "pisa_ant": 6, "pisa_dur": 4, "luc_ant": 2, "luc_dur": 4}
+]
+
+for i, pl in enumerate(varchi):
+    if i > 0: st.write("⬇️")
+    chiuso, info_pl = False, ""
+    
+    for tr in lista_treni:
+        m_p = tr["ora_p"] * 60 + tr["min_p"] + tr["ritardo"]
+        if tr["direzione"] == "PISA":
+            ini = m_p - 5 + pl["pisa_ant"]
+            fin = ini + pl["pisa_dur"] + estensione
+        else:
+            base_pisa = m_p - 5
+            ini = base_pisa + pl["luc_ant"]
+            fin = ini + pl["luc_dur"] + estensione
+            
+        if ini <= minuti_ora <= fin:
+            t_ini = f"{ini//60:02d}:{ini%60:02d}"
+            t_fin = f"{fin//60:02d}:{fin%60:02d}"
+            chiuso = True
+            info_pl = f"🛑 **CHIUSO** | Inizio: **{t_ini}** ➡️ Riapertura prevista: **{t_fin}**\n\n*(REG {tr['num']} per {tr['direzione'].title()})*"
+            break
+            
+    if not chiuso and treni_futuri:
+        prossimi_blocchi = []
+        for _, tr in treni_futuri:
+            m_p = tr["ora_p"] * 60 + tr["min_p"] + tr["ritardo"]
+            if tr["direzione"] == "PISA":
+                ini = m_p - 5 + pl["pisa_ant"]
+                fin = ini + pl["pisa_dur"] + estensione
+            else:
+                base_pisa = m_p - 5
+                ini = base_pisa + pl["luc_ant"]
+                fin = ini + pl["luc_dur"] + estensione
+            if ini > minuti_ora:
+                prossimi_blocchi.append((ini, fin, tr["num"]))
+        
+        if prossimi_blocchi:
+            p_ini, p_fin, p_num = min(prossimi_blocchi, key=lambda x: x[0])
+            t_ini = f"{p_ini//60:02d}:{p_ini%60:02d}"
+            t_fin = f"{p_fin//60:02d}:{p_fin%60:02d}"
+            info_pl = f"🟢 **APERTO** | Prossima chiusura: **{t_ini}** (Riapre alle **{t_fin}**)\n\n*Transito programmato: REG {p_num}*"
+        else:
+            info_pl = "🟢 **APERTO** | Nessun transito imminente rilevato."
+            
+    elif not chiuso and not treni_futuri:
+        info_pl = "🟢 **APERTO** | Servizio passeggeri terminato."
+
+    if chiuso: 
+        st.error(f"### {pl['nome']}\n{info_pl}")
+    else: 
+        st.success(f"### {pl['nome']}\n{info_pl}")
+
+st.markdown("---")
+st.markdown('<div style="text-align: center;"><a href="https://www.paypal.com/paypalme/rebolo73" target="_blank"><button style="background-color: #FF813F; color: white; border: none; padding: 10px 20px; font-weight: bold; border-radius: 8px; cursor: pointer;">☕ Offrimi un caffè</button></a></div>', unsafe_allow_html=True)
+st.write("© 2026 BinarioLibero Pisa. info.railflow@gmail.com")
