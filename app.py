@@ -112,13 +112,3 @@ ORARIO_TABELLA = [
 
 @st.cache_data(ttl=10)
 def recupera_treni():
-    treni = []
-    try:
-        dt_str = ora_adesso.strftime('%Y-%m-%dT00:00:00')
-        stazioni = [("S06411", "PISA", "PISA"), ("S06501", "LUCCA", "LUCCA")]
-        
-        for v_id, d_name, f_key in stazioni:
-            try:
-                url = f"http://www.viaggiatreno.it/viaggiatrenonew/api/esitoPartenze/{v_id}/{dt_str}"
-                res = requests.get(url, timeout=3).json() # Abbassato timeout a 3 secondi
-                for t in res.get('tabellone',
