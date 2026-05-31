@@ -65,7 +65,6 @@ estensione = min(max([t.get("ritardo", 0) for t in lista_treni if t.get("fonte")
 
 treni_futuri = [(t["ora_p"] * 60 + t["min_p"] + t["ritardo"], t) for t in lista_treni if (t["ora_p"] * 60 + t["min_p"] + t["ritardo"]) > minuti_ora]
 
-# Sezione Info principale con l'aggiunta della nota sui treni merci/manutenzione
 if treni_futuri:
     m_tot, prox = min(treni_futuri, key=lambda x: x[0])
     nota = f" (+{prox['ritardo']} min)" if prox.get("fonte") == "LIVE" and prox['ritardo'] > 0 else " (Da orario)"
@@ -81,4 +80,70 @@ c1, c2, c3 = st.columns(3)
 mail_sponsor = "mailto:info.railflow@gmail.com?subject=Richiesta%20Sponsorizzazione"
 
 with c1:
-    if os.path.exists("sponsor1.jpg"): st.image("sponsor1.jpg",
+    if os.path.exists("sponsor1.jpg"): st.image("sponsor1.jpg", use_container_width=True)
+    st.link_button("🎩 Il Cappellaio Matto", "https://www.facebook.com/ilcappellaiomattopisa")
+with c2:
+    if os.path.exists("sponsor2.jpg"): st.image("sponsor2.jpg", use_container_width=True)
+    st.link_button("🤝 Spazio Libero", mail_sponsor)
+with c3:
+    if os.path.exists("sponsor3.jpg"): st.image("sponsor3.jpg", use_container_width=True)
+    st.link_button("🤝 Spazio Libero", mail_sponsor)
+
+st.markdown("---")
+st.link_button("📩 Diventa Sponsor", mail_sponsor)
+st.markdown("---")
+st.write("### 𚊊 STATO VARCHI")
+
+varchi = [
+    {"nome": "San Giuliano Terme", "pisa_ant": 0, "pisa_dur": 5, "luc_ant": -1, "luc_dur": 5},
+    {"nome": "Via Ulisse Dini (Gello)", "pisa_ant": 2, "pisa_dur": 4, "luc_ant": 0, "luc_dur": 4},
+    {"nome": "Via XXIV Maggio (Pisa)", "pisa_ant": 5, "pisa_dur": 4, "luc_ant": 1, "luc_dur": 4},
+    {"nome": "Via di Gagno (Pisa)", "pisa_ant": 5, "pisa_dur": 4, "luc_ant": 1, "luc_dur": 4},
+    {"nome": "Via Ugo Rindi (Pisa)", "pisa_ant": 6, "pisa_dur": 4, "luc_ant": 2, "luc_dur": 4}
+]
+
+for i, pl in enumerate(varchi):
+    if i > 0: st.write("⬇️")
+    chiuso, info_pl = False, ""
+    
+    for tr in lista_treni:
+        m_p = tr["ora_p"] * 60 + tr["min_p"] + tr["ritardo"]
+        if tr["direzione"] == "PISA":
+            ini = m_p - 5 + pl["pisa_ant"]
+            fin = ini + pl["pisa_dur"] + estensione
+        else:
+            base_pisa = m_p - 5
+            ini = base_pisa + pl["luc_ant"]
+            fin = ini + pl["luc_dur"] + estensione
+            
+        if ini <= minuti_ora <= fin:
+            t_ini = f"{ini//60:02d}:{ini%60:02d}"
+            t_fin = f"{fin//60:02d}:{fin%60:02d}"
+            chiuso = True
+            info_pl = f"🛑 **CHIUSO** | Inizio: **{t_ini}** ➡️ Riapertura prevista: **{t_fin}**\n\n*(REG {tr['num']} per {tr['direzione'].title()})*"
+            break
+            
+    if not chiuso and treni_futuri:
+        prossimi_blocchi = []
+        for _, tr in treni_futuri:
+            m_p = tr["ora_p"] * 60 + tr["min_p"] + tr["ritardo"]
+            if tr["direzione"] == "PISA":
+                ini = m_p - 5 + pl["pisa_ant"]
+                fin = ini + pl["pisa_dur"] + estensione
+            else:
+                base_pisa = m_p - 5
+                ini = base_pisa + pl["luc_ant"]
+                fin = ini + pl["luc_dur"] + estensione
+            if ini > minuti_ora:
+                prossimi_blocchi.append((ini, fin, tr["num"]))
+        
+        if prossimi_blocchi:
+            p_ini, p_fin, p_num = min(prossimi_blocchi, key=lambda x: x[0])
+            t_ini = f"{p_ini//60:02d}:{p_ini%60:02d}"
+            t_fin = f"{p_fin//60:02d}:{p_fin%60:02d}"
+            info_pl = f"🟢 **APERTO** | Prossima chiusura: **{t_ini}** (Riapre alle **{t_fin}**)\n\n*Transito programmato: REG {p_num}*"
+        else:
+            info_pl = "🟢 **APERTO** | Nessun transito imminente rilevato."
+            
+    elif not chiuso and not treni_futuri:
+        info_pl = "
