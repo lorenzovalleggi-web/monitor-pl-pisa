@@ -79,14 +79,15 @@ st.markdown("---")
 c1, c2, c3 = st.columns(3)
 with c1:
     if os.path.exists("sponsor1.jpg"): st.image("sponsor1.jpg", use_container_width=True)
-    st.markdown("[Il Cappellaio Matto](https://www.facebook.com/ilcappellaiomatto)")
+    st.link_button("🎩 Il Cappellaio Matto", "https://www.facebook.com/ilcappellaiomatto")
 with c2:
     if os.path.exists("sponsor2.jpg"): st.image("sponsor2.jpg", use_container_width=True)
-    st.markdown("[Sponsor 2]")
+    st.link_button("🤝 Sponsor 2", "https://binariolibero-pisa.streamlit.app")
 with c3:
     if os.path.exists("sponsor3.jpg"): st.image("sponsor3.jpg", use_container_width=True)
-    st.markdown("[Sponsor 3]")
+    st.link_button("🤝 Sponsor 3", "https://binariolibero-pisa.streamlit.app")
 
+st.markdown("---")
 st.link_button("📩 Diventa Sponsor", "mailto:info.railflow@gmail.com?subject=Sponsor")
 st.markdown("---")
 st.write("### 🚊 STATO VARCHI")
