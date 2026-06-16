@@ -83,21 +83,19 @@ with c2:
 with c3:
     st.markdown('<div class="sp-box"><b style="color:white; font-size:14px;">Spazio Disponibile</b><br>🤝<br><span style="font-size:11px; color:#94a3b8;">Scrivici sotto</span></div>', unsafe_allow_html=True)
 
+# Form nativo con reindirizzamento sicuro HTML a prova di blocco server
 if st.button("📩 Vuoi inserire la tua pubblicità? Clicca qui"):
     st.dialog("Modulo Sponsor")
-    with st.form("form_modal", clear_on_submit=True):
-        st.write("✉️ **Invia una richiesta a BinarioLibero**")
-        nome_att = st.text_input("Nome o Attività")
-        email_utente = st.text_input("La tua Email")
-        msg_utente = st.text_area("Messaggio o dettagli richiesta")
-        if st.form_submit_button("🚀 Invia Richiesta"):
-            if nome_att and email_utente and msg_utente:
-                try:
-                    pld = {"name": nome_att, "email": email_utente, "message": msg_utente, "_subject": "Nuovo Sponsor BinarioLibero"}
-                    requests.post("https://formsubmit.co/info.railflow@gmail.com", data=pld, timeout=5)
-                    st.success("Inviato con successo! Controlliamo la mail.")
-                except: st.error("Errore temporaneo. Riprova.")
-            else: st.warning("Compila tutti i campi.")
+    nome_att = st.text_input("Nome o Attività")
+    email_ut = st.text_input("La tua Email")
+    msg_ut = st.text_area("Messaggio o dettagli richiesta")
+    
+    if nome_att and email_ut and msg_ut:
+        link_form = f"https://formsubmit.co/info.railflow@gmail.com?name={nome_att}&email={email_ut}&message={msg_ut}&_subject=Nuovo%20Sponsor%20BinarioLibero"
+        st.write("👍 Campi compilati correttamente!")
+        st.link_button("🚀 INVIA ORA L'EMAIL", link_form)
+    else:
+        st.info("Compila i tre campi sopra per sbloccare il tasto di invio.")
 
 st.markdown("---")
 st.write("### 🚊 STATO VARCHI")
@@ -125,11 +123,4 @@ for nom, p_ant, p_dur, l_ant, l_dur in VARCHI:
         if fut:
             p_ch, dr = min(fut, key=lambda x: x[0])
             info = f"🟢 APERTO | Preavviso Chiusura: {p_ch//60:02d}:{p_ch%60:02d} (tra {p_ch - min_ora} min per treno dir. **{dr}**)"
-        else: info = "🟢 APERTO | Nessun transito imminente"
-
-    if chiuso: st.error(f"#### {nom}\n{info}")
-    else: st.success(f"#### {nom}\n{info}")
-
-st.markdown("---")
-st.markdown('<div style="text-align:center;"><a href="https://www.paypal.com/paypalme/rebolo73" target="_blank"><button style="background:#FF813F;color:white;border:none;padding:10px 20px;font-weight:bold;border-radius:6px;cursor:pointer;">☕ Offri un caffè al server</button></a></div>', unsafe_allow_html=True)
-st.write("© 2026 BinarioLibero")
+        else: info = "🟢 APERTO | Nessun trans
