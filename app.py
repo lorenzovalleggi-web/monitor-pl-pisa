@@ -79,28 +79,30 @@ with c1:
     st.markdown('<div class="sp-box"><b style="color:white; font-size:14px;">Il Cappellaio Matto</b><br>🎩<br><span style="font-size:11px; color:#94a3b8;">Pisa</span></div>', unsafe_allow_html=True)
     st.link_button("🎩 Pagina FB", "https://www.facebook.com/ilcappellaiomattopisa")
 with c2:
-    st.markdown('<div class="sp-box"><b style="color:white; font-size:14px;">Spazio Disponibile</b><br>🤝<br><span style="font-size:11px; color:#94a3b8;">Contattaci sotto</span></div>', unsafe_allow_html=True)
+    st.markdown('<div class="sp-box"><b style="color:white; font-size:14px;">Spazio Disponibile</b><br>🤝<br><span style="font-size:11px; color:#94a3b8;">Scrivici sotto</span></div>', unsafe_allow_html=True)
 with c3:
-    st.markdown('<div class="sp-box"><b style="color:white; font-size:14px;">Spazio Disponibile</b><br>🤝<br><span style="font-size:11px; color:#94a3b8;">Contattaci sotto</span></div>', unsafe_allow_html=True)
+    st.markdown('<div class="sp-box"><b style="color:white; font-size:14px;">Spazio Disponibile</b><br>🤝<br><span style="font-size:11px; color:#94a3b8;">Scrivici sotto</span></div>', unsafe_allow_html=True)
 
-# Modulo contatti nativo Streamlit (Senza stringhe HTML lunghe che si rompono)
-with st.form("form_sponsor", clear_on_submit=True):
-    st.write("✉️ **Diventa Sponsor / Richiedi Informazioni**")
-    nome_att = st.text_input("Nome o Nome Attività")
-    email_utente = st.text_input("La tua Email")
-    msg_utente = st.text_area("Messaggio o richiesta")
-    invia = st.form_submit_button("🚀 Invia tramite Email")
-    
-    if invia:
-        if nome_att and email_utente and msg_utente:
-            try:
-                payload = {"name": nome_att, "email": email_utente, "message": msg_utente, "_subject": "Nuovo Sponsor BinarioLibero"}
-                requests.post("https://formsubmit.co/info.railflow@gmail.com", data=payload, timeout=5)
-                st.success("Richiesta inviata con successo! Ti risponderemo presto.")
-            except:
-                st.error("Errore di connessione. Riprova più tardi.")
-        else:
-            st.warning("Per favore, compila tutti i campi.")
+# Bottone unico per attivare il popup contatti
+if st.button("📩 Vuoi inserire la tua pubblicità? Clicca qui"):
+    st.dialog("Modulo Sponsor")
+    with st.form("form_modal", clear_on_submit=True):
+        st.write("✉️ **Invia una richiesta a BinarioLibero**")
+        nome_att = st.text_input("Nome o Nome Attività")
+        email_utente = st.text_input("La tua Email di contatto")
+        msg_utente = st.text_area("Messaggio o dettagli spazio pubblicitario")
+        invia_mail = st.form_submit_button("🚀 Invia Richiesta")
+        
+        if invia_mail:
+            if nome_att and email_utente and msg_utente:
+                try:
+                    payload = {"name": nome_att, "email": email_utente, "message": msg_utente, "_subject": "Nuovo Sponsor BinarioLibero"}
+                    requests.post("https://formsubmit.co/info.railflow@gmail.com", data=payload, timeout=5)
+                    st.success("Inviato con successo! Controlliamo la mail e ti rispondiamo.")
+                except:
+                    st.error("Errore di connessione temporaneo. Riprova.")
+            else:
+                st.warning("Compila tutti i campi obbligatori.")
 
 st.markdown("---")
 st.write("### 🚊 STATO VARCHI")
@@ -117,4 +119,19 @@ for nom, p_ant, p_dur, l_ant, l_dur in VARCHI:
         ini = (m_p + p_ant) if tr["direzione"] == "LUCCA" else (m_p + l_ant)
         fin = ini + (p_dur if tr["direzione"] == "LUCCA" else l_dur) + estensione
         if ini <= min_ora <= fin:
-            chiuso, info = True, f
+            chiuso, info = True, f"🛑 CHIUSO | Fino alle {fin//60:02d}:{fin%60:02d}"; break
+    if not chiuso and treni_futuri:
+        prossimi = []
+        for _, tr in treni_futuri:
+            m_p = tr["ora_p"] * 60 + tr["min_p"] + tr["ritardo"]
+            ini_f = (m_p + p_ant) if tr["direzione"] == "LUCCA" else (m_p + l_ant)
+            if ini_f > min_ora: prossimi.append(ini_f)
+        if prossimi: info = f"🟢 APERTO | Preavviso Chiusura: {min(prossimi)//60:02d}:{min(prossimi)%60:02d} (tra {min(prossimi) - min_ora} min)"
+        else: info = "🟢 APERTO | Nessun transito"
+    elif not chiuso: info = "🟢 APERTO | Fine servizio"
+    if chiuso: st.error(f"#### {nom}\n{info}")
+    else: st.success(f"#### {nom}\n{info}")
+
+st.markdown("---")
+st.markdown('<div style="text-align:center;"><a href="https://www.paypal.com/paypalme/rebolo73" target="_blank"><button style="background:#FF813F;color:white;border:none;padding:10px 20px;font-weight:bold;border-radius:6px;cursor:pointer;">☕ Offri un caffè al server</button></a></div>', unsafe_allow_html=True)
+st.write("© 2026 BinarioLibero")
