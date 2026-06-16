@@ -10,6 +10,9 @@ st.markdown("""
     h1, h2, h3, h4, p, span, div, li { color: #ffffff !important; }
     .stAlert p { color: #ffffff !important; }
     .stButton>button { background-color: #1e293b !important; color: white !important; border: 1px solid #475569; }
+    /* Stile personalizzato per i pulsanti email HTML per farli sembrare bottoni veri */
+    .btn-email { display: block; text-align: center; background-color: #334155; color: white !important; border: 1px solid #475569; padding: 6px 12px; border-radius: 8px; text-decoration: none !important; font-size: 14px; margin-top: 4px; }
+    .btn-email:hover { background-color: #475569; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -81,7 +84,7 @@ else:
 st.markdown("---")
 st.write("### 🤝 I nostri Sponsor")
 c1, c2, c3 = st.columns(3)
-ml_sp = "mailto:info.railflow@gmail.com?subject=Sponsor"
+ml_sp = "mailto:info.railflow@gmail.com?subject=Richiesta%20Sponsorizzazione"
 box_html = '<div style="background:#1e293b;border:1px dashed #475569;border-radius:6px;padding:8px;text-align:center;font-size:13px;color:#ffffff!important;font-weight:bold;">'
 
 with c1:
@@ -89,10 +92,12 @@ with c1:
     st.link_button("🎩 Pagina FB", "https://www.facebook.com/ilcappellaiomattopisa")
 with c2:
     st.markdown(f'{box_html}Spazio Disponibile<br>🤝</div>', unsafe_allow_html=True)
-    st.link_button("📢 Diventa Sponsor", ml_sp)
+    # Cambiato in link HTML diretto per evitare la pagina bianca
+    st.markdown(f'<a href="{ml_sp}" class="btn-email">📢 Diventa Sponsor</a>', unsafe_allow_html=True)
 with c3:
     st.markdown(f'{box_html}Spazio Disponibile<br>🤝</div>', unsafe_allow_html=True)
-    st.link_button("📢 Info Email", ml_sp)
+    # Cambiato in link HTML diretto per evitare la pagina bianca
+    st.markdown(f'<a href="{ml_sp}" class="btn-email">📢 Info Email</a>', unsafe_allow_html=True)
 
 # --- STATO VARCHI ---
 st.markdown("---")
