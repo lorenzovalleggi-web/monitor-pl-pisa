@@ -85,6 +85,9 @@ with c2:
 with c3:
     st.markdown('<div class="sp-box"><b style="color:white; font-size:14px;">Spazio Disponibile</b><br>🤝<br><span style="font-size:11px; color:#94a3b8;">Scrivici sotto</span></div>', unsafe_allow_html=True)
 
+# Gestione modulo lineare separata (senza blocchi "with form" per evitare crash)
 if st.button("📩 Vuoi inserire la tua pubblicità? Clicca qui"):
     st.dialog("Modulo Sponsor")
-    with st.form("modulo_stabile"):
+    nome_att = st.text_input("Nome o Attività", key="f_nome")
+    email_ut = st.text_input("La tua Email", key="f_mail")
+    msg_ut = st.text_area("Messaggio o richiesta",
