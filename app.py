@@ -76,4 +76,15 @@ st.write("### 🤝 I nostri Sponsor")
 c1, c2, c3 = st.columns(3)
 
 with c1:
-    st.markdown('<div class="sp-box"><b style="color:white;
+    st.markdown('<div class="sp-box"><b style="color:white; font-size:14px;">Il Cappellaio Matto</b><br>🎩<br><span style="font-size:11px; color:#94a3b8;">Pisa</span></div>', unsafe_allow_html=True)
+    st.link_button("🎩 Pagina FB", "https://www.facebook.com/ilcappellaiomattopisa")
+
+with c2:
+    st.markdown('<div class="sp-box"><b style="color:white; font-size:14px;">Spazio Disponibile</b><br>🤝<br><span style="font-size:11px; color:#94a3b8;">Scrivici sotto</span></div>', unsafe_allow_html=True)
+
+with c3:
+    st.markdown('<div class="sp-box"><b style="color:white; font-size:14px;">Spazio Disponibile</b><br>🤝<br><span style="font-size:11px; color:#94a3b8;">Scrivici sotto</span></div>', unsafe_allow_html=True)
+
+if st.button("📩 Vuoi inserire la tua pubblicità? Clicca qui"):
+    st.dialog("Modulo Sponsor")
+    with st.form("modulo_stabile"):
