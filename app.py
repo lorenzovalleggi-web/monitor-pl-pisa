@@ -83,7 +83,6 @@ with c2:
 with c3:
     st.markdown('<div class="sp-box"><b style="color:white; font-size:14px;">Spazio Disponibile</b><br>🤝<br><span style="font-size:11px; color:#94a3b8;">Scrivici sotto</span></div>', unsafe_allow_html=True)
 
-# Bottone unico per attivare il popup contatti
 if st.button("📩 Vuoi inserire la tua pubblicità? Clicca qui"):
     st.dialog("Modulo Sponsor")
     with st.form("form_modal", clear_on_submit=True):
@@ -92,17 +91,14 @@ if st.button("📩 Vuoi inserire la tua pubblicità? Clicca qui"):
         email_utente = st.text_input("La tua Email di contatto")
         msg_utente = st.text_area("Messaggio o dettagli spazio pubblicitario")
         invia_mail = st.form_submit_button("🚀 Invia Richiesta")
-        
         if invia_mail:
             if nome_att and email_utente and msg_utente:
                 try:
                     payload = {"name": nome_att, "email": email_utente, "message": msg_utente, "_subject": "Nuovo Sponsor BinarioLibero"}
                     requests.post("https://formsubmit.co/info.railflow@gmail.com", data=payload, timeout=5)
                     st.success("Inviato con successo! Controlliamo la mail e ti rispondiamo.")
-                except:
-                    st.error("Errore di connessione temporaneo. Riprova.")
-            else:
-                st.warning("Compila tutti i campi obbligatori.")
+                except: st.error("Errore di connessione temporaneo. Riprova.")
+            else: st.warning("Compila tutti i campi obbligatori.")
 
 st.markdown("---")
 st.write("### 🚊 STATO VARCHI")
@@ -120,15 +116,21 @@ for nom, p_ant, p_dur, l_ant, l_dur in VARCHI:
         fin = ini + (p_dur if tr["direzione"] == "LUCCA" else l_dur) + estensione
         if ini <= min_ora <= fin:
             chiuso, info = True, f"🛑 CHIUSO | Fino alle {fin//60:02d}:{fin%60:02d}"; break
-    if not chiuso and treni_futuri:
-        prossimi = []
+            
+    if not chiuso:
+        prossimi_orari = []
         for _, tr in treni_futuri:
             m_p = tr["ora_p"] * 60 + tr["min_p"] + tr["ritardo"]
             ini_f = (m_p + p_ant) if tr["direzione"] == "LUCCA" else (m_p + l_ant)
-            if ini_f > min_ora: prossimi.append(ini_f)
-        if prossimi: info = f"🟢 APERTO | Preavviso Chiusura: {min(prossimi)//60:02d}:{min(prossimi)%60:02d} (tra {min(prossimi) - min_ora} min)"
-        else: info = "🟢 APERTO | Nessun transito"
-    elif not chiuso: info = "🟢 APERTO | Fine servizio"
+            if ini_f > min_ora:
+                prossimi_orari.append(ini_f)
+        if prossimi_orari:
+            p_chiusura = min(prossimi_orari)
+            minuti_mancanti = p_chiusura - min_ora
+            info = f"🟢 APERTO | Preavviso Chiusura: {p_chiusura//60:02d}:{p_chiusura%60:02d} (tra {minuti_mancanti} min)"
+        else:
+            info = "🟢 APERTO | Nessun transito imminente"
+
     if chiuso: st.error(f"#### {nom}\n{info}")
     else: st.success(f"#### {nom}\n{info}")
 
