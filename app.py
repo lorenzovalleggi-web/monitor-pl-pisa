@@ -3,16 +3,13 @@ import datetime, pytz, requests
 
 st.set_page_config(page_title="BinarioLibero", layout="centered")
 
-# CSS globale per forzare la visibilità di tutti i testi su sfondo scuro
+# CSS globale per lo sfondo e i testi dell'app
 st.markdown("""
     <style>
     .stApp { background-color: #0f172a !important; color: #ffffff !important; }
     h1, h2, h3, h4, p, span, div, li { color: #ffffff !important; }
     .stAlert p { color: #ffffff !important; }
     .stButton>button { background-color: #1e293b !important; color: white !important; border: 1px solid #475569; }
-    /* Stile personalizzato per i pulsanti email HTML per farli sembrare bottoni veri */
-    .btn-email { display: block; text-align: center; background-color: #334155; color: white !important; border: 1px solid #475569; padding: 6px 12px; border-radius: 8px; text-decoration: none !important; font-size: 14px; margin-top: 4px; }
-    .btn-email:hover { background-color: #475569; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -80,24 +77,33 @@ if treni_futuri:
 else:
     st.info("📋 Servizio terminato.")
 
-# --- SEZIONE SPONSOR ---
+# --- SEZIONE SPONSOR INTERAMENTE IN HTML PROTETTO ---
 st.markdown("---")
 st.write("### 🤝 I nostri Sponsor")
-c1, c2, c3 = st.columns(3)
-ml_sp = "mailto:info.railflow@gmail.com?subject=Richiesta%20Sponsorizzazione"
-box_html = '<div style="background:#1e293b;border:1px dashed #475569;border-radius:6px;padding:8px;text-align:center;font-size:13px;color:#ffffff!important;font-weight:bold;">'
 
-with c1:
-    st.markdown(f'{box_html}Il Cappellaio Matto<br>🎩</div>', unsafe_allow_html=True)
-    st.link_button("🎩 Pagina FB", "https://www.facebook.com/ilcappellaiomattopisa")
-with c2:
-    st.markdown(f'{box_html}Spazio Disponibile<br>🤝</div>', unsafe_allow_html=True)
-    # Cambiato in link HTML diretto per evitare la pagina bianca
-    st.markdown(f'<a href="{ml_sp}" class="btn-email">📢 Diventa Sponsor</a>', unsafe_allow_html=True)
-with c3:
-    st.markdown(f'{box_html}Spazio Disponibile<br>🤝</div>', unsafe_allow_html=True)
-    # Cambiato in link HTML diretto per evitare la pagina bianca
-    st.markdown(f'<a href="{ml_sp}" class="btn-email">📢 Info Email</a>', unsafe_allow_html=True)
+ml_sp = "mailto:info.railflow@gmail.com?subject=Richiesta%20Sponsorizzazione"
+fb_url = "https://www.facebook.com/ilcappellaiomattopisa"
+
+sponsor_html = f"""
+<div style="display: flex; gap: 10px; justify-content: space-between; flex-wrap: wrap;">
+    <!-- SPONSOR 1 -->
+    <div style="flex: 1; min-width: 100px; background: #1e293b; border: 1px dashed #475569; border-radius: 8px; padding: 12px; text-align: center;">
+        <p style="color: #ffffff !important; font-size: 13px; font-weight: bold; margin: 0 0 8px 0;">Il Cappellaio Matto<br>🎩</p>
+        <a href="{fb_url}" target="_blank" style="display: inline-block; background: #3b82f6; color: #ffffff !important; font-size: 12px; font-weight: bold; text-decoration: none; padding: 6px 10px; border-radius: 6px;">🎩 Pagina FB</a>
+    </div>
+    <!-- SPONSOR 2 -->
+    <div style="flex: 1; min-width: 100px; background: #1e293b; border: 1px dashed #475569; border-radius: 8px; padding: 12px; text-align: center;">
+        <p style="color: #ffffff !important; font-size: 13px; font-weight: bold; margin: 0 0 8px 0;">Spazio Disponibile<br>🤝</p>
+        <a href="{ml_sp}" style="display: inline-block; background: #10b981; color: #ffffff !important; font-size: 12px; font-weight: bold; text-decoration: none; padding: 6px 10px; border-radius: 6px;">📢 Sponsor</a>
+    </div>
+    <!-- SPONSOR 3 -->
+    <div style="flex: 1; min-width: 100px; background: #1e293b; border: 1px dashed #475569; border-radius: 8px; padding: 12px; text-align: center;">
+        <p style="color: #ffffff !important; font-size: 13px; font-weight: bold; margin: 0 0 8px 0;">Spazio Disponibile<br>🤝</p>
+        <a href="{ml_sp}" style="display: inline-block; background: #64748b; color: #ffffff !important; font-size: 12px; font-weight: bold; text-decoration: none; padding: 6px 10px; border-radius: 6px;">📢 Info Email</a>
+    </div>
+</div>
+"""
+st.markdown(sponsor_html, unsafe_allow_html=True)
 
 # --- STATO VARCHI ---
 st.markdown("---")
