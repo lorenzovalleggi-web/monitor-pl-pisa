@@ -63,11 +63,13 @@ st.markdown("---")
 st.write("### 🤝 I nostri Sponsor")
 c1, c2, c3 = st.columns(3)
 with c1: st.write("**Il Cappellaio Matto** 🎩\nPisa\n[Pagina FB](https://www.facebook.com/ilcappellaiomattopisa)")
-with c2: st.write("**Spazio Libero** 🤝\nUsa il tasto sotto")
-with c3: st.write("**Spazio Libero** 🤝\nUsa il tasto sotto")
+with c2: st.write("**Spazio Libero** 🤝\nContattaci subito")
+with c3: st.write("**Spazio Libero** 🤝\nContattaci subito")
 
 st.write("")
-st.link_button("📩 CLICCA QUI PER INVIARCI UNA EMAIL", "https://formsubmit.co/el/info.railflow@gmail.com")
+
+# Sostituisci il numero 393331234567 con il TUO numero reale (lascia il 39 all'inizio per l'Italia)
+st.link_button("💬 CLICCA QUI PER INFORMAZIONI PUBBLICITÀ (WHATSAPP)", "https://wa.me/393331234567?text=Ciao!%20Vorrei%20ricevere%20informazioni%20per%20inserire%20uno%20sponsor%20su%20BinarioLibero")
 
 st.markdown("---")
 st.write("### 🚊 STATO VARCHI")
