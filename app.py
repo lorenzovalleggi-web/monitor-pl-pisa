@@ -3,13 +3,13 @@ import datetime, pytz, requests
 
 st.set_page_config(page_title="BinarioLibero", layout="centered")
 
+# Stile CSS pulito senza tag HTML interni alle funzioni
 st.markdown("""
     <style>
     .stApp { background-color: #0f172a !important; color: #ffffff !important; }
     h1, h2, h3, h4, p, span, div, li { color: #ffffff !important; }
     .stAlert p { color: #ffffff !important; }
     .stButton>button, .stLinkButton>a { background-color: #1e293b !important; color: #ffffff !important; border: 1px solid #475569 !important; width: 100% !important; text-align: center !important; }
-    .sp-box { background: #1e293b; border: 1px dashed #475569; border-radius: 8px; padding: 12px; text-align: center; margin-bottom: 8px; min-height: 90px; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -76,13 +76,19 @@ st.write("### 🤝 I nostri Sponsor")
 c1, c2, c3 = st.columns(3)
 
 with c1:
-    st.markdown('<div class="sp-box"><b style="color:white; font-size:14px;">Il Cappellaio Matto</b><br>🎩<br><span style="font-size:11px; color:#94a3b8;">Pisa</span></div>', unsafe_allow_html=True)
+    st.write("**Il Cappellaio Matto**")
+    st.write("🎩 Pisa")
     st.link_button("🎩 Pagina FB", "https://www.facebook.com/ilcappellaiomattopisa")
 
-with c2: st.markdown('<div class="sp-box"><b style="color:white; font-size:14px;">Spazio Disponibile</b><br>🤝<br><span style="font-size:11px; color:#94a3b8;">Scrivici sotto</span></div>', unsafe_allow_html=True)
-with c3: st.markdown('<div class="sp-box"><b style="color:white; font-size:14px;">Spazio Disponibile</b><br>🤝<br><span style="font-size:11px; color:#94a3b8;">Scrivici sotto</span></div>', unsafe_allow_html=True)
+with c2:
+    st.write("**Spazio Libero**")
+    st.write("🤝 Contattaci")
 
-# Link di reindirizzamento esterno ultra-sicuro senza moduli locali soggetti a crash
+with c3:
+    st.write("**Spazio Libero**")
+    st.write("🤝 Contattaci")
+
+st.write("")
 st.link_button("📩 CONTATTACI PER INSERIRE LA TUA PUBBLICITÀ", "https://formsubmit.co/el/info.railflow@gmail.com")
 
 st.markdown("---")
@@ -113,10 +119,12 @@ for nom, p_ant, p_dur, l_ant, l_dur in VARCHI:
         if fut:
             p_ch, dr = min(fut, key=lambda x: x[0])
             msg = f"🟢 APERTO | Preavviso Chiusura: {p_ch//60:02d}:{p_ch%60:02d} ({p_ch - min_ora} min - Dir. {dr})"
-        else: msg = "🟢 APERTO | Nessun transito"
+        else:
+            msg = "🟢 APERTO | Nessun transito"
 
     if chiuso: st.error(f"#### {nom}\n{msg}")
     else: st.success(f"#### {nom}\n{msg}")
 
 st.markdown("---")
-st.markdown('<div style="text-align:center;"><a href="https://www.paypal
+st.link_button("☕ Offri un caffè al server", "https://www.paypal.com/paypalme/rebolo73")
+st.write("© 2026 BinarioLibero")
