@@ -8,21 +8,12 @@ st.markdown("""
     .stApp { background-color: #0f172a !important; color: #ffffff !important; }
     h1, h2, h3, h4, p, span, div, li { color: #ffffff !important; }
     .stAlert p { color: #ffffff !important; }
-    .stButton>button, .stLinkButton>a { background-color: #1e293b !important; color: #ffffff !important; border: 1px solid #475569 !important; width: 100% !important; text-align: center !important; }
+    .stButton>button, .stLinkButton>a { background-color: #1e293b !important; color: #ffffff !important; border: 1px solid #475569 !important; text-align: center !important; }
     </style>
     """, unsafe_allow_html=True)
 
 ORARI = [
-    (5,30,"LUCCA","18502"),(5,51,"PISA","18501"),(6,23,"LUCCA","18504"),(6,35,"PISA","18503"),
-    (6,54,"LUCCA","18506"),(7,17,"PISA","6915"),(7,30,"LUCCA","18508"),(7,47,"PISA","18505"),
-    (8,23,"LUCCA","18514"),(8,51,"PISA","18511"),(9,23,"LUCCA","18516"),(9,51,"PISA","18515"),
-    (10,23,"LUCCA","18518"),(10,51,"PISA","18517"),(11,23,"LUCCA","18520"),(11,51,"PISA","18519"),
-    (12,23,"LUCCA","18522"),(12,43,"PISA","18521"),(13,13,"LUCCA","18524"),(13,36,"PISA","18523"),
-    (13,53,"LUCCA","18526"),(14,13,"PISA","18525"),(14,35,"LUCCA","18528"),(14,43,"PISA","18527"),
-    (15,23,"LUCCA","18532"),(15,51,"PISA","18531"),(16,23,"LUCCA","18534"),(16,51,"PISA","18533"),
-    (17,23,"LUCCA","18536"),(17,46,"PISA","18535"),(18,23,"LUCCA","18540"),(18,51,"PISA","18537"),
-    (19,23,"LUCCA","18542"),(19,51,"PISA","18541"),(20,23,"LUCCA","18544"),(20,46,"PISA","18543"),
-    (21,23,"LUCCA","18546"),(21,58,"PISA","18545")
+    (5,30,"LUCCA","18502"),(5,51,"PISA","18501"),(6,23,"LUCCA","18504"),(6,35,"PISA","18503"),(6,54,"LUCCA","18506"),(7,17,"PISA","6915"),(7,30,"LUCCA","18508"),(7,47,"PISA","18505"),(8,23,"LUCCA","18514"),(8,51,"PISA","18511"),(9,23,"LUCCA","18516"),(9,51,"PISA","18515"),(10,23,"LUCCA","18518"),(10,51,"PISA","18517"),(11,23,"LUCCA","18520"),(11,51,"PISA","18519"),(12,23,"LUCCA","18522"),(12,43,"PISA","18521"),(13,13,"LUCCA","18524"),(13,36,"PISA","18523"),(13,53,"LUCCA","18526"),(14,13,"PISA","18525"),(14,35,"LUCCA","18528"),(14,43,"PISA","18527"),(15,23,"LUCCA","18532"),(15,51,"PISA","18531"),(16,23,"LUCCA","18534"),(16,51,"PISA","18533"),(17,23,"LUCCA","18536"),(17,46,"PISA","18535"),(18,23,"LUCCA","18540"),(18,51,"PISA","18537"),(19,23,"LUCCA","18542"),(19,51,"PISA","18541"),(20,23,"LUCCA","18544"),(20,46,"PISA","18543"),(21,23,"LUCCA","18546"),(21,58,"PISA","18545")
 ]
 
 st.title("⚡ BinarioLibero Pisa")
@@ -73,26 +64,41 @@ else: st.info("📋 Servizio terminato.")
 st.markdown("---")
 st.write("### 🤝 I nostri Sponsor")
 c1, c2, c3 = st.columns(3)
+with c1: st.write("**Il Cappellaio Matto** 🎩\nPisa\n[Pagina FB](https://www.facebook.com/ilcappellaiomattopisa)")
+with c2: st.write("**Spazio Libero** 🤝\nContattaci via mail")
+with c3: st.write("**Spazio Libero** 🤝\nContattaci via mail")
 
-with c1:
-    st.write("**Il Cappellaio Matto**")
-    st.write("🎩 Pisa")
-    st.link_button("🎩 Pagina FB", "https://www.facebook.com/ilcappellaiomattopisa")
+st.write("✉️ Per info pubblicità scrivi a: **info.railflow@gmail.com**")
 
-with c2:
-    st.write("**Spazio Libero**")
-    st.write("🤝 Contattaci")
+st.markdown("---")
+st.write("### 🚊 STATO VARCHI")
+VARCHI = [("San Giuliano Terme", -13, 16, -3, 8), ("Via Ulisse Dini (Gello)", -15, 18, -1, 8), ("Via XXIV Maggio (Pisa)", -17, 20, 1, 8), ("Via di Gagno (Pisa)", -17, 20, 1, 8), ("Via Ugo Rindi (Pisa)", -18, 21, 2, 8)]
 
-with c3:
-    st.write("**Spazio Libero**")
-    st.write("🤝 Contattaci")
+for nom, p_ant, p_dur, l_ant, l_dur in VARCHI:
+    chiuso, msg = False, ""
+    for tr in lista_treni:
+        mt = tr["ora_p"] * 60 + tr["min_p"] + tr["ritardo"]
+        ini = (mt + p_ant) if tr["direzione"] == "LUCCA" else (mt + l_ant)
+        fin = ini + (p_dur if tr["direzione"] == "LUCCA" else l_dur) + estensione
+        if ini <= min_ora <= fin:
+            chiuso = True
+            msg = f"🛑 CHIUSO | Fino alle {fin//60:02d}:{fin%60:02d} (Treno dir. {tr['direzione']})"
+            break
+            
+    if not chiuso:
+        fut = []
+        for _, tr in treni_futuri:
+            mt = tr["ora_p"] * 60 + tr["min_p"] + tr["ritardo"]
+            ini_f = (mt + p_ant) if tr["direzione"] == "LUCCA" else (mt + l_ant)
+            if ini_f > min_ora: fut.append((ini_f, tr["direzione"]))
+        if fut:
+            p_ch, dr = min(fut, key=lambda x: x[0])
+            msg = f"🟢 APERTO | Preavviso Chiusura: {p_ch//60:02d}:{p_ch%60:02d} ({p_ch - min_ora} min - Dir. {dr})"
+        else: msg = "🟢 APERTO | Nessun transito"
 
-st.write("")
+    if chiuso: st.error(f"#### {nom}\n{msg}")
+    else: st.success(f"#### {nom}\n{msg}")
 
-# Modulo HTML puro incorporato per evitare errori di sblocco FormSubmit
-html_form = """
-<form action="https://formsubmit.co/info.railflow@gmail.com" method="POST" style="background:#1e293b; padding:15px; border-radius:8px; border:1px solid #475569;">
-    <p style="margin-bottom:8px; font-weight:bold; color:white;">📩 Vuoi inserire la tua pubblicità? Scrivici ora:</p>
-    <input type="text" name="name" placeholder="Il tuo nome / Attività" required style="width:100%; padding:8px; margin-bottom:8px; border-radius:4px; border:1px solid #475569; background:#0f172a; color:white;">
-    <input type="email" name="email" placeholder="La tua Email" required style="width:100%; padding:8px; margin-bottom:8px; border-radius:4px; border:1px solid #475569; background:#0f172a; color:white;">
-    <textarea name="message" placeholder="Messaggio o dettagli richiesta" required style="width:100%; padding:8px; margin-bottom:10px; border-radius:4px; border:1px solid #475569; background:#0f172a
+st.markdown("---")
+st.link_button("☕ Offri un caffè al server", "https://www.paypal.com/paypalme/rebolo73")
+st.write("© 2026 BinarioLibero")
