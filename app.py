@@ -3,13 +3,28 @@ import datetime, pytz, requests
 
 st.set_page_config(page_title="BinarioLibero", layout="centered")
 
-# CSS globale per lo sfondo e i testi dell'app
+# CSS globale per sistemare i colori di sfondo, testi e bottoni nativi
 st.markdown("""
     <style>
     .stApp { background-color: #0f172a !important; color: #ffffff !important; }
     h1, h2, h3, h4, p, span, div, li { color: #ffffff !important; }
     .stAlert p { color: #ffffff !important; }
-    .stButton>button { background-color: #1e293b !important; color: white !important; border: 1px solid #475569; }
+    /* Forzatura colore per i bottoni nativi di Streamlit degli sponsor */
+    .stButton>button, .stDownloadButton>button, .stLinkButton>a { 
+        background-color: #1e293b !important; 
+        color: #ffffff !important; 
+        border: 1px solid #475569 !important;
+        width: 100% !important;
+        text-align: center !important;
+    }
+    .sponsor-box { 
+        background: #1e293b; 
+        border: 1px dashed #475569; 
+        border-radius: 8px; 
+        padding: 12px; 
+        text-align: center; 
+        margin-bottom: 8px;
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -77,72 +92,23 @@ if treni_futuri:
 else:
     st.info("📋 Servizio terminato.")
 
-# --- SEZIONE SPONSOR INTERAMENTE IN HTML PROTETTO ---
+# --- SEZIONE SPONSOR AGGIORNATA (BOTTONI NATIVI FUNZIONANTI) ---
 st.markdown("---")
 st.write("### 🤝 I nostri Sponsor")
-
+c1, c2, c3 = st.columns(3)
 ml_sp = "mailto:info.railflow@gmail.com?subject=Richiesta%20Sponsorizzazione"
-fb_url = "https://www.facebook.com/ilcappellaiomattopisa"
 
-sponsor_html = f"""
-<div style="display: flex; gap: 10px; justify-content: space-between; flex-wrap: wrap;">
-    <!-- SPONSOR 1 -->
-    <div style="flex: 1; min-width: 100px; background: #1e293b; border: 1px dashed #475569; border-radius: 8px; padding: 12px; text-align: center;">
-        <p style="color: #ffffff !important; font-size: 13px; font-weight: bold; margin: 0 0 8px 0;">Il Cappellaio Matto<br>🎩</p>
-        <a href="{fb_url}" target="_blank" style="display: inline-block; background: #3b82f6; color: #ffffff !important; font-size: 12px; font-weight: bold; text-decoration: none; padding: 6px 10px; border-radius: 6px;">🎩 Pagina FB</a>
-    </div>
-    <!-- SPONSOR 2 -->
-    <div style="flex: 1; min-width: 100px; background: #1e293b; border: 1px dashed #475569; border-radius: 8px; padding: 12px; text-align: center;">
-        <p style="color: #ffffff !important; font-size: 13px; font-weight: bold; margin: 0 0 8px 0;">Spazio Disponibile<br>🤝</p>
-        <a href="{ml_sp}" style="display: inline-block; background: #10b981; color: #ffffff !important; font-size: 12px; font-weight: bold; text-decoration: none; padding: 6px 10px; border-radius: 6px;">📢 Sponsor</a>
-    </div>
-    <!-- SPONSOR 3 -->
-    <div style="flex: 1; min-width: 100px; background: #1e293b; border: 1px dashed #475569; border-radius: 8px; padding: 12px; text-align: center;">
-        <p style="color: #ffffff !important; font-size: 13px; font-weight: bold; margin: 0 0 8px 0;">Spazio Disponibile<br>🤝</p>
-        <a href="{ml_sp}" style="display: inline-block; background: #64748b; color: #ffffff !important; font-size: 12px; font-weight: bold; text-decoration: none; padding: 6px 10px; border-radius: 6px;">📢 Info Email</a>
-    </div>
-</div>
-"""
-st.markdown(sponsor_html, unsafe_allow_html=True)
+with c1:
+    st.markdown('<div class="sponsor-box"><b style="color:white;">Il Cappellaio Matto</b><br>🎩</div>', unsafe_allow_html=True)
+    st.link_button("🎩 Pagina FB", "https://www.facebook.com/ilcappellaiomattopisa")
+with c2:
+    st.markdown('<div class="sponsor-box"><b style="color:white;">Spazio Disponibile</b><br>🤝</div>', unsafe_allow_html=True)
+    st.link_button("📢 Sponsor", ml_sp)
+with c3:
+    st.markdown('<div class="sponsor-box"><b style="color:white;">Spazio Disponibile</b><br>🤝</div>', unsafe_allow_html=True)
+    st.link_button("📢 Info Email", ml_sp)
 
 # --- STATO VARCHI ---
 st.markdown("---")
 st.write("### 🚊 STATO VARCHI")
-varchi = [
-    {"n": "San Giuliano Terme", "p_ant": -13, "p_dur": 16, "l_ant": -3, "l_dur": 8},
-    {"n": "Via Ulisse Dini (Gello)", "p_ant": -15, "p_dur": 18, "l_ant": -1, "l_dur": 8},
-    {"n": "Via XXIV Maggio (Pisa)", "p_ant": -17, "p_dur": 20, "l_ant": 1, "l_dur": 8},
-    {"n": "Via di Gagno (Pisa)", "p_ant": -17, "p_dur": 20, "l_ant": 1, "l_dur": 8},
-    {"n": "Via Ugo Rindi (Pisa)", "p_ant": -18, "p_dur": 21, "l_ant": 2, "l_dur": 8}
-]
-
-for pl in varchi:
-    chiuso, info = False, ""
-    for tr in lista_treni:
-        m_p = tr["ora_p"] * 60 + tr["min_p"] + tr["ritardo"]
-        ini = (m_p + pl["p_ant"]) if tr["direzione"] == "LUCCA" else (m_p + pl["l_ant"])
-        dur = pl["p_dur"] if tr["direzione"] == "LUCCA" else pl["l_dur"]
-        fin = ini + dur + estensione
-        if ini <= min_ora <= fin:
-            chiuso = True
-            info = f"🛑 CHIUSO | Fino alle {fin//60:02d}:{fin%60:02d}"
-            break
-    if not chiuso and treni_futuri:
-        prossimi = []
-        for _, tr in treni_futuri:
-            m_p = tr["ora_p"] * 60 + tr["min_p"] + tr["ritardo"]
-            ini_f = (m_p + pl["p_ant"]) if tr["direzione"] == "LUCCA" else (m_p + pl["l_ant"])
-            if ini_f > min_ora: prossimi.append(ini_f)
-        if prossimi:
-            p_ini = min(prossimi)
-            info = f"🟢 APERTO | Preavviso Chiusura: {p_ini//60:02d}:{p_ini%60:02d} (tra {p_ini - min_ora} min)"
-        else: info = "🟢 APERTO | Nessun transito"
-    elif not chiuso: info = "🟢 APERTO | Fine servizio"
-
-    if chiuso: st.error(f"#### {pl['n']}\n{info}")
-    else: st.success(f"#### {pl['n']}\n{info}")
-
-# --- DONAZIONI ---
-st.markdown("---")
-st.markdown('<div style="text-align:center;"><a href="https://www.paypal.com/paypalme/rebolo73" target="_blank"><button style="background:#FF813F;color:white;border:none;padding:10px 20px;font-weight:bold;border-radius:6px;cursor:pointer;">☕ Offri un caffè al server</button></a></div>', unsafe_allow_html=True)
-st.write("© 2026 BinarioLibero")
+varchi =
