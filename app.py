@@ -9,7 +9,7 @@ st.markdown("""
     h1, h2, h3, h4, p, span, div, li { color: #ffffff !important; }
     .stAlert p { color: #ffffff !important; }
     .stButton>button, .stLinkButton>a { background-color: #1e293b !important; color: #ffffff !important; border: 1px solid #475569 !important; width: 100% !important; text-align: center !important; }
-    .sp-box { background: #1e293b; border: 1px dashed #475569; border-radius: 8px; padding: 12px; text-align: center; margin-bottom: 8px; }
+    .sp-box { background: #1e293b; border: 1px dashed #475569; border-radius: 8px; padding: 12px; text-align: center; margin-bottom: 8px; min-height: 90px; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -74,17 +74,21 @@ else: st.info("📋 Servizio terminato.")
 st.markdown("---")
 st.write("### 🤝 I nostri Sponsor")
 c1, c2, c3 = st.columns(3)
-ml_sp = "mailto:info.railflow@gmail.com?subject=Richiesta%20Sponsorizzazione"
+EMAIL_TARGET = "info.railflow@gmail.com"
 
 with c1:
-    st.markdown('<div class="sp-box"><b style="color:white;">Il Cappellaio Matto</b><br>🎩</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sp-box"><b style="color:white; font-size:14px;">Il Cappellaio Matto</b><br>🎩<br><span style="font-size:11px; color:#94a3b8;">Pisa</span></div>', unsafe_allow_html=True)
     st.link_button("🎩 Pagina FB", "https://www.facebook.com/ilcappellaiomattopisa")
 with c2:
-    st.markdown('<div class="sp-box"><b style="color:white;">Spazio Disponibile</b><br>🤝</div>', unsafe_allow_html=True)
-    st.link_button("📢 Sponsor", ml_sp)
+    st.markdown(f'<div class="sp-box"><b style="color:white; font-size:14px;">Spazio Disponibile</b><br>🤝<br><span style="font-size:11px; color:#cbd5e1;">{EMAIL_TARGET}</span></div>', unsafe_allow_html=True)
+    if st.button("📢 Diventa Sponsor", key="btn_sp"):
+        st.code(EMAIL_TARGET, language="text")
+        st.toast("Email mostrata! Copiala pure.")
 with c3:
-    st.markdown('<div class="sp-box"><b style="color:white;">Spazio Disponibile</b><br>🤝</div>', unsafe_allow_html=True)
-    st.link_button("📢 Info Email", ml_sp)
+    st.markdown(f'<div class="sp-box"><b style="color:white; font-size:14px;">Spazio Disponibile</b><br>🤝<br><span style="font-size:11px; color:#cbd5e1;">{EMAIL_TARGET}</span></div>', unsafe_allow_html=True)
+    if st.button("📢 Info Email", key="btn_inf"):
+        st.code(EMAIL_TARGET, language="text")
+        st.toast("Email mostrata! Copiala pure.")
 
 st.markdown("---")
 st.write("### 🚊 STATO VARCHI")
