@@ -3,7 +3,6 @@ import datetime, pytz, requests
 
 st.set_page_config(page_title="BinarioLibero", layout="centered")
 
-# Orari base in riga singola per occupare meno spazio
 ORARI = [
     (5,30,"LUCCA","18502"),(5,51,"PISA","18501"),(6,23,"LUCCA","18504"),(6,35,"PISA","18503"),
     (6,54,"LUCCA","18506"),(7,17,"PISA","6915"),(7,30,"LUCCA","18508"),(7,47,"PISA","18505"),
@@ -68,6 +67,25 @@ if treni_futuri:
 else:
     st.info("📋 Servizio terminato.")
 
+# --- NUOVA SEZIONE SPONSOR COMPATTA ---
+st.markdown("---")
+st.write("### 🤝 I nostri Sponsor")
+c1, c2, c3 = st.columns(3)
+ml_sp = "mailto:info.railflow@gmail.com?subject=Sponsor"
+box_html = '<div style="background:#1e293b;border:1px dashed #475569;border-radius:6px;padding:8px;text-align:center;font-size:13px;color:#94a3b8!important;">'
+
+with c1:
+    st.markdown(f'{box_html}Il Cappellaio Matto<br>🎩</div>', unsafe_allow_html=True)
+    st.link_button("🎩 Pagina FB", "https://www.facebook.com/ilcappellaiomattopisa")
+with c2:
+    st.markdown(f'{box_html}Spazio Disponibile<br>🤝</div>', unsafe_allow_html=True)
+    st.link_button("📢 Diventa Sponsor", ml_sp)
+with c3:
+    st.markdown(f'{box_html}Spazio Disponibile<br>🤝</div>', unsafe_allow_html=True)
+    st.link_button("📢 Info Email", ml_sp)
+
+# --- STATO VARCHI ---
+st.markdown("---")
 st.write("### 🚊 STATO VARCHI")
 varchi = [
     {"n": "San Giuliano Terme", "p_ant": -13, "p_dur": 16, "l_ant": -3, "l_dur": 8},
@@ -103,4 +121,7 @@ for pl in varchi:
     if chiuso: st.error(f"#### {pl['n']}\n{info}")
     else: st.success(f"#### {pl['n']}\n{info}")
 
+# --- DONAZIONI ---
+st.markdown("---")
+st.markdown('<div style="text-align:center;"><a href="https://www.paypal.com/paypalme/rebolo73" target="_blank"><button style="background:#FF813F;color:white;border:none;padding:10px 20px;font-weight:bold;border-radius:6px;cursor:pointer;">☕ Offri un caffè al server</button></a></div>', unsafe_allow_html=True)
 st.write("© 2026 BinarioLibero")
