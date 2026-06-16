@@ -10,17 +10,13 @@ st.markdown("""<style>
     .stButton>button, .stLinkButton>a { background-color: #1e293b !important; color: #ffffff !important; border: 1px solid #475569 !important; text-align: center !important; }
 </style>""", unsafe_allow_html=True)
 
-# ORARI AGGIORNATI E VERIFICATI DA APP (Solo treni diretti 0 cambi)
-ORARI = [
-    (6,13,"LUCCA","18502"),(7,4,"PISA","18501"),(7,50,"LUCCA","18504"),
-    (8,50,"PISA","18503"),(9,3,"LUCCA","18506"),(9,22,"PISA","18505"),
-    (9,50,"LUCCA","18514"),(10,20,"PISA","18511"),(12,20,"LUCCA","18516"),
-    (12,50,"PISA","18515"),(13,20,"LUCCA","18518"),(13,43,"PISA","18517"),
-    (14,20,"LUCCA","18520"),(14,50,"PISA","18519"),(15,20,"LUCCA","18522"),
-    (15,50,"PISA","18521"),(16,19,"LUCCA","18524"),(16,50,"PISA","18523"),
-    (17,20,"LUCCA","18526"),(17,50,"PISA","18525"),(18,20,"LUCCA","18528"),
-    (18,50,"PISA","18527"),(19,20,"LUCCA","18532"),(19,50,"PISA","18531"),
-    (20,50,"LUCCA","18534"),(21,20,"PISA","18533"),(21,50,"LUCCA","18536")
+# Divisi per direzione reale di partenza (Solo treni diretti 0 cambi verificati da tua app)
+ORARI_PISA = [
+    (5,25),(7,50),(8,50),(9,50),(12,50),(14,50),(15,50),(16,50),(17,50),(18,50),(19,50),(20,50),(21,50)
+]
+
+ORARI_LUCCA = [
+    (6,13),(7,4),(9,3),(9,22),(10,20),(12,20),(13,20),(13,43),(14,20),(15,20),(16,19),(17,20),(18,20),(19,20),(21,20)
 ]
 
 st.title("⚡ BinarioLibero Pisa")
@@ -48,8 +44,10 @@ def prendi_treni():
                     treni.append({"ora_p": h, "min_p": m, "ritardo": rit, "direzione": d_name, "num": t.get('numeroTreno'), "live": True})
     except: pass
     if not treni:
-        for o, m, d, n in ORARI:
-            if (o * 60 + m) > min_ora: treni.append({"ora_p": o, "min_p": m, "ritardo": 0, "direzione": d, "num": n, "live": False})
+        for o, m in ORARI_PISA:
+            if (o * 60 + m) > min_ora: treni.append({"ora_p": o, "min_p": m, "ritardo": 0, "direzione": "LUCCA", "num": "PROG", "live": False})
+        for o, m in ORARI_LUCCA:
+            if (o * 60 + m) > min_ora: treni.append({"ora_p": o, "min_p": m, "ritardo": 0, "direzione": "PISA", "num": "PROG", "live": False})
     return treni
 
 lista_treni = prendi_treni()
@@ -64,7 +62,7 @@ for t in lista_treni:
 if treni_futuri:
     _, prox = min(treni_futuri, key=lambda x: x[0])
     h_vis = prox["ora_p"] * 60 + prox["min_p"] + prox["ritardo"]
-    st.info(f"📋 PROSSIMO TRENO: REG {prox['num']} ({prox['direzione']}) alle {h_vis//60:02d}:{h_vis%60:02d}")
+    st.info(f"📋 PROSSIMO TRENO: REG {prox['num']} (Dir. {prox['direzione']}) alle {h_vis//60:02d}:{h_vis%60:02d}")
 else: st.info("📋 Servizio terminato.")
 
 st.markdown("---")
