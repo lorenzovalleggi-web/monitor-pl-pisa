@@ -1,4 +1,4 @@
 File "/mount/src/monitor-pl-pisa/app.py", line 2
-          {"ora": 15, "min": 23, "dir": "LUCCA", "num": "18532"}, {"ora": 15, "min
-                                                                              ^
+            {"ora": 15, "min": 23, "dir": "LUCCA", "num": "18532"}, {"ora": 15, "min
+                                                                                ^
 SyntaxError: unterminated string literal (detected at line 2)
