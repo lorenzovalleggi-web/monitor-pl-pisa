@@ -115,25 +115,9 @@ for nom, p_ant, p_dur, l_ant, l_dur in VARCHI:
         ini = (m_p + p_ant) if tr["direzione"] == "LUCCA" else (m_p + l_ant)
         fin = ini + (p_dur if tr["direzione"] == "LUCCA" else l_dur) + estensione
         if ini <= min_ora <= fin:
-            chiuso, info = True, f"🛑 CHIUSO | Fino alle {fin//60:02d}:{fin%60:02d}"; break
+            chiuso, info = True, f"🛑 CHIUSO | Fino alle {fin//60:02d}:{fin%60:02d} (Treno dir. **{tr['direzione']}**)"; break
             
     if not chiuso:
         prossimi_orari = []
         for _, tr in treni_futuri:
-            m_p = tr["ora_p"] * 60 + tr["min_p"] + tr["ritardo"]
-            ini_f = (m_p + p_ant) if tr["direzione"] == "LUCCA" else (m_p + l_ant)
-            if ini_f > min_ora:
-                prossimi_orari.append(ini_f)
-        if prossimi_orari:
-            p_chiusura = min(prossimi_orari)
-            minuti_mancanti = p_chiusura - min_ora
-            info = f"🟢 APERTO | Preavviso Chiusura: {p_chiusura//60:02d}:{p_chiusura%60:02d} (tra {minuti_mancanti} min)"
-        else:
-            info = "🟢 APERTO | Nessun transito imminente"
-
-    if chiuso: st.error(f"#### {nom}\n{info}")
-    else: st.success(f"#### {nom}\n{info}")
-
-st.markdown("---")
-st.markdown('<div style="text-align:center;"><a href="https://www.paypal.com/paypalme/rebolo73" target="_blank"><button style="background:#FF813F;color:white;border:none;padding:10px 20px;font-weight:bold;border-radius:6px;cursor:pointer;">☕ Offri un caffè al server</button></a></div>', unsafe_allow_html=True)
-st.write("© 2026 BinarioLibero")
+            m_p = tr["ora_p"] * 60 +
