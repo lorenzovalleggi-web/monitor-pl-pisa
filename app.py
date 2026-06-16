@@ -10,7 +10,6 @@ st.markdown("""<style>
     .stButton>button, .stLinkButton>a { background-color: #1e293b !important; color: #ffffff !important; border: 1px solid #475569 !important; text-align: center !important; }
 </style>""", unsafe_allow_html=True)
 
-# Lista orari accorciata e compattata
 ORARI = [
     (5,30,"LUCCA","18502"),(5,51,"PISA","18501"),(6,23,"LUCCA","18504"),(6,35,"PISA","18503"),
     (6,54,"LUCCA","18506"),(7,17,"PISA","6915"),(7,30,"LUCCA","18508"),(7,47,"PISA","18505"),
@@ -71,30 +70,9 @@ with c2: st.write("**Spazio Libero** 🤝\nContattaci subito")
 with c3: st.write("**Spazio Libero** 🤝\nContattaci subito")
 
 st.write("")
-st.link_button("💬 CLICCA QUI PER INFO PUBBLICITÀ (WHATSAPP)", "https://wa.me/39320275026?text=Ciao!%20Vorrei%20informazioni%20per%20lo%20sponsor")
+# Link corretto con il tuo numero reale 392 02 75 026
+st.link_button("💬 CLICCA QUI PER INFO PUBBLICITÀ (WHATSAPP)", "https://wa.me/393920275026?text=Ciao!%20Vorrei%20informazioni%20per%20lo%20sponsor")
 
 st.markdown("---")
 st.write("### 🚊 STATO VARCHI")
 VARCHI = [("San Giuliano Terme", -13, 16, -3, 8), ("Via Ulisse Dini (Gello)", -15, 18, -1, 8), ("Via XXIV Maggio (Pisa)", -17, 20, 1, 8), ("Via di Gagno (Pisa)", -17, 20, 1, 8), ("Via Ugo Rindi (Pisa)", -18, 21, 2, 8)]
-
-for nom, p_ant, p_dur, l_ant, l_dur in VARCHI:
-    chiuso, msg = False, ""
-    for tr in lista_treni:
-        mt = tr["ora_p"] * 60 + tr["min_p"] + tr["ritardo"]
-        ini = (mt + p_ant) if tr["direzione"] == "LUCCA" else (mt + l_ant)
-        fin = ini + (p_dur if tr["direzione"] == "LUCCA" else l_dur) + est
-        if ini <= min_ora <= fin:
-            chiuso, msg = True, f"🛑 CHIUSO | Fino alle {fin//60:02d}:{fin%60:02d} (Treno dir. {tr['direzione']})"
-            break
-    if not chiuso:
-        fut = [((tr["ora_p"]*60 + tr["min_p"] + tr["ritardo"] + (p_ant if tr["direzione"] == "LUCCA" else l_ant)), tr["direzione"]) for _, tr in treni_futuri if (tr["ora_p"]*60 + tr["min_p"] + tr["ritardo"] + (p_ant if tr["direzione"] == "LUCCA" else l_ant)) > min_ora]
-        if fut:
-            p_ch, dr = min(fut, key=lambda x: x[0])
-            msg = f"🟢 APERTO | Preavviso: {p_ch//60:02d}:{p_ch%60:02d} ({p_ch - min_ora} min - Dir. {dr})"
-        else: msg = "🟢 APERTO | Nessun transito"
-    if chiuso: st.error(f"#### {nom}\n{msg}")
-    else: st.success(f"#### {nom}\n{msg}")
-
-st.markdown("---")
-st.link_button("☕ Offri un caffè al server", "https://www.paypal.com/paypalme/rebolo73")
-st.write("© 2026 BinarioLibero")
