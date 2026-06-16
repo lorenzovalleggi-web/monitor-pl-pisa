@@ -79,15 +79,44 @@ with c1:
     st.markdown('<div class="sp-box"><b style="color:white; font-size:14px;">Il Cappellaio Matto</b><br>🎩<br><span style="font-size:11px; color:#94a3b8;">Pisa</span></div>', unsafe_allow_html=True)
     st.link_button("🎩 Pagina FB", "https://www.facebook.com/ilcappellaiomattopisa")
 
-with c2:
-    st.markdown('<div class="sp-box"><b style="color:white; font-size:14px;">Spazio Disponibile</b><br>🤝<br><span style="font-size:11px; color:#94a3b8;">Scrivici sotto</span></div>', unsafe_allow_html=True)
+with c2: st.markdown('<div class="sp-box"><b style="color:white; font-size:14px;">Spazio Disponibile</b><br>🤝<br><span style="font-size:11px; color:#94a3b8;">Scrivici sotto</span></div>', unsafe_allow_html=True)
+with c3: st.markdown('<div class="sp-box"><b style="color:white; font-size:14px;">Spazio Disponibile</b><br>🤝<br><span style="font-size:11px; color:#94a3b8;">Scrivici sotto</span></div>', unsafe_allow_html=True)
 
-with c3:
-    st.markdown('<div class="sp-box"><b style="color:white; font-size:14px;">Spazio Disponibile</b><br>🤝<br><span style="font-size:11px; color:#94a3b8;">Scrivici sotto</span></div>', unsafe_allow_html=True)
+# Link di reindirizzamento esterno ultra-sicuro senza moduli locali soggetti a crash
+st.link_button("📩 CONTATTACI PER INSERIRE LA TUA PUBBLICITÀ", "https://formsubmit.co/el/info.railflow@gmail.com")
 
-# Gestione modulo lineare separata (senza blocchi "with form" per evitare crash)
-if st.button("📩 Vuoi inserire la tua pubblicità? Clicca qui"):
-    st.dialog("Modulo Sponsor")
-    nome_att = st.text_input("Nome o Attività", key="f_nome")
-    email_ut = st.text_input("La tua Email", key="f_mail")
-    msg_ut = st.text_area("Messaggio o richiesta",
+st.markdown("---")
+st.write("### 🚊 STATO VARCHI")
+VARCHI = [
+    ("San Giuliano Terme", -13, 16, -3, 8), ("Via Ulisse Dini (Gello)", -15, 18, -1, 8),
+    ("Via XXIV Maggio (Pisa)", -17, 20, 1, 8), ("Via di Gagno (Pisa)", -17, 20, 1, 8),
+    ("Via Ugo Rindi (Pisa)", -18, 21, 2, 8)
+]
+
+for nom, p_ant, p_dur, l_ant, l_dur in VARCHI:
+    chiuso, msg = False, ""
+    for tr in lista_treni:
+        mt = tr["ora_p"] * 60 + tr["min_p"] + tr["ritardo"]
+        ini = (mt + p_ant) if tr["direzione"] == "LUCCA" else (mt + l_ant)
+        fin = ini + (p_dur if tr["direzione"] == "LUCCA" else l_dur) + estensione
+        if ini <= min_ora <= fin:
+            chiuso = True
+            msg = f"🛑 CHIUSO | Fino alle {fin//60:02d}:{fin%60:02d} (Treno dir. {tr['direzione']})"
+            break
+            
+    if not chiuso:
+        fut = []
+        for _, tr in treni_futuri:
+            mt = tr["ora_p"] * 60 + tr["min_p"] + tr["ritardo"]
+            ini_f = (mt + p_ant) if tr["direzione"] == "LUCCA" else (mt + l_ant)
+            if ini_f > min_ora: fut.append((ini_f, tr["direzione"]))
+        if fut:
+            p_ch, dr = min(fut, key=lambda x: x[0])
+            msg = f"🟢 APERTO | Preavviso Chiusura: {p_ch//60:02d}:{p_ch%60:02d} ({p_ch - min_ora} min - Dir. {dr})"
+        else: msg = "🟢 APERTO | Nessun transito"
+
+    if chiuso: st.error(f"#### {nom}\n{msg}")
+    else: st.success(f"#### {nom}\n{msg}")
+
+st.markdown("---")
+st.markdown('<div style="text-align:center;"><a href="https://www.paypal
