@@ -10,13 +10,18 @@ st.markdown("""<style>
     .stButton>button, .stLinkButton>a { background-color: #1e293b !important; color: #ffffff !important; border: 1px solid #475569 !important; text-align: center !important; }
 </style>""", unsafe_allow_html=True)
 
-# Divisi per direzione reale di partenza (Solo treni diretti 0 cambi verificati da tua app)
+# ORARI DA PISA CENTRALE VERSO LUCCA (Verificati da tua app)
 ORARI_PISA = [
-    (5,25),(7,50),(8,50),(9,50),(12,50),(14,50),(15,50),(16,50),(17,50),(18,50),(19,50),(20,50),(21,50)
+    (5,25), (6,13), (7,4), (7,50), (8,50), (9,3), (9,22), (9,50), (10,20), 
+    (12,20), (12,50), (13,20), (13,43), (14,20), (14,50), (15,20), (15,50), 
+    (16,19), (16,50), (17,20), (17,50), (18,20), (18,50), (19,20), (19,50), 
+    (20,50), (21,20), (21,50)
 ]
 
+# ORARI DA LUCCA VERSO PISA S. ROSSORE (Verificati ora da tua app)
 ORARI_LUCCA = [
-    (6,13),(7,4),(9,3),(9,22),(10,20),(12,20),(13,20),(13,43),(14,20),(15,20),(16,19),(17,20),(18,20),(19,20),(21,20)
+    (6,52), (7,08), (7,40), (7,53), (8,15), (9,10), (9,42), (10,12), (10,42), 
+    (12,42), (13,12)
 ]
 
 st.title("⚡ BinarioLibero Pisa")
