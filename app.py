@@ -3,6 +3,16 @@ import datetime, pytz, requests
 
 st.set_page_config(page_title="BinarioLibero", layout="centered")
 
+# CSS globale per forzare la visibilità di tutti i testi su sfondo scuro
+st.markdown("""
+    <style>
+    .stApp { background-color: #0f172a !important; color: #ffffff !important; }
+    h1, h2, h3, h4, p, span, div, li { color: #ffffff !important; }
+    .stAlert p { color: #ffffff !important; }
+    .stButton>button { background-color: #1e293b !important; color: white !important; border: 1px solid #475569; }
+    </style>
+    """, unsafe_allow_html=True)
+
 ORARI = [
     (5,30,"LUCCA","18502"),(5,51,"PISA","18501"),(6,23,"LUCCA","18504"),(6,35,"PISA","18503"),
     (6,54,"LUCCA","18506"),(7,17,"PISA","6915"),(7,30,"LUCCA","18508"),(7,47,"PISA","18505"),
@@ -67,13 +77,12 @@ if treni_futuri:
 else:
     st.info("📋 Servizio terminato.")
 
-# --- SEZIONE SPONSOR CORRETTA ---
+# --- SEZIONE SPONSOR ---
 st.markdown("---")
 st.write("### 🤝 I nostri Sponsor")
 c1, c2, c3 = st.columns(3)
 ml_sp = "mailto:info.railflow@gmail.com?subject=Sponsor"
-# Colore del testo forzato a bianco (#ffffff)
-box_html = '<div style="background:#1e293b;border:1px dashed #475569;border-radius:6px;padding:8px;text-align:center;font-size:13px;color:#ffffff !important;font-weight:bold;">'
+box_html = '<div style="background:#1e293b;border:1px dashed #475569;border-radius:6px;padding:8px;text-align:center;font-size:13px;color:#ffffff!important;font-weight:bold;">'
 
 with c1:
     st.markdown(f'{box_html}Il Cappellaio Matto<br>🎩</div>', unsafe_allow_html=True)
@@ -99,9 +108,4 @@ varchi = [
 for pl in varchi:
     chiuso, info = False, ""
     for tr in lista_treni:
-        m_p = tr["ora_p"] * 60 + tr["min_p"] + tr["ritardo"]
-        ini = (m_p + pl["p_ant"]) if tr["direzione"] == "LUCCA" else (m_p + pl["l_ant"])
-        dur = pl["p_dur"] if tr["direzione"] == "LUCCA" else pl["l_dur"]
-        fin = ini + dur + estensione
-        if ini <= min_ora <= fin:
-            chi
+        m_p = tr["ora_p"] * 60 +
