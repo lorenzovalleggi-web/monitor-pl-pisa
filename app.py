@@ -26,7 +26,9 @@ ORARI = [
 st.title("⚡ BinarioLibero Pisa")
 if st.button("🔄 Aggiorna"): st.rerun()
 
-ora_adesso = datetime.datetime.now(pytz.timezone('Europe/Rome'))
+try: ora_adesso = datetime.datetime.now(pytz.timezone('Europe/Rome'))
+except: ora_adesso = datetime.datetime.now()
+
 min_ora = ora_adesso.hour * 60 + ora_adesso.minute
 st.write(f"Ultimo controllo: {ora_adesso.strftime('%H:%M:%S')}")
 
@@ -42,7 +44,8 @@ def prendi_treni():
                 dest = t.get('destinazione', '').upper()
                 if f_key in dest or "LIVORNO" in dest or "PISTOIA" in dest or "FIRENZE" in dest:
                     h, m = map(int, t.get('orarioProgrammato', '').split(':'))
-                    rit = int(t.get('ritardo', 0) or 0)
+                    rit = t.get('ritardo', 0)
+                    rit = 0 if rit in ["---", None] else int(rit)
                     treni.append({"ora_p": h, "min_p": m, "ritardo": rit, "direzione": d_name, "num": t.get('numeroTreno'), "live": True})
     except: pass
     if not treni:
@@ -54,13 +57,18 @@ lista_treni = prendi_treni()
 ritardi = [t["ritardo"] for t in lista_treni if t["live"]]
 est = min(max(ritardi), 12) if (ritardi and max(ritardi) >= 4) else 0
 
-treni_futuri = [(t["ora_p"]*60 + t["min_p"] + t["ritardo"], t) for t in lista_treni if (t["ora_p"]*60 + t["min_p"] + t["ritardo"] + 15) > min_ora]
+treni_futuri = []
+for t in lista_treni:
+    mt = t["ora_p"] * 60 + t["min_p"] + t["ritardo"]
+    if (mt + 15) > min_ora:
+        treni_futuri.append((mt, t))
 
 if treni_futuri:
     _, prox = min(treni_futuri, key=lambda x: x[0])
     h_vis = prox["ora_p"] * 60 + prox["min_p"] + prox["ritardo"]
     st.info(f"📋 PROSSIMO TRENO: REG {prox['num']} ({prox['direzione']}) alle {h_vis//60:02d}:{h_vis%60:02d}")
-else: st.info("📋 Servizio terminato.")
+else: 
+    st.info("📋 Servizio terminato.")
 
 st.markdown("---")
 st.write("### 🤝 I nostri Sponsor")
@@ -70,9 +78,25 @@ with c2: st.write("**Spazio Libero** 🤝\nContattaci subito")
 with c3: st.write("**Spazio Libero** 🤝\nContattaci subito")
 
 st.write("")
-# Link corretto con il tuo numero reale 392 02 75 026
 st.link_button("💬 CLICCA QUI PER INFO PUBBLICITÀ (WHATSAPP)", "https://wa.me/393920275026?text=Ciao!%20Vorrei%20informazioni%20per%20lo%20sponsor")
 
 st.markdown("---")
 st.write("### 🚊 STATO VARCHI")
 VARCHI = [("San Giuliano Terme", -13, 16, -3, 8), ("Via Ulisse Dini (Gello)", -15, 18, -1, 8), ("Via XXIV Maggio (Pisa)", -17, 20, 1, 8), ("Via di Gagno (Pisa)", -17, 20, 1, 8), ("Via Ugo Rindi (Pisa)", -18, 21, 2, 8)]
+
+for nom, p_ant, p_dur, l_ant, l_dur in VARCHI:
+    chiuso, msg = False, ""
+    for _, tr in treni_futuri:
+        mt = tr["ora_p"] * 60 + tr["min_p"] + tr["ritardo"]
+        ini = (mt + p_ant) if tr["direzione"] == "LUCCA" else (mt + l_ant)
+        fin = ini + (p_dur if tr["direzione"] == "LUCCA" else l_dur) + est
+        if ini <= min_ora <= fin:
+            chiuso = True
+            msg = f"🛑 CHIUSO | Fino alle {fin//60:02d}:{fin%60:02d} (Treno dir. {tr['direzione']})"
+            break
+            
+    if not chiuso:
+        fut = []
+        for _, tr in treni_futuri:
+            mt = tr["ora_p"] * 60 + tr["min_p"] + tr["ritardo"]
+            ini_f = (mt
