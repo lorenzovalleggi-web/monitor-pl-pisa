@@ -1,7 +1,13 @@
 import streamlit as st
 import datetime, pytz, requests
+import time
 
 st.set_page_config(page_title="BinarioLibero", layout="centered")
+
+# Forza l'auto-aggiornamento della pagina ogni 15 secondi senza pacchetti esterni
+if "counter" not in st.session_state:
+    st.session_state.counter = 0
+st.session_state.counter += 1
 
 st.markdown("""<style>
     .stApp { background-color: #0f172a !important; color: #ffffff !important; }
@@ -10,7 +16,7 @@ st.markdown("""<style>
     .stButton>button, .stLinkButton>a { background-color: #1e293b !important; color: #ffffff !important; border: 1px solid #475569 !important; text-align: center !important; }
 </style>""", unsafe_allow_html=True)
 
-# ORARI DA PISA CENTRALE VERSO LUCCA (Senza zeri iniziali vietati da Python)
+# ORARI DA PISA CENTRALE VERSO LUCCA
 ORARI_PISA = [
     (5,25), (6,13), (7,4), (7,50), (8,50), (9,3), (9,22), (9,50), (10,20), 
     (12,20), (12,50), (13,20), (13,43), (14,20), (14,50), (15,20), (15,50), 
@@ -18,7 +24,7 @@ ORARI_PISA = [
     (20,50), (21,20), (21,50)
 ]
 
-# ORARI DA LUCCA VERSO PISA S. ROSSORE (Corretti senza zeri iniziali)
+# ORARI DA LUCCA VERSO PISA S. ROSSORE
 ORARI_LUCCA = [
     (6,52), (7,8), (7,40), (7,53), (8,15), (9,10), (9,42), (10,12), (10,42), 
     (12,42), (13,12)
@@ -31,9 +37,9 @@ try: ora_adesso = datetime.datetime.now(pytz.timezone('Europe/Rome'))
 except: ora_adesso = datetime.datetime.now()
 
 min_ora = ora_adesso.hour * 60 + ora_adesso.minute
-st.write(f"Ultimo controllo: {ora_adesso.strftime('%H:%M:%S')}")
+st.write(f"Ultimo controllo: {ora_adesso.strftime('%H:%M:%S')} (Auto-refresh attivo)")
 
-@st.cache_data(ttl=15)
+@st.cache_data(ttl=10) # Abbassato il cache a 10 secondi per massima precisione live
 def prendi_treni():
     treni = []
     try:
@@ -107,3 +113,7 @@ for nom, p_ant, p_dur, l_ant, l_dur in VARCHI:
 st.markdown("---")
 st.link_button("☕ Offri un caffè al server", "https://www.paypal.com/paypalme/rebolo73")
 st.write("© 2026 BinarioLibero")
+
+# Questo micro-timer dice alla pagina di ricaricarsi ogni 15 secondi esatti
+time.sleep(15)
+st.rerun()
