@@ -8,13 +8,11 @@ st.markdown("""
     .stApp { background-color: #0f172a !important; color: #ffffff !important; }
     h1, h2, h3, h4, p, span, div, li { color: #ffffff !important; }
     .stAlert p { color: #ffffff !important; }
-    .stButton>button, .stLinkButton>a { background-color: #1e293b !important; color: #ffffff !important; border: 1px solid #475569 !important; text-align: center !important; }
+    .stButton>button, .stLinkButton>a { background-color: #1e293b !important; color: #ffffff !important; border: 1px solid #475569 !important; width: 100% !important; text-align: center !important; }
     </style>
     """, unsafe_allow_html=True)
 
-ORARI = [
-    (5,30,"LUCCA","18502"),(5,51,"PISA","18501"),(6,23,"LUCCA","18504"),(6,35,"PISA","18503"),(6,54,"LUCCA","18506"),(7,17,"PISA","6915"),(7,30,"LUCCA","18508"),(7,47,"PISA","18505"),(8,23,"LUCCA","18514"),(8,51,"PISA","18511"),(9,23,"LUCCA","18516"),(9,51,"PISA","18515"),(10,23,"LUCCA","18518"),(10,51,"PISA","18517"),(11,23,"LUCCA","18520"),(11,51,"PISA","18519"),(12,23,"LUCCA","18522"),(12,43,"PISA","18521"),(13,13,"LUCCA","18524"),(13,36,"PISA","18523"),(13,53,"LUCCA","18526"),(14,13,"PISA","18525"),(14,35,"LUCCA","18528"),(14,43,"PISA","18527"),(15,23,"LUCCA","18532"),(15,51,"PISA","18531"),(16,23,"LUCCA","18534"),(16,51,"PISA","18533"),(17,23,"LUCCA","18536"),(17,46,"PISA","18535"),(18,23,"LUCCA","18540"),(18,51,"PISA","18537"),(19,23,"LUCCA","18542"),(19,51,"PISA","18541"),(20,23,"LUCCA","18544"),(20,46,"PISA","18543"),(21,23,"LUCCA","18546"),(21,58,"PISA","18545")
-]
+ORARI = [(5,30,"LUCCA","18502"),(5,51,"PISA","18501"),(6,23,"LUCCA","18504"),(6,35,"PISA","18503"),(6,54,"LUCCA","18506"),(7,17,"PISA","6915"),(7,30,"LUCCA","18508"),(7,47,"PISA","18505"),(8,23,"LUCCA","18514"),(8,51,"PISA","18511"),(9,23,"LUCCA","18516"),(9,51,"PISA","18515"),(10,23,"LUCCA","18518"),(10,51,"PISA","18517"),(11,23,"LUCCA","18520"),(11,51,"PISA","18519"),(12,23,"LUCCA","18522"),(12,43,"PISA","18521"),(13,13,"LUCCA","18524"),(13,36,"PISA","18523"),(13,53,"LUCCA","18526"),(14,13,"PISA","18525"),(14,35,"LUCCA","18528"),(14,43,"PISA","18527"),(15,23,"LUCCA","18532"),(15,51,"PISA","18531"),(16,23,"LUCCA","18534"),(16,51,"PISA","18533"),(17,23,"LUCCA","18536"),(17,46,"PISA","18535"),(18,23,"LUCCA","18540"),(18,51,"PISA","18537"),(19,23,"LUCCA","18542"),(19,51,"PISA","18541"),(20,23,"LUCCA","18544"),(20,46,"PISA","18543"),(21,23,"LUCCA","18546"),(21,58,"PISA","18545")]
 
 st.title("⚡ BinarioLibero Pisa")
 if st.button("🔄 Aggiorna"): st.rerun()
@@ -65,10 +63,12 @@ st.markdown("---")
 st.write("### 🤝 I nostri Sponsor")
 c1, c2, c3 = st.columns(3)
 with c1: st.write("**Il Cappellaio Matto** 🎩\nPisa\n[Pagina FB](https://www.facebook.com/ilcappellaiomattopisa)")
-with c2: st.write("**Spazio Libero** 🤝\nContattaci via mail")
-with c3: st.write("**Spazio Libero** 🤝\nContattaci via mail")
+with c2: st.write("**Spazio Libero** 🤝\nUsa il tasto sotto")
+with c3: st.write("**Spazio Libero** 🤝\nUsa il tasto sotto")
 
-st.write("✉️ Per info pubblicità scrivi a: **info.railflow@gmail.com**")
+st.write("")
+# Pulsante cliccabile che apre direttamente l'applicazione di posta dell'utente
+st.link_button("📩 CLICCA QUI PER INVIARCI UNA EMAIL", "mailto:info.railflow@gmail.com?subject=Richiesta%20Sponsor%20BinarioLibero")
 
 st.markdown("---")
 st.write("### 🚊 STATO VARCHI")
@@ -84,7 +84,6 @@ for nom, p_ant, p_dur, l_ant, l_dur in VARCHI:
             chiuso = True
             msg = f"🛑 CHIUSO | Fino alle {fin//60:02d}:{fin%60:02d} (Treno dir. {tr['direzione']})"
             break
-            
     if not chiuso:
         fut = []
         for _, tr in treni_futuri:
@@ -93,7 +92,7 @@ for nom, p_ant, p_dur, l_ant, l_dur in VARCHI:
             if ini_f > min_ora: fut.append((ini_f, tr["direzione"]))
         if fut:
             p_ch, dr = min(fut, key=lambda x: x[0])
-            msg = f"🟢 APERTO | Preavviso Chiusura: {p_ch//60:02d}:{p_ch%60:02d} ({p_ch - min_ora} min - Dir. {dr})"
+            msg = f"🟢 APERTO | Preavviso: {p_ch//60:02d}:{p_ch%60:02d} ({p_ch - min_ora} min - Dir. {dr})"
         else: msg = "🟢 APERTO | Nessun transito"
 
     if chiuso: st.error(f"#### {nom}\n{msg}")
