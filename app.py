@@ -78,24 +78,17 @@ c1, c2, c3 = st.columns(3)
 with c1:
     st.markdown('<div class="sp-box"><b style="color:white; font-size:14px;">Il Cappellaio Matto</b><br>🎩<br><span style="font-size:11px; color:#94a3b8;">Pisa</span></div>', unsafe_allow_html=True)
     st.link_button("🎩 Pagina FB", "https://www.facebook.com/ilcappellaiomattopisa")
-with c2:
-    st.markdown('<div class="sp-box"><b style="color:white; font-size:14px;">Spazio Disponibile</b><br>🤝<br><span style="font-size:11px; color:#94a3b8;">Scrivici sotto</span></div>', unsafe_allow_html=True)
-with c3:
-    st.markdown('<div class="sp-box"><b style="color:white; font-size:14px;">Spazio Disponibile</b><br>🤝<br><span style="font-size:11px; color:#94a3b8;">Scrivici sotto</span></div>', unsafe_allow_html=True)
+with c2: st.markdown('<div class="sp-box"><b style="color:white; font-size:14px;">Spazio Disponibile</b><br>🤝<br><span style="font-size:11px; color:#94a3b8;">Scrivici sotto</span></div>', unsafe_allow_html=True)
+with c3: st.markdown('<div class="sp-box"><b style="color:white; font-size:14px;">Spazio Disponibile</b><br>🤝<br><span style="font-size:11px; color:#94a3b8;">Scrivici sotto</span></div>', unsafe_allow_html=True)
 
-# Form nativo con reindirizzamento sicuro HTML a prova di blocco server
 if st.button("📩 Vuoi inserire la tua pubblicità? Clicca qui"):
     st.dialog("Modulo Sponsor")
-    nome_att = st.text_input("Nome o Attività")
-    email_ut = st.text_input("La tua Email")
-    msg_ut = st.text_area("Messaggio o dettagli richiesta")
-    
+    nome_att = st.text_input("Nome")
+    email_ut = st.text_input("Email")
+    msg_ut = st.text_area("Messaggio")
     if nome_att and email_ut and msg_ut:
-        link_form = f"https://formsubmit.co/info.railflow@gmail.com?name={nome_att}&email={email_ut}&message={msg_ut}&_subject=Nuovo%20Sponsor%20BinarioLibero"
-        st.write("👍 Campi compilati correttamente!")
-        st.link_button("🚀 INVIA ORA L'EMAIL", link_form)
-    else:
-        st.info("Compila i tre campi sopra per sbloccare il tasto di invio.")
+        lnk = f"https://formsubmit.co/info.railflow@gmail.com?name={nome_att}&email={email_ut}&message={msg_ut}"
+        st.link_button("🚀 INVIA EMAIL CONFERMA", lnk)
 
 st.markdown("---")
 st.write("### 🚊 STATO VARCHI")
@@ -106,13 +99,15 @@ VARCHI = [
 ]
 
 for nom, p_ant, p_dur, l_ant, l_dur in VARCHI:
-    chiuso, info = False, ""
+    chiuso, msg = False, ""
     for tr in lista_treni:
         mt = tr["ora_p"] * 60 + tr["min_p"] + tr["ritardo"]
         ini = (mt + p_ant) if tr["direzione"] == "LUCCA" else (mt + l_ant)
         fin = ini + (p_dur if tr["direzione"] == "LUCCA" else l_dur) + estensione
         if ini <= min_ora <= fin:
-            chiuso, info = True, f"🛑 CHIUSO | Fino alle {fin//60:02d}:{fin%60:02d} (Treno dir. **{tr['direzione']}**)"; break
+            chiuso = True
+            msg = f"🛑 CHIUSO | Fino alle {fin//60:02d}:{fin%60:02d} (Treno dir. {tr['direzione']})"
+            break
             
     if not chiuso:
         fut = []
@@ -122,5 +117,13 @@ for nom, p_ant, p_dur, l_ant, l_dur in VARCHI:
             if ini_f > min_ora: fut.append((ini_f, tr["direzione"]))
         if fut:
             p_ch, dr = min(fut, key=lambda x: x[0])
-            info = f"🟢 APERTO | Preavviso Chiusura: {p_ch//60:02d}:{p_ch%60:02d} (tra {p_ch - min_ora} min per treno dir. **{dr}**)"
-        else: info = "🟢 APERTO | Nessun trans
+            msg = f"🟢 APERTO | Preavviso Chiusura: {p_ch//60:02d}:{p_ch%60:02d} ({p_ch - min_ora} min - Dir. {dr})"
+        else:
+            msg = "🟢 APERTO | Nessun transito"
+
+    if chiuso: st.error(f"#### {nom}\n{msg}")
+    else: st.success(f"#### {nom}\n{msg}")
+
+st.markdown("---")
+st.markdown('<div style="text-align:center;"><a href="https://www.paypal.com/paypalme/rebolo73" target="_blank"><button style="background:#FF813F;color:white;border:none;padding:10px 20px;font-weight:bold;border-radius:6px;cursor:pointer;">☕ Offri un caffè al server</button></a></div>', unsafe_allow_html=True)
+st.write("© 2026 BinarioLibero")
