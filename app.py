@@ -2,11 +2,7 @@ import streamlit as st
 import datetime, pytz, requests, os
 from streamlit_autorefresh import st_autorefresh
 
-st.set_page_config(
-    page_title="BinarioLibero Pisa",
-    page_icon="🚦",
-    layout="centered"
-)
+st.set_page_config(page_title="BinarioLibero", layout="centered")
 
 try:
     st_autorefresh(interval=15000, key="datarefresh")
@@ -15,19 +11,17 @@ except:
 
 st.markdown("""
     <style>
-    .stApp { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: #f8fafc; }
+    .stApp { background: #0f172a; color: #f8fafc; }
     h1, h2, h3, h4, p, span, div { color: #f8fafc !important; }
-    a { color: #38bdf8 !important; text-decoration: underline; }
-    .stAlert { border-radius: 12px !important; border: none !important; box-shadow: 0 4px 15px rgba(0,0,0,0.3) !important; }
-    .stButton>button { background-color: #334155 !important; color: white !important; border-radius: 8px !important; width: 100%; }
-    .sponsor-box { background-color: #1e293b; border: 1px dashed #475569; border-radius: 8px; padding: 15px; text-align: center; margin-bottom: 10px; color: #94a3b8 !important; font-size: 14px; }
+    .stAlert { border-radius: 8px !important; }
+    .sponsor-box { background: #1e293b; border: 1px dashed #475569; padding: 10px; text-align: center; font-size: 12px; }
     </style>
     """, unsafe_allow_html=True)
 
 st.title("⚡ BinarioLibero")
-st.subheader("Meteo passaggi a livello: Pisa - San Giuliano")
+st.subheader("Pisa - San Giuliano")
 
-if st.button("🔄 Aggiorna Stato In Tempo Reale"):
+if st.button("🔄 Aggiorna"):
     st.rerun()
 
 try:
@@ -36,7 +30,7 @@ try:
 except:
     ora_adesso = datetime.datetime.now()
 
-st.write(f"Ultimo controllo: **{ora_adesso.strftime('%H:%M:%S')}**")
+st.write(f"Orario: {ora_adesso.strftime('%H:%M:%S')}")
 minuti_ora = ora_adesso.hour * 60 + ora_adesso.minute
 
 ORARIO_TABELLA = [
@@ -84,61 +78,8 @@ ORARIO_TABELLA = [
 def recupera_treni():
     treni = []
     try:
-        dt_str = ora_adesso.strftime('%Y-%m-%dT00:00:00')
-        stazioni = [
-            ("S06411", "PISA", "PISA"),
-            ("S06501", "LUCCA", "LUCCA")
-        ]
+        dt = ora_adesso.strftime('%Y-%m-%dT00:00:00')
+        stazioni = [("S06411", "PISA", "PISA"), ("S06501", "LUCCA", "LUCCA")]
         for v_id, d_name, f_key in stazioni:
             try:
-                url = f"http://www.viaggiatreno.it/viaggiatrenonew/api/esitoPartenze/{v_id}/{dt_str}"
-                res = requests.get(url, timeout=3).json()
-                for t in res.get('tabellone', []):
-                    dest = t.get('destinazione', '').upper()
-                    valido = f_key in dest or ("LIVORNO" in dest and f_key == "PISA") or (("PISTOIA" in dest or "FIRENZE" in dest) and f_key == "LUCCA")
-                    if valido:
-                        h, m = map(int, t.get('orarioProgrammato', '').split(':'))
-                        rit = t.get('ritardo', 0)
-                        rit = 0 if rit in ["---", None] else int(rit)
-                        treni.append({"ora_p": h, "min_p": m, "ritardo": rit, "direzione": d_name, "num": t.get('numeroTreno'), "fonte": "LIVE"})
-            except: pass
-    except: pass
-    return treni
-
-lista_treni = recupera_treni()
-
-if not lista_treni:
-    for tp in ORARIO_TABELLA:
-        if (tp["ora"] * 60 + tp["min"]) > minuti_ora:
-            lista_treni.append({"ora_p": tp["ora"], "min_p": tp["min"], "ritardo": 0, "direzione": tp["dir"], "num": tp["num"], "fonte": "TABELLA"})
-
-ritardo_rilevato = any(t.get("fonte") == "LIVE" and t.get("ritardo", 0) >= 4 for t in lista_treni)
-ritardi_live = [t.get("ritardo", 0) for t in lista_treni if t.get("fonte") == "LIVE"]
-estensione = min(max(ritardi_live), 12) if (ritardo_rilevato and ritardi_live) else 0
-
-treni_futuri = []
-for t in lista_treni:
-    m_p = t["ora_p"] * 60 + t["min_p"] + t["ritardo"]
-    if (m_p + 15) > minuti_ora:
-        treni_futuri.append((m_p, t))
-
-if treni_futuri:
-    m_tot, prox = min(treni_futuri, key=lambda x: x[0])
-    h_visualizza = (prox["ora_p"] * 60 + prox["min_p"] + prox["ritardo"])
-    nota = f" (+{prox['ritardo']} min)" if prox.get("fonte") == "LIVE" and prox['ritardo'] > 0 else " (Da orario)"
-    freccia_info = "➡️ LUCCA" if prox['direzione'] == "LUCCA" else "⬅️ PISA"
-    
-    st.info(f"📋 **PROSSIMO TRENO**: REG {prox['num']} ({freccia_info}) alle **{h_visualizza // 60:02d}:{h_visualizza % 60:02d}**{nota}")
-    
-    minuti_mancanti = h_visualizza - minuti_ora
-    if minuti_mancanti > 15:
-        st.success(f"⏱️ **PREVISIONE GENERALE**: Barriere libere sulla linea. Prossimi blocchi tra circa **{minuti_mancanti - 15} minuti**.")
-    elif 0 <= minuti_mancanti <= 15:
-        st.warning(f"⏳ **PREVISIONE GENERALE**: Chiusura varchi in corso. Transito imminente.")
-    else:
-        st.error(f"🛑 **PREVISIONE GENERALE**: Treno sulla tratta. Code residue.")
-else:
-    st.info("📋 **Servizio passeggeri terminato.**")
-
-if ritardo_rilevato:
-    st.warning("⚠️ **
+                url = f
