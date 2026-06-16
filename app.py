@@ -10,7 +10,7 @@ st.markdown("""<style>
     .stButton>button, .stLinkButton>a { background-color: #1e293b !important; color: #ffffff !important; border: 1px solid #475569 !important; text-align: center !important; }
 </style>""", unsafe_allow_html=True)
 
-# ORARI DA PISA CENTRALE VERSO LUCCA (Verificati da tua app)
+# ORARI DA PISA CENTRALE VERSO LUCCA (Senza zeri iniziali vietati da Python)
 ORARI_PISA = [
     (5,25), (6,13), (7,4), (7,50), (8,50), (9,3), (9,22), (9,50), (10,20), 
     (12,20), (12,50), (13,20), (13,43), (14,20), (14,50), (15,20), (15,50), 
@@ -18,9 +18,9 @@ ORARI_PISA = [
     (20,50), (21,20), (21,50)
 ]
 
-# ORARI DA LUCCA VERSO PISA S. ROSSORE (Verificati ora da tua app)
+# ORARI DA LUCCA VERSO PISA S. ROSSORE (Corretti senza zeri iniziali)
 ORARI_LUCCA = [
-    (6,52), (7,08), (7,40), (7,53), (8,15), (9,10), (9,42), (10,12), (10,42), 
+    (6,52), (7,8), (7,40), (7,53), (8,15), (9,10), (9,42), (10,12), (10,42), 
     (12,42), (13,12)
 ]
 
