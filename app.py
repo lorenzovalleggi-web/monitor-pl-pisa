@@ -67,12 +67,13 @@ if treni_futuri:
 else:
     st.info("📋 Servizio terminato.")
 
-# --- NUOVA SEZIONE SPONSOR COMPATTA ---
+# --- SEZIONE SPONSOR CORRETTA ---
 st.markdown("---")
 st.write("### 🤝 I nostri Sponsor")
 c1, c2, c3 = st.columns(3)
 ml_sp = "mailto:info.railflow@gmail.com?subject=Sponsor"
-box_html = '<div style="background:#1e293b;border:1px dashed #475569;border-radius:6px;padding:8px;text-align:center;font-size:13px;color:#94a3b8!important;">'
+# Colore del testo forzato a bianco (#ffffff)
+box_html = '<div style="background:#1e293b;border:1px dashed #475569;border-radius:6px;padding:8px;text-align:center;font-size:13px;color:#ffffff !important;font-weight:bold;">'
 
 with c1:
     st.markdown(f'{box_html}Il Cappellaio Matto<br>🎩</div>', unsafe_allow_html=True)
@@ -103,25 +104,4 @@ for pl in varchi:
         dur = pl["p_dur"] if tr["direzione"] == "LUCCA" else pl["l_dur"]
         fin = ini + dur + estensione
         if ini <= min_ora <= fin:
-            chiuso = True
-            info = f"🛑 CHIUSO | Fino alle {fin//60:02d}:{fin%60:02d}"
-            break
-    if not chiuso and treni_futuri:
-        prossimi = []
-        for _, tr in treni_futuri:
-            m_p = tr["ora_p"] * 60 + tr["min_p"] + tr["ritardo"]
-            ini_f = (m_p + pl["p_ant"]) if tr["direzione"] == "LUCCA" else (m_p + pl["l_ant"])
-            if ini_f > min_ora: prossimi.append(ini_f)
-        if prossimi:
-            p_ini = min(prossimi)
-            info = f"🟢 APERTO | Preavviso Chiusura: {p_ini//60:02d}:{p_ini%60:02d} (tra {p_ini - min_ora} min)"
-        else: info = "🟢 APERTO | Nessun transito"
-    elif not chiuso: info = "🟢 APERTO | Fine servizio"
-
-    if chiuso: st.error(f"#### {pl['n']}\n{info}")
-    else: st.success(f"#### {pl['n']}\n{info}")
-
-# --- DONAZIONI ---
-st.markdown("---")
-st.markdown('<div style="text-align:center;"><a href="https://www.paypal.com/paypalme/rebolo73" target="_blank"><button style="background:#FF813F;color:white;border:none;padding:10px 20px;font-weight:bold;border-radius:6px;cursor:pointer;">☕ Offri un caffè al server</button></a></div>', unsafe_allow_html=True)
-st.write("© 2026 BinarioLibero")
+            chi
