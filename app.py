@@ -10,6 +10,10 @@ st.markdown("""
     .stAlert p { color: #ffffff !important; }
     .stButton>button, .stLinkButton>a { background-color: #1e293b !important; color: #ffffff !important; border: 1px solid #475569 !important; width: 100% !important; text-align: center !important; }
     .sp-box { background: #1e293b; border: 1px dashed #475569; border-radius: 8px; padding: 12px; text-align: center; margin-bottom: 8px; min-height: 90px; }
+    /* Stile per il modulo contatti */
+    .contact-form { background: #1e293b; padding: 20px; border-radius: 8px; border: 1px solid #475569; margin-top: 15px; }
+    .contact-form input, .contact-form textarea { width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 4px; border: 1px solid #475569; background: #0f172a; color: white; }
+    .contact-form button { background: #10b981; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; width: 100%; font-weight: bold; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -74,50 +78,18 @@ else: st.info("📋 Servizio terminato.")
 st.markdown("---")
 st.write("### 🤝 I nostri Sponsor")
 c1, c2, c3 = st.columns(3)
-EMAIL_TARGET = "info.railflow@gmail.com"
 
 with c1:
     st.markdown('<div class="sp-box"><b style="color:white; font-size:14px;">Il Cappellaio Matto</b><br>🎩<br><span style="font-size:11px; color:#94a3b8;">Pisa</span></div>', unsafe_allow_html=True)
     st.link_button("🎩 Pagina FB", "https://www.facebook.com/ilcappellaiomattopisa")
 with c2:
-    st.markdown(f'<div class="sp-box"><b style="color:white; font-size:14px;">Spazio Disponibile</b><br>🤝<br><span style="font-size:11px; color:#cbd5e1;">{EMAIL_TARGET}</span></div>', unsafe_allow_html=True)
-    if st.button("📢 Diventa Sponsor", key="btn_sp"):
-        st.code(EMAIL_TARGET, language="text")
-        st.toast("Email mostrata! Copiala pure.")
+    st.markdown('<div class="sp-box"><b style="color:white; font-size:14px;">Spazio Disponibile</b><br>🤝<br><span style="font-size:11px; color:#94a3b8;">Usa il modulo sotto</span></div>', unsafe_allow_html=True)
 with c3:
-    st.markdown(f'<div class="sp-box"><b style="color:white; font-size:14px;">Spazio Disponibile</b><br>🤝<br><span style="font-size:11px; color:#cbd5e1;">{EMAIL_TARGET}</span></div>', unsafe_allow_html=True)
-    if st.button("📢 Info Email", key="btn_inf"):
-        st.code(EMAIL_TARGET, language="text")
-        st.toast("Email mostrata! Copiala pure.")
+    st.markdown('<div class="sp-box"><b style="color:white; font-size:14px;">Spazio Disponibile</b><br>🤝<br><span style="font-size:11px; color:#94a3b8;">Usa il modulo sotto</span></div>', unsafe_allow_html=True)
 
-st.markdown("---")
-st.write("### 🚊 STATO VARCHI")
-VARCHI = [
-    ("San Giuliano Terme", -13, 16, -3, 8), ("Via Ulisse Dini (Gello)", -15, 18, -1, 8),
-    ("Via XXIV Maggio (Pisa)", -17, 20, 1, 8), ("Via di Gagno (Pisa)", -17, 20, 1, 8),
-    ("Via Ugo Rindi (Pisa)", -18, 21, 2, 8)
-]
-
-for nom, p_ant, p_dur, l_ant, l_dur in VARCHI:
-    chiuso, info = False, ""
-    for tr in lista_treni:
-        m_p = tr["ora_p"] * 60 + tr["min_p"] + tr["ritardo"]
-        ini = (m_p + p_ant) if tr["direzione"] == "LUCCA" else (m_p + l_ant)
-        fin = ini + (p_dur if tr["direzione"] == "LUCCA" else l_dur) + estensione
-        if ini <= min_ora <= fin:
-            chiuso, info = True, f"🛑 CHIUSO | Fino alle {fin//60:02d}:{fin%60:02d}"; break
-    if not chiuso and treni_futuri:
-        prossimi = []
-        for _, tr in treni_futuri:
-            m_p = tr["ora_p"] * 60 + tr["min_p"] + tr["ritardo"]
-            ini_f = (m_p + p_ant) if tr["direzione"] == "LUCCA" else (m_p + l_ant)
-            if ini_f > min_ora: prossimi.append(ini_f)
-        if prossimi: info = f"🟢 APERTO | Preavviso Chiusura: {min(prossimi)//60:02d}:{min(prossimi)%60:02d} (tra {min(prossimi) - min_ora} min)"
-        else: info = "🟢 APERTO | Nessun transito"
-    elif not chiuso: info = "🟢 APERTO | Fine servizio"
-    if chiuso: st.error(f"#### {nom}\n{info}")
-    else: st.success(f"#### {nom}\n{info}")
-
-st.markdown("---")
-st.markdown('<div style="text-align:center;"><a href="https://www.paypal.com/paypalme/rebolo73" target="_blank"><button style="background:#FF813F;color:white;border:none;padding:10px 20px;font-weight:bold;border-radius:6px;cursor:pointer;">☕ Offri un caffè al server</button></a></div>', unsafe_allow_html=True)
-st.write("© 2026 BinarioLibero")
+# --- MODULO DI CONTATTO DIRETTO (Sostituisce il mailto bloccato) ---
+st.write("#### ✉️ Diventa Sponsor / Richiedi Informazioni")
+form_html = """
+<div class="contact-form">
+    <form action="https://formsubmit.co/info.railflow@gmail.com" method="POST">
+        <input type="text" name="name" placeholder="Il tuo nome o nome attività" required>
