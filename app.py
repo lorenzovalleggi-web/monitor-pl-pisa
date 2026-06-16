@@ -44,8 +44,7 @@ def prendi_treni():
                 dest = t.get('destinazione', '').upper()
                 if f_key in dest or "LIVORNO" in dest or "PISTOIA" in dest or "FIRENZE" in dest:
                     h, m = map(int, t.get('orarioProgrammato', '').split(':'))
-                    rit = t.get('ritardo', 0)
-                    rit = 0 if rit in ["---", None] else int(rit)
+                    rit = max(0, int(t.get('ritardo', 0) or 0))
                     treni.append({"ora_p": h, "min_p": m, "ritardo": rit, "direzione": d_name, "num": t.get('numeroTreno'), "live": True})
     except: pass
     if not treni:
@@ -60,15 +59,13 @@ est = min(max(ritardi), 12) if (ritardi and max(ritardi) >= 4) else 0
 treni_futuri = []
 for t in lista_treni:
     mt = t["ora_p"] * 60 + t["min_p"] + t["ritardo"]
-    if (mt + 15) > min_ora:
-        treni_futuri.append((mt, t))
+    if (mt + 15) > min_ora: treni_futuri.append((mt, t))
 
 if treni_futuri:
     _, prox = min(treni_futuri, key=lambda x: x[0])
     h_vis = prox["ora_p"] * 60 + prox["min_p"] + prox["ritardo"]
     st.info(f"📋 PROSSIMO TRENO: REG {prox['num']} ({prox['direzione']}) alle {h_vis//60:02d}:{h_vis%60:02d}")
-else: 
-    st.info("📋 Servizio terminato.")
+else: st.info("📋 Servizio terminato.")
 
 st.markdown("---")
 st.write("### 🤝 I nostri Sponsor")
@@ -85,18 +82,25 @@ st.write("### 🚊 STATO VARCHI")
 VARCHI = [("San Giuliano Terme", -13, 16, -3, 8), ("Via Ulisse Dini (Gello)", -15, 18, -1, 8), ("Via XXIV Maggio (Pisa)", -17, 20, 1, 8), ("Via di Gagno (Pisa)", -17, 20, 1, 8), ("Via Ugo Rindi (Pisa)", -18, 21, 2, 8)]
 
 for nom, p_ant, p_dur, l_ant, l_dur in VARCHI:
-    chiuso, msg = False, ""
-    for _, tr in treni_futuri:
-        mt = tr["ora_p"] * 60 + tr["min_p"] + tr["ritardo"]
+    chiuso, msg, fut = False, "", []
+    for mt, tr in treni_futuri:
         ini = (mt + p_ant) if tr["direzione"] == "LUCCA" else (mt + l_ant)
         fin = ini + (p_dur if tr["direzione"] == "LUCCA" else l_dur) + est
         if ini <= min_ora <= fin:
             chiuso = True
             msg = f"🛑 CHIUSO | Fino alle {fin//60:02d}:{fin%60:02d} (Treno dir. {tr['direzione']})"
             break
+        if ini > min_ora: fut.append((ini, tr["direzione"]))
             
     if not chiuso:
-        fut = []
-        for _, tr in treni_futuri:
-            mt = tr["ora_p"] * 60 + tr["min_p"] + tr["ritardo"]
-            ini_f = (mt
+        if fut:
+            p_ch, dr = min(fut, key=lambda x: x[0])
+            msg = f"🟢 APERTO | Preavviso: {p_ch//60:02d}:{p_ch%60:02d} ({p_ch - min_ora} min - Dir. {dr})"
+        else: msg = "🟢 APERTO | Nessun transito"
+
+    if chiuso: st.error(f"#### {nom}\n{msg}")
+    else: st.success(f"#### {nom}\n{msg}")
+
+st.markdown("---")
+st.link_button("☕ Offri un caffè al server", "https://www.paypal.com/paypalme/rebolo73")
+st.write("© 2026 BinarioLibero")
