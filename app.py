@@ -3,7 +3,6 @@ import datetime, pytz, requests
 
 st.set_page_config(page_title="BinarioLibero", layout="centered")
 
-# Stile CSS pulito senza tag HTML interni alle funzioni
 st.markdown("""
     <style>
     .stApp { background-color: #0f172a !important; color: #ffffff !important; }
@@ -89,42 +88,11 @@ with c3:
     st.write("🤝 Contattaci")
 
 st.write("")
-st.link_button("📩 CONTATTACI PER INSERIRE LA TUA PUBBLICITÀ", "https://formsubmit.co/el/info.railflow@gmail.com")
 
-st.markdown("---")
-st.write("### 🚊 STATO VARCHI")
-VARCHI = [
-    ("San Giuliano Terme", -13, 16, -3, 8), ("Via Ulisse Dini (Gello)", -15, 18, -1, 8),
-    ("Via XXIV Maggio (Pisa)", -17, 20, 1, 8), ("Via di Gagno (Pisa)", -17, 20, 1, 8),
-    ("Via Ugo Rindi (Pisa)", -18, 21, 2, 8)
-]
-
-for nom, p_ant, p_dur, l_ant, l_dur in VARCHI:
-    chiuso, msg = False, ""
-    for tr in lista_treni:
-        mt = tr["ora_p"] * 60 + tr["min_p"] + tr["ritardo"]
-        ini = (mt + p_ant) if tr["direzione"] == "LUCCA" else (mt + l_ant)
-        fin = ini + (p_dur if tr["direzione"] == "LUCCA" else l_dur) + estensione
-        if ini <= min_ora <= fin:
-            chiuso = True
-            msg = f"🛑 CHIUSO | Fino alle {fin//60:02d}:{fin%60:02d} (Treno dir. {tr['direzione']})"
-            break
-            
-    if not chiuso:
-        fut = []
-        for _, tr in treni_futuri:
-            mt = tr["ora_p"] * 60 + tr["min_p"] + tr["ritardo"]
-            ini_f = (mt + p_ant) if tr["direzione"] == "LUCCA" else (mt + l_ant)
-            if ini_f > min_ora: fut.append((ini_f, tr["direzione"]))
-        if fut:
-            p_ch, dr = min(fut, key=lambda x: x[0])
-            msg = f"🟢 APERTO | Preavviso Chiusura: {p_ch//60:02d}:{p_ch%60:02d} ({p_ch - min_ora} min - Dir. {dr})"
-        else:
-            msg = "🟢 APERTO | Nessun transito"
-
-    if chiuso: st.error(f"#### {nom}\n{msg}")
-    else: st.success(f"#### {nom}\n{msg}")
-
-st.markdown("---")
-st.link_button("☕ Offri un caffè al server", "https://www.paypal.com/paypalme/rebolo73")
-st.write("© 2026 BinarioLibero")
+# Modulo HTML puro incorporato per evitare errori di sblocco FormSubmit
+html_form = """
+<form action="https://formsubmit.co/info.railflow@gmail.com" method="POST" style="background:#1e293b; padding:15px; border-radius:8px; border:1px solid #475569;">
+    <p style="margin-bottom:8px; font-weight:bold; color:white;">📩 Vuoi inserire la tua pubblicità? Scrivici ora:</p>
+    <input type="text" name="name" placeholder="Il tuo nome / Attività" required style="width:100%; padding:8px; margin-bottom:8px; border-radius:4px; border:1px solid #475569; background:#0f172a; color:white;">
+    <input type="email" name="email" placeholder="La tua Email" required style="width:100%; padding:8px; margin-bottom:8px; border-radius:4px; border:1px solid #475569; background:#0f172a; color:white;">
+    <textarea name="message" placeholder="Messaggio o dettagli richiesta" required style="width:100%; padding:8px; margin-bottom:10px; border-radius:4px; border:1px solid #475569; background:#0f172a
