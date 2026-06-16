@@ -1,22 +1,22 @@
 import streamlit as st
 import datetime, pytz, requests
-import time
 
 st.set_page_config(page_title="BinarioLibero", layout="centered")
-
-# Forza l'auto-aggiornamento della pagina ogni 15 secondi senza pacchetti esterni
-if "counter" not in st.session_state:
-    st.session_state.counter = 0
-st.session_state.counter += 1
 
 st.markdown("""<style>
     .stApp { background-color: #0f172a !important; color: #ffffff !important; }
     h1, h2, h3, h4, p, span, div, li { color: #ffffff !important; }
     .stAlert p { color: #ffffff !important; }
-    .stButton>button, .stLinkButton>a { background-color: #1e293b !important; color: #ffffff !important; border: 1px solid #475569 !important; text-align: center !important; }
+    .stButton>button, .stLinkButton>a { background-color: #1e293b !important; color: #ffffff !important; border: 1px solid #475569 !important; width: 100% !important; text-align: center !important; }
 </style>""", unsafe_allow_html=True)
 
-# ORARI DA PISA CENTRALE VERSO LUCCA
+# Auto-refresh ogni 10 secondi tramite HTML
+st.components.v1.html("""
+    <script>
+        setTimeout(function(){ window.parent.location.reload(); }, 10000);
+    </script>
+""", height=0, width=0)
+
 ORARI_PISA = [
     (5,25), (6,13), (7,4), (7,50), (8,50), (9,3), (9,22), (9,50), (10,20), 
     (12,20), (12,50), (13,20), (13,43), (14,20), (14,50), (15,20), (15,50), 
@@ -24,22 +24,20 @@ ORARI_PISA = [
     (20,50), (21,20), (21,50)
 ]
 
-# ORARI DA LUCCA VERSO PISA S. ROSSORE
 ORARI_LUCCA = [
     (6,52), (7,8), (7,40), (7,53), (8,15), (9,10), (9,42), (10,12), (10,42), 
     (12,42), (13,12)
 ]
 
 st.title("⚡ BinarioLibero Pisa")
-if st.button("🔄 Aggiorna"): st.rerun()
 
 try: ora_adesso = datetime.datetime.now(pytz.timezone('Europe/Rome'))
 except: ora_adesso = datetime.datetime.now()
 
 min_ora = ora_adesso.hour * 60 + ora_adesso.minute
-st.write(f"Ultimo controllo: {ora_adesso.strftime('%H:%M:%S')} (Auto-refresh attivo)")
+st.write(f"⏱️ Ora attuale: {ora_adesso.strftime('%H:%M:%S')} (Aggiornamento automatico)")
 
-@st.cache_data(ttl=10) # Abbassato il cache a 10 secondi per massima precisione live
+@st.cache_data(ttl=5)
 def prendi_treni():
     treni = []
     try:
@@ -68,7 +66,7 @@ est = min(max(ritardi), 12) if (ritardi and max(ritardi) >= 4) else 0
 treni_futuri = []
 for t in lista_treni:
     mt = t["ora_p"] * 60 + t["min_p"] + t["ritardo"]
-    if (mt + 15) > min_ora: treni_futuri.append((mt, t))
+    if (mt + 5) > min_ora: treni_futuri.append((mt, t))
 
 if treni_futuri:
     _, prox = min(treni_futuri, key=lambda x: x[0])
@@ -88,7 +86,7 @@ st.link_button("💬 CLICCA QUI PER INFO PUBBLICITÀ (WHATSAPP)", "https://wa.me
 
 st.markdown("---")
 st.write("### 🚊 STATO VARCHI")
-VARCHI = [("San Giuliano Terme", -13, 16, -3, 8), ("Via Ulisse Dini (Gello)", -15, 18, -1, 8), ("Via XXIV Maggio (Pisa)", -17, 20, 1, 8), ("Via di Gagno (Pisa)", -17, 20, 1, 8), ("Via Ugo Rindi (Pisa)", -18, 21, 2, 8)]
+VARCHI = [("San Giuliano Terme", -6, 8, -2, 4), ("Via Ulisse Dini (Gello)", -7, 9, -1, 3), ("Via XXIV Maggio (Pisa)", -9, 11, 0, 3), ("Via di Gagno (Pisa)", -9, 11, 0, 3), ("Via Ugo Rindi (Pisa)", -10, 12, 1, 3)]
 
 for nom, p_ant, p_dur, l_ant, l_dur in VARCHI:
     chiuso, msg, fut = False, "", []
@@ -113,7 +111,3 @@ for nom, p_ant, p_dur, l_ant, l_dur in VARCHI:
 st.markdown("---")
 st.link_button("☕ Offri un caffè al server", "https://www.paypal.com/paypalme/rebolo73")
 st.write("© 2026 BinarioLibero")
-
-# Questo micro-timer dice alla pagina di ricaricarsi ogni 15 secondi esatti
-time.sleep(15)
-st.rerun()
