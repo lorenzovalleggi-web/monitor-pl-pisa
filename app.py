@@ -1,17 +1,7 @@
 import re
 
-# =====================================================================
-# INCOLLA QUI SOTTO TUTTI I TUOI DATI NUOVI (E VECCHI) TRA LE TRE VIRGOLETTE:
-# =====================================================================
-dati_da_elaborare = """
-
-[INCOLLA QUI IL TESTO COPIATO DALL'APP O DAL SITO SBLOCCATO]
-
-"""
-# =====================================================================
-
 def analizza_tutti_i_treni(testo_completo):
-    # Divide il testo usando la parola "CHIUDI" per isolare ogni treno
+    # Divide il testo usando la parola "CHIUDI" (case-insensitive) per isolare i treni
     blocchi = re.split(r'(?i)CHIUDI', testo_completo)
     
     report_andata = []  # Pisa -> Lucca
@@ -22,92 +12,98 @@ def analizza_tutti_i_treni(testo_completo):
             continue
             
         # 1. Estrazione Numero Treno
-        num_treno_match = re.search(r'\b(\d{5})\b', blocco)
+        num_treno_match = re.search(r'\b(18\d{3}|83\d{3})\b', blocco)
         num_treno = num_treno_match.group(1) if num_treno_match else "N/D"
         
-        # 2. Rilevamento Direzione basato sulla sequenza delle fermate
-        pos_pisa = blocco.find("Pisa S. Rossore")
-        pos_lucca = blocco.find("Lucca")
+        # 2. Rilevamento Direzione (Guarda l'ordine delle stazioni principali nel blocco)
+        # Se trova "Pisa S. Rossore" prima di "Lucca" nella testata è Andata, altrimenti Ritorno
+        pos_pisa_gen = blocco.find("Pisa S. Rossore")
+        pos_lucca_gen = blocco.find("Lucca")
         
-        dettaglio_pisa = re.search(r'Pisa\s*S\.\s*Rossore', blocco, re.IGNORECASE)
-        dettaglio_sg = re.search(r'S\.\s*Giuliano\s*Terme', blocco, re.IGNORECASE)
-        
-        if not dettaglio_pisa or not dettaglio_sg:
-            continue
+        direzione = "RITORNO" # Default se non chiaro
+        if pos_pisa_gen != -1 and pos_lucca_gen != -1:
+            direzione = "ANDATA" if pos_pisa_gen < pos_lucca_gen else "RITORNO"
+
+        # 3. Estrazione dati S. Giuliano Terme e Pisa S. Rossore nei dettagli delle fermate
+        sg_match = re.search(r'S\.\s*Giuliano\s*Terme.*?(?:Arrivo|Partenza):\s*([0-2]\d:[0-5]\d).*?Partenza:\s*([0-2]\d:[0-5]\d)', blocco, re.DOTALL | re.IGNORECASE)
+        # Se non trova sia arrivo che partenza (es. se c'è solo una voce), prova a prendere la partenza generica
+        if not sg_match:
+            sg_match = re.search(r'S\.\s*Giuliano\s*Terme.*?Partenza:\s*([0-2]\d:[0-5]\d)', blocco, re.DOTALL | re.IGNORECASE)
             
-        direzione = "RITORNO" if pos_lucca < pos_pisa else "ANDATA"
-        
-        try:
-            if direzione == "ANDATA":
-                # PISA -> LUCCA (Tratto: Partenza Pisa S.R. -> Arrivo S. Giuliano)
-                pisa_partenza = re.search(r'Pisa\s*S\.\s*Rossore.*?Partenza:\s*([0-2]\d:[0-5]\d)', blocco, re.DOTALL | re.IGNORECASE)
-                sg_arrivo = re.search(r'S\.\s*Giuliano\s*Terme.*?Arrivo:\s*([0-2]\d:[0-5]\d)', blocco, re.DOTALL | re.IGNORECASE)
-                
-                if pisa_partenza and sg_arrivo:
-                    ora_in, min_in = map(int, pisa_partenza.group(1).split(':'))
-                    ora_fi, min_fi = map(int, sg_arrivo.group(1).split(':'))
-                    str_partenza = f"Pisa S.R. ({pisa_partenza.group(1)})"
-                    str_arrivo = f"S. Giuliano ({sg_arrivo.group(1)})"
+        pisa_match = re.search(r'Pisa\s*S\.\s*Rossore.*?(?:Arrivo|Partenza):\s*([0-2]\d:[0-5]\d)', blocco, re.DOTALL | re.IGNORECASE)
+
+        if sg_match and pisa_match:
+            # Per il calcolo dei minuti:
+            # Se ANDATA (Pisa -> Lucca): il tratto è Pisa S. Rossore (Partenza) -> S. Giuliano (Arrivo)
+            # Se RITORNO (Lucca -> Pisa): il tratto è S. Giuliano (Partenza) -> Pisa S. Rossore (Arrivo)
+            
+            try:
+                if direzione == "ANDATA":
+                    # Cerca l'orario di partenza da Pisa S. Rossore nei dettagli
+                    orario_pisa = pisa_match.group(1)
+                    # L'arrivo a San Giuliano è il primo orario catturato dal pattern esteso
+                    orario_sg = re.search(r'S\.\s*Giuliano\s*Terme.*?Arrivo:\s*([0-2]\d:[0-5]\d)', blocco, re.DOTALL | re.IGNORECASE).group(1)
+                    
+                    h_in, m_in = map(int, orario_pisa.split(':'))
+                    h_fi, m_fi = map(int, orario_sg.split(':'))
+                    stazione_partenza = f"Pisa S.R. ({orario_pisa})"
+                    stazione_arrivo = f"S. Giuliano ({orario_sg})"
                 else:
-                    continue
-            else:
-                # LUCCA -> PISA (Tratto: Partenza S. Giuliano -> Arrivo Pisa S.R.)
-                sg_partenza = re.search(r'S\.\s*Giuliano\s*Terme.*?Partenza:\s*([0-2]\d:[0-5]\d)', blocco, re.DOTALL | re.IGNORECASE)
-                pisa_arrivo = re.search(r'Pisa\s*S\.\s*Rossore.*?Arrivo:\s*([0-2]\d:[0-5]\d)', blocco, re.DOTALL | re.IGNORECASE)
+                    # RITORNO
+                    orario_sg_partenza = sg_match.group(2) if len(sg_match.groups()) > 1 else sg_match.group(1)
+                    orario_pisa_arrivo = pisa_match.group(1)
+                    
+                    h_in, m_in = map(int, orario_sg_partenza.split(':'))
+                    h_fi, m_fi = map(int, orario_pisa_arrivo.split(':'))
+                    stazione_partenza = f"S. Giuliano ({orario_sg_partenza})"
+                    stazione_arrivo = f"Pisa S.R. ({orario_pisa_arrivo})"
                 
-                if not pisa_arrivo:
-                    pisa_arrivo = re.search(r'Pisa\s*S\.\s*Rossore.*?([0-2]\d:[0-5]\d)$', blocco.strip(), re.DOTALL | re.IGNORECASE)
+                # Calcolo effettivo dei minuti
+                min_in = h_in * 60 + m_in
+                min_fi = h_fi * 60 + m_fi
+                if min_fi < min_in:  # Gestione cambio giorno/mezzanotte
+                    min_fi += 24 * 60
+                    
+                durata = min_fi - min_in
                 
-                if sg_partenza and pisa_arrivo:
-                    ora_in, min_in = map(int, sg_partenza.group(1).split(':'))
-                    ora_fi, min_fi = map(int, pisa_arrivo.group(1).split(':'))
-                    str_partenza = f"S. Giuliano ({sg_partenza.group(1)})"
-                    str_arrivo = f"Pisa S.R. ({pisa_arrivo.group(1)})"
+                info_treno = {
+                    "treno": num_treno,
+                    "chiave_orario": min_in, # per ordinamento cronologico
+                    "partenza": stazione_partenza,
+                    "arrivo": stazione_arrivo,
+                    "durata": durata
+                }
+                
+                if direzione == "ANDATA":
+                    report_andata.append(info_treno)
                 else:
-                    continue
-            
-            # Calcolo della durata
-            m_tot_in = ora_in * 60 + min_in
-            m_tot_fi = ora_fi * 60 + min_fi
-            if m_tot_fi < m_tot_in:  
-                m_tot_fi += 24 * 60
-                
-            durata = m_tot_fi - m_tot_in
-            
-            dati_treno = {
-                "treno": num_treno,
-                "chiave_tempo": m_tot_in,
-                "partenza": str_partenza,
-                "arrivo": str_arrivo,
-                "durata": durata
-            }
-            
-            if direzione == "ANDATA":
-                report_andata.append(dati_treno)
-            else:
-                report_ritorno.append(dati_treno)
-                
-        except Exception:
-            continue
+                    report_ritorno.append(info_treno)
+            except Exception:
+                continue
 
     # Ordinamento cronologico
-    report_andata.sort(key=lambda x: x["chiave_tempo"])
-    report_ritorno.sort(key=lambda x: x["chiave_tempo"])
+    report_andata.sort(key=lambda x: x["chiave_orario"])
+    report_ritorno.sort(key=lambda x: x["chiave_orario"])
 
-    # Output tabelle
+    # Stampa i risultati
     print("=== TRATTA: PISA S. ROSSORE --> LUCCA (ANDATA) ===")
-    print(f"{'Treno':<8} | {'Partenza (Ora)':<20} | {'Arrivo (Ora)':<20} | {'Durata Tratto'}")
+    print(f"{'Treno':<8} | {'Da Stazione (Ora)':<20} | {'A Stazione (Ora)':<20} | {'Durata Tratto Breve'}")
     print("-" * 75)
     for t in report_andata:
         print(f"{t['treno']:<8} | {t['partenza']:<20} | {t['arrivo']:<20} | {t['durata']} min")
         
-    print("\n" + "="*60 + "\n")
+    print("\n" + "="*50 + "\n")
     
     print("=== TRATTA: LUCCA --> PISA S. ROSSORE (RITORNO) ===")
-    print(f"{'Treno':<8} | {'Partenza (Ora)':<20} | {'Arrivo (Ora)':<20} | {'Durata Tratto'}")
+    print(f"{'Treno':<8} | {'Da Stazione (Ora)':<20} | {'A Stazione (Ora)':<20} | {'Durata Tratto Breve'}")
     print("-" * 75)
     for t in report_ritorno:
         print(f"{t['treno']:<8} | {t['partenza']:<20} | {t['arrivo']:<20} | {t['durata']} min")
 
-# Avvio analisi
-analizza_tutti_i_treni(dati_da_elaborare)
+# --- INCOLLA I TUOI DATI QUI SOTTO ---
+dati_completi = """
+[Incolla qui tutto il testo dei treni che hai raccolto oggi]
+"""
+
+# Esegui l'analisi finale
+# analizza_tutti_i_treni(dati_completi)
