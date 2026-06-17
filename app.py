@@ -49,33 +49,19 @@ ORARI_LUCCA = [
 st.title("⚡ BinarioLibero Pisa")
 
 try:
-    tz_it = pytz.timezone(
-        'Europe/Rome'
-    )
-    ora_adesso = (
-        datetime.datetime.now(
-            tz_it
-        )
-    )
+    tz_it = pytz.timezone('Europe/Rome')
+    ora_adesso = datetime.datetime.now(tz_it)
 except:
-    ora_adesso = (
-        datetime.datetime.now()
-    )
+    ora_adesso = datetime.datetime.now()
 
 h_or = ora_adesso.hour
 m_or = ora_adesso.minute
 min_ora = h_or * 60 + m_or
 
-txt_ora = (
-    ora_adesso.strftime(
-        '%H:%M:%S'
-    )
-)
-st.write(
-    f"⏱️ Ora attuale: {txt_ora}"
-)
+txt_ora = ora_adesso.strftime('%H:%M:%S')
+st.write(f"⏱️ Ora attuale: {txt_ora}")
 
-# 2. CHIAMATE API
+# 2. CHIAMATE API CON INDICI WHILES (ANTI-SPEZZAMENTO)
 treni = []
 str_pisa = "PISA"
 str_lucca = "LUCCA"
@@ -83,28 +69,20 @@ str_liv = "LIVORNO"
 str_pist = "PISTOIA"
 str_fir = "FIRENZE"
 
-dt = (
-    ora_adesso.strftime(
-        '%Y-%m-%dT00:00:00'
-    )
-)
+dt = ora_adesso.strftime('%Y-%m-%dT00:00:00')
 
-# Fetch Pisa
+# Fetch Pisa con While
 try:
-    base_p = (
-        "http://www.viaggiat"
-        "reno.it/viaggiatren"
-        "onew/api/esitoPart"
-        "enze/S06411/"
-    )
-    url_p = base_p + dt
-    res_p = (
-        requests.get(
-            url_p,
-            timeout=3
-        ).json().get(
-            'tabellone',
-            []
-        )
-    )
-    for t in
+    bp = "http://www.viaggiatreno.it/viaggiatrenonew/api/esitoPartenze/S06411/"
+    res_p = requests.get(bp + dt, timeout=3).json().get('tabellone', [])
+    i_p = 0
+    tot_p = len(res_p)
+    while i_p < tot_p:
+        t = res_p[i_p]
+        dest = t.get('destinazione', '').upper()
+        if str_pisa in dest or str_liv in dest or str_pist in dest or str_fir in dest:
+            prog = t.get('orarioProgrammato', '')
+            h_p, m_p = map(int, prog.split(':'))
+            r_p = t.get('ritardo', 0)
+            rit = max(0, int(r_p if r_p else 0))
+            n
