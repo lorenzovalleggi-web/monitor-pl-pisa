@@ -61,7 +61,7 @@ min_ora = h_or * 60 + m_or
 txt_ora = ora_adesso.strftime('%H:%M:%S')
 st.write(f"⏱️ Ora attuale: {txt_ora}")
 
-# 2. CHIAMATE API CON INDICI WHILES (ANTI-SPEZZAMENTO)
+# 2. CHIAMATE API CON URL SCOMPOSTI (ANTI-TRONCAMENTO)
 treni = []
 str_pisa = "PISA"
 str_lucca = "LUCCA"
@@ -71,6 +71,6 @@ str_fir = "FIRENZE"
 
 dt = ora_adesso.strftime('%Y-%m-%dT00:00:00')
 
-# Fetch Pisa con While
-try:
-    bp = "
+# Ricostruzione URL Pisa senza stringhe dirette
+# Corrisponde a viaggiatreno... S06411/
+codici_p = [104,116,116,112,58,47,47,119,119,119,46,118,105,97,103,103,105,97,116,114,101,110,111,46,105,116,47,118,105,97,103,103,105,97,116,114,101,110,111,110,101,119,47,97,112,105,47,101,115,105,116,111,80,97,1
