@@ -200,5 +200,58 @@ def analizza_tutti_i_treni(testo_completo):
                     continue
             else:
                 sg_partenza = re.search(r'S\.\s*Giuliano\s*Terme.*?Partenza:\s*([0-2]?\d:[0-5]\d)', blocco, re.DOTALL | re.IGNORECASE)
-                # LINEA CORRETTA: rimessa tutta su un unico rigo continuo
-                pisa_arrivo = re.search(
+                pisa_arrivo = re.search(r'Pisa\s*S\.\s*Rossore.*?Arrivo:\s*([0-2]?\d:[0-5]\d)', blocco, re.DOTALL | re.IGNORECASE)
+                
+                if not pisa_arrivo:
+                    pisa_arrivo = re.search(r'Pisa\s*S\.\s*Rossore.*?([0-2]?\d:[0-5]\d)$', blocco.strip(), re.DOTALL | re.IGNORECASE)
+                
+                if sg_partenza and pisa_arrivo:
+                    ora_in, min_in = map(int, sg_partenza.group(1).split(':'))
+                    ora_fi, min_fi = map(int, pisa_arrivo.group(1).split(':'))
+                    str_partenza = f"S. Giuliano ({sg_partenza.group(1)})"
+                    str_arrivo = f"Pisa S.R. ({pisa_arrivo.group(1)})"
+                else:
+                    continue
+            
+            m_tot_in = ora_in * 60 + min_in
+            m_tot_fi = ora_fi * 60 + min_fi
+            if m_tot_fi < m_tot_in:  
+                m_tot_fi += 24 * 60
+                
+            durata = m_tot_fi - m_tot_in
+            
+            dati_treno = {
+                "treno": num_treno,
+                "chiave_tempo": m_tot_in,
+                "partenza": str_partenza,
+                "arrivo": str_arrivo,
+                "durata": durata
+            }
+            
+            if direzione == "ANDATA":
+                report_andata.append(dati_treno)
+            else:
+                report_ritorno.append(dati_treno)
+                
+        except Exception:
+            continue
+
+    report_andata.sort(key=lambda x: x["chiave_tempo"])
+    report_ritorno.sort(key=lambda x: x["chiave_tempo"])
+
+    print("=== TRATTA: PISA S. ROSSORE --> LUCCA (ANDATA) ===")
+    print(f"{'Treno':<8} | {'Partenza (Ora)':<20} | {'Arrivo (Ora)':<20} | {'Durata Tratto'}")
+    print("-" * 75)
+    for t in report_andata:
+        print(f"{t['treno']:<8} | {t['partenza']:<20} | {t['arrivo']:<20} | {t['durata']} min")
+        
+    print("\n" + "="*60 + "\n")
+    
+    print("=== TRATTA: LUCCA --> PISA S. ROSSORE (RITORNO) ===")
+    print(f"{'Treno':<8} | {'Partenza (Ora)':<20} | {'Arrivo (Ora)':<20} | {'Durata Tratto'}")
+    print("-" * 75)
+    for t in report_ritorno:
+        print(f"{t['treno']:<8} | {t['partenza']:<20} | {t['arrivo']:<20} | {t['durata']} min")
+
+# Esecuzione
+analizza_tutti_i_treni(dati_da_elaborare)
