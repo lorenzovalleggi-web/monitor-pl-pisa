@@ -104,47 +104,4 @@ if not treni:
         if (o * 60 + m) > min_ora:
             treni.append({
                 "ora_p": o, "min_p": m, "ritardo": 0,
-                "direzione": str_pisa, "num": "PROG", "live": False
-            })
-
-# Calcolo del ritardo massimo per l'estensione
-est = 0
-r_lista = [t["ritardo"] for t in treni if t["live"]]
-if r_lista and max(r_lista) >= 4:
-    est = min(max(r_lista), 12)
-
-# Filtro dei treni attivi nei prossimi 25 minuti
-treni_futuri = []
-for t in treni:
-    m_tr = (t["ora_p"] * 60) + t["min_p"] + t["ritardo"]
-    if (m_tr + 25) > min_ora:
-        treni_futuri.append((m_tr, t))
-
-# Box informativo del prossimo treno
-if treni_futuri:
-    p_el = min(treni_futuri, key=lambda x: x[0])
-    prox = p_el[1]
-    m_v = (prox["ora_p"] * 60) + prox["min_p"] + prox["ritardo"]
-    st.info(f"📋 PROSSIMO: REG {prox['num']} (Dir. {prox['direzione']}) alle {m_v//60:02d}:{m_v%60:02d}")
-else:
-    st.info("📋 Servizio terminato o nessun treno imminente.")
-
-st.markdown("---")
-st.write("### 🤝 I nostri Sponsor")
-c1, c2, c3 = st.columns(3)
-with c1: st.write("**Il Cappellaio Matto** 🎩\nPisa\n[Pagina FB](https://www.facebook.com/ilcappellaiomattopisa)")
-with c2: st.write("**Spazio Libero** 🤝\nContattaci subito")
-with c3: st.write("**Spazio Libero** 🤝\nContattaci subito")
-
-st.markdown("---")
-st.write("### 🚊 STATO VARCHI (PASSAGGI A LIVELLO)")
-
-VARCHI_CONFIG = [
-    ("Via Ugo Rindi", -4, 2, 15, 21),
-    ("Via di Gagno", -4, 2, 15, 21),
-    ("Via XXIV Maggio", -3, 3, 14, 20),
-    ("Via U. Dini (Gello)", -1, 5, 11, 17),
-    ("San Giuliano Terme", 1, 7, 9, 15)
-]
-
-for nom, a_i, a_f, r_i, r_f in VARCHI_
+                "direzione": str_p
