@@ -43,16 +43,23 @@ except:
 min_ora = ora_adesso.hour * 60 + ora_adesso.minute
 st.write(f"⏱️ Ora attuale: {ora_adesso.strftime('%H:%M:%S')} (Aggiornamento automatico 30s)")
 
-# 2. MOTORE DI RECUPERO DATI LIVE (STRINGHE SCOMPOSTE ANTI-TAGLIO)
+# 2. MOTORE DI RECUPERO DATI LIVE (STRUTTURA LINEARE ANTI-TRONCAMENTO)
 @st.cache_data(ttl=5)
 def prendi_treni(min_attuale):
     treni = []
-    str_pisa = "P" + "I" + "S" + "A"
-    str_lucca = "L" + "U" + "C" + "C" + "A"
-    str_liv = "L" + "I" + "V" + "O" + "R" + "N" + "O"
-    str_pist = "P" + "I" + "S" + "T" + "O" + "I" + "A"
-    str_fir = "F" + "I" + "R" + "E" + "N" + "Z" + "E"
+    str_pisa = "PISA"
+    str_lucca = "LUCCA"
+    str_liv = "LIVORNO"
+    str_pist = "PISTOIA"
+    str_fir = "FIRENZE"
+    dt = ora_adesso.strftime('%Y-%m-%dT00:00:00')
     
+    # Blocco Pisa dedicato
     try:
-        dt = ora_adesso.strftime('%Y-%m-%dT00:00:00')
-        stazioni =
+        url_p = f"http://www.viaggiatreno.it/viaggiatrenonew/api/esitoPartenze/S06411/{dt}"
+        res_p = requests.get(url_p, timeout=3).json().get('tabellone', [])
+        for t in res_p:
+            dest = t.get('destinazione', '').upper()
+            if str_pisa in dest or str_liv in dest or str_pist in dest or str_fir in dest:
+                h, m = map(int, t.get('orarioProgrammato', '').split(':'))
+                rit = max(0, int(t.get
