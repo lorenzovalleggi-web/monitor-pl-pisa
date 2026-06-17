@@ -188,7 +188,6 @@ def analizza_tutti_i_treni(testo_completo):
         
         try:
             if direzione == "ANDATA":
-                # CORREZIONE: [0-2]?\d permette di leggere le ore a singola cifra come 5:31 o 7:55
                 pisa_partenza = re.search(r'Pisa\s*S\.\s*Rossore.*?Partenza:\s*([0-2]?\d:[0-5]\d)', blocco, re.DOTALL | re.IGNORECASE)
                 sg_arrivo = re.search(r'S\.\s*Giuliano\s*Terme.*?Arrivo:\s*([0-2]?\d:[0-5]\d)', blocco, re.DOTALL | re.IGNORECASE)
                 
@@ -201,4 +200,5 @@ def analizza_tutti_i_treni(testo_completo):
                     continue
             else:
                 sg_partenza = re.search(r'S\.\s*Giuliano\s*Terme.*?Partenza:\s*([0-2]?\d:[0-5]\d)', blocco, re.DOTALL | re.IGNORECASE)
-                pisa_arrivo = re.search(r'Pisa\s*S\.\
+                # LINEA CORRETTA: rimessa tutta su un unico rigo continuo
+                pisa_arrivo = re.search(
