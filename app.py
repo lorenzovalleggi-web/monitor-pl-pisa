@@ -71,8 +71,81 @@ def prendi_treni(min_attuale):
     return treni
 
 lista_treni = prendi_treni(min_ora)
-ritardi = [t["ritardo"] for t in lista_treni if t["live"]]
-est = min(max(ritardi), 12) if (ritardi and max(ritardi) >= 4) else 0
 
+# Calcolo ritardi semplificato per evitare righe lunghe
+ritardi = []
+for t in lista_treni:
+    if t["live"]:
+        ritardi.append(t["ritardo"])
+
+est = 0
+if ritardi and max(ritardi) >= 4:
+    est = min(max(ritardi), 12)
+
+# Filtro treni futuri scritto in modo super spezzettato e sicuro
 treni_futuri = []
-for t
+for t in lista_treni:
+    mt = t["ora_p"] * 60 + t["min_p"] + t["ritardo"]
+    if (mt + 25) > min_ora:
+        treni_futuri.append((mt, t))
+
+# Box prossimo treno in arrivo
+if treni_futuri:
+    prossimo_elemento = min(treni_futuri, key=lambda x: x[0])
+    prox = prossimo_elemento[1]
+    h_vis = prox["ora_p"] * 60 + prox["min_p"] + prox["ritardo"]
+    st.info(f"📋 PROSSIMO TRENO: REG {prox['num']} (Dir. {prox['direzione']}) alle {h_vis//60:02d}:{h_vis%60:02d}")
+else: 
+    st.info("📋 Servizio terminato per oggi.")
+
+st.markdown("---")
+st.write("### 🤝 I nostri Sponsor")
+c1, c2, c3 = st.columns(3)
+with c1: st.write("**Il Cappellaio Matto** 🎩\nPisa\n[Pagina FB](https://www.facebook.com/ilcappellaiomattopisa)")
+with c2: st.write("**Spazio Libero** 🤝\nContattaci subito")
+with c3: st.write("**Spazio Libero** 🤝\nContattaci subito")
+
+st.write("")
+st.link_button("💬 CLICCA QUI PER INFO PUBBLICITÀ (WHATSAPP)", "https://wa.me/393920275026?text=Ciao!%20Vorrei%20informazioni%20per%20lo%20sponsor")
+
+st.markdown("---")
+st.write("### 🚊 STATO VARCHI (PASSAGGI A LIVELLO)")
+
+VARCHI_CONFIG = [
+    ("Via Ugo Rindi (Pisa)", 7, 3, 17, 3),
+    ("Via di Gagno (Pisa)", 7, 3, 17, 3),
+    ("Via XXIV Maggio (Pisa)", 8, 3, 16, 3),
+    ("Via Ulisse Dini (Gello)", 11, 3, 13, 3),
+    ("San Giuliano Terme", 13, 4, 10, 3)
+]
+
+for nom, p_offset, p_dur, l_offset, l_dur in VARCHI_CONFIG:
+    chiuso, msg, fut = False, "", []
+    for mt, tr in treni_futuri:
+        if tr["direzione"] == "LUCCA":
+            ini = mt + p_offset
+            fin = ini + p_dur + est
+        else:
+            ini = mt + l_offset
+            fin = ini + l_dur + est
+            
+        if ini <= min_ora <= fin:
+            chiuso = True
+            msg = f"🛑 CHIUSO | Fino alle {fin//60:02d}:{fin%60:02d} (Treno dir. {tr['direzione']})"
+            break
+        if ini > min_ora: 
+            fut.append((ini, tr["direzione"]))
+            
+    if not chiuso:
+        if fut:
+            p_ch, dr = min(fut, key=lambda x: x[0])
+            msg = f"🟢 APERTO | Preavviso: {p_ch//60:02d}:{p_ch%60:02d} ({p_ch - min_ora} min - Dir. {dr})"
+        else: 
+            msg = "🟢 APERTO | Nessun transito imminente"
+
+    if chiuso: st.error(f"#### {nom}\n{msg}")
+    else: st.success(f"#### {nom}\n{msg}")
+
+st.markdown("---")
+st.link_button("☕ Offri un caffè al server", "https://www.paypal.com/paypalme/rebolo73")
+st.write("© 2026 BinarioLibero")
