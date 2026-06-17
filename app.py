@@ -20,7 +20,7 @@ st.components.v1.html("""
 
 # 1. TABELLA ORARIA AGGIORNATA (Inseriti i 5 nuovi treni della mattina)
 ORARI_PISA = [
-    (5,31), (7,10), (7,55), (8,55), (9,55),  # Nuovi treni inseriti qui
+    (5,31), (7,10), (7,55), (8,55), (9,55),
     (5,25), (6,13), (7,4), (7,50), (8,50), (9,3), (9,22), (9,50), (10,20), 
     (12,20), (12,50), (13,20), (13,43), (14,20), (14,50), (15,20), (15,50), 
     (16,19), (16,50), (17,20), (17,50), (18,20), (18,50), (19,20), (19,50), 
@@ -52,14 +52,30 @@ def prendi_treni():
             res = requests.get(url, timeout=3).json().get('tabellone', [])
             for t in res:
                 dest = t.get('destinazione', '').upper()
-                # Filtra solo i treni della linea Pisa-Lucca escludendo Viareggio/costa
                 if f_key in dest or "LIVORNO" in dest or "PISTOIA" in dest or "FIRENZE" in dest:
                     h, m = map(int, t.get('orarioProgrammato', '').split(':'))
                     rit = max(0, int(t.get('ritardo', 0) or 0))
                     treni.append({"ora_p": h, "min_p": m, "ritardo": rit, "direzione": d_name, "num": t.get('numeroTreno'), "live": True})
     except: pass
     
-    # Se i server ViaggiaTreno non rispondono, usa gli orari programmati dell'app
     if not treni:
         for o, m in ORARI_PISA:
-            if (o * 60 + m) > min_ora: treni.append({"ora_p": o, "min_p": m, "ritardo": 0, "direzione": "LU
+            if (o * 60 + m) > min_ora:
+                treni.append({"ora_p": o, "min_p": m, "ritardo": 0, "direzione": "LUCCA", "num": "PROG", "live": False})
+        for o, m in ORARI_LUCCA:
+            if (o * 60 + m) > min_ora:
+                treni.append({"ora_p": o, "min_p": m, "ritardo": 0, "direzione": "PISA", "num": "PROG", "live": False})
+    return treni
+
+lista_treni = prendi_treni()
+ritardi = [t["ritardo"] for t in lista_treni if t["live"]]
+est = min(max(ritardi), 12) if (ritardi and max(ritardi) >= 4) else 0
+
+treni_futuri = []
+for t in lista_treni:
+    mt = t["ora_p"] * 60 + t["min_p"] + t["ritardo"]
+    if (mt + 25) > min_ora: treni_futuri.append((mt, t))
+
+if treni_futuri:
+    _, prox = min(treni_futuri, key=lambda x: x[0])
+    h
