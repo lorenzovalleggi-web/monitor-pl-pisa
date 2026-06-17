@@ -1,113 +1,109 @@
-import streamlit as st
-import datetime, pytz, requests
+import re
 
-st.set_page_config(page_title="BinarioLibero", layout="centered")
-
-st.markdown("""<style>
-    .stApp { background-color: #0f172a !important; color: #ffffff !important; }
-    h1, h2, h3, h4, p, span, div, li { color: #ffffff !important; }
-    .stAlert p { color: #ffffff !important; }
-    .stButton>button, .stLinkButton>a { background-color: #1e293b !important; color: #ffffff !important; border: 1px solid #475569 !important; width: 100% !important; text-align: center !important; }
-</style>""", unsafe_allow_html=True)
-
-# Auto-refresh ogni 10 secondi tramite HTML
-st.components.v1.html("""
-    <script>
-        setTimeout(function(){ window.parent.location.reload(); }, 10000);
-    </script>
-""", height=0, width=0)
-
-ORARI_PISA = [
-    (5,25), (6,13), (7,4), (7,50), (8,50), (9,3), (9,22), (9,50), (10,20), 
-    (12,20), (12,50), (13,20), (13,43), (14,20), (14,50), (15,20), (15,50), 
-    (16,19), (16,50), (17,20), (17,50), (18,20), (18,50), (19,20), (19,50), 
-    (20,50), (21,20), (21,50)
-]
-
-ORARI_LUCCA = [
-    (6,52), (7,8), (7,40), (7,53), (8,15), (9,10), (9,42), (10,12), (10,42), 
-    (12,42), (13,12)
-]
-
-st.title("⚡ BinarioLibero Pisa")
-
-try: ora_adesso = datetime.datetime.now(pytz.timezone('Europe/Rome'))
-except: ora_adesso = datetime.datetime.now()
-
-min_ora = ora_adesso.hour * 60 + ora_adesso.minute
-st.write(f"⏱️ Ora attuale: {ora_adesso.strftime('%H:%M:%S')} (Aggiornamento automatico)")
-
-@st.cache_data(ttl=5)
-def prendi_treni():
-    treni = []
-    try:
-        dt = ora_adesso.strftime('%Y-%m-%dT00:00:00')
-        for v_id, d_name, f_key in [("S06411", "PISA", "PISA"), ("S06501", "LUCCA", "LUCCA")]:
-            url = f"http://www.viaggiatreno.it/viaggiatrenonew/api/esitoPartenze/{v_id}/{dt}"
-            res = requests.get(url, timeout=3).json().get('tabellone', [])
-            for t in res:
-                dest = t.get('destinazione', '').upper()
-                if f_key in dest or "LIVORNO" in dest or "PISTOIA" in dest or "FIRENZE" in dest:
-                    h, m = map(int, t.get('orarioProgrammato', '').split(':'))
-                    rit = max(0, int(t.get('ritardo', 0) or 0))
-                    treni.append({"ora_p": h, "min_p": m, "ritardo": rit, "direzione": d_name, "num": t.get('numeroTreno'), "live": True})
-    except: pass
-    if not treni:
-        for o, m in ORARI_PISA:
-            if (o * 60 + m) > min_ora: treni.append({"ora_p": o, "min_p": m, "ritardo": 0, "direzione": "LUCCA", "num": "PROG", "live": False})
-        for o, m in ORARI_LUCCA:
-            if (o * 60 + m) > min_ora: treni.append({"ora_p": o, "min_p": m, "ritardo": 0, "direzione": "PISA", "num": "PROG", "live": False})
-    return treni
-
-lista_treni = prendi_treni()
-ritardi = [t["ritardo"] for t in lista_treni if t["live"]]
-est = min(max(ritardi), 12) if (ritardi and max(ritardi) >= 4) else 0
-
-treni_futuri = []
-for t in lista_treni:
-    mt = t["ora_p"] * 60 + t["min_p"] + t["ritardo"]
-    if (mt + 5) > min_ora: treni_futuri.append((mt, t))
-
-if treni_futuri:
-    _, prox = min(treni_futuri, key=lambda x: x[0])
-    h_vis = prox["ora_p"] * 60 + prox["min_p"] + prox["ritardo"]
-    st.info(f"📋 PROSSIMO TRENO: REG {prox['num']} (Dir. {prox['direzione']}) alle {h_vis//60:02d}:{h_vis%60:02d}")
-else: st.info("📋 Servizio terminato.")
-
-st.markdown("---")
-st.write("### 🤝 I nostri Sponsor")
-c1, c2, c3 = st.columns(3)
-with c1: st.write("**Il Cappellaio Matto** 🎩\nPisa\n[Pagina FB](https://www.facebook.com/ilcappellaiomattopisa)")
-with c2: st.write("**Spazio Libero** 🤝\nContattaci subito")
-with c3: st.write("**Spazio Libero** 🤝\nContattaci subito")
-
-st.write("")
-st.link_button("💬 CLICCA QUI PER INFO PUBBLICITÀ (WHATSAPP)", "https://wa.me/393920275026?text=Ciao!%20Vorrei%20informazioni%20per%20lo%20sponsor")
-
-st.markdown("---")
-st.write("### 🚊 STATO VARCHI")
-VARCHI = [("San Giuliano Terme", -6, 8, -2, 4), ("Via Ulisse Dini (Gello)", -7, 9, -1, 3), ("Via XXIV Maggio (Pisa)", -9, 11, 0, 3), ("Via di Gagno (Pisa)", -9, 11, 0, 3), ("Via Ugo Rindi (Pisa)", -10, 12, 1, 3)]
-
-for nom, p_ant, p_dur, l_ant, l_dur in VARCHI:
-    chiuso, msg, fut = False, "", []
-    for mt, tr in treni_futuri:
-        ini = (mt + p_ant) if tr["direzione"] == "LUCCA" else (mt + l_ant)
-        fin = ini + (p_dur if tr["direzione"] == "LUCCA" else l_dur) + est
-        if ini <= min_ora <= fin:
-            chiuso = True
-            msg = f"🛑 CHIUSO | Fino alle {fin//60:02d}:{fin%60:02d} (Treno dir. {tr['direzione']})"
-            break
-        if ini > min_ora: fut.append((ini, tr["direzione"]))
+def analizza_tutti_i_treni(testo_completo):
+    # Divide il testo usando la parola "CHIUDI" (case-insensitive) per isolare i treni
+    blocchi = re.split(r'(?i)CHIUDI', testo_completo)
+    
+    report_andata = []  # Pisa -> Lucca
+    report_ritorno = [] # Lucca -> Pisa
+    
+    for blocco in blocchi:
+        if not blocco.strip():
+            continue
             
-    if not chiuso:
-        if fut:
-            p_ch, dr = min(fut, key=lambda x: x[0])
-            msg = f"🟢 APERTO | Preavviso: {p_ch//60:02d}:{p_ch%60:02d} ({p_ch - min_ora} min - Dir. {dr})"
-        else: msg = "🟢 APERTO | Nessun transito"
+        # 1. Estrazione Numero Treno
+        num_treno_match = re.search(r'\b(18\d{3}|83\d{3})\b', blocco)
+        num_treno = num_treno_match.group(1) if num_treno_match else "N/D"
+        
+        # 2. Rilevamento Direzione (Guarda l'ordine delle stazioni principali nel blocco)
+        # Se trova "Pisa S. Rossore" prima di "Lucca" nella testata è Andata, altrimenti Ritorno
+        pos_pisa_gen = blocco.find("Pisa S. Rossore")
+        pos_lucca_gen = blocco.find("Lucca")
+        
+        direzione = "RITORNO" # Default se non chiaro
+        if pos_pisa_gen != -1 and pos_lucca_gen != -1:
+            direzione = "ANDATA" if pos_pisa_gen < pos_lucca_gen else "RITORNO"
 
-    if chiuso: st.error(f"#### {nom}\n{msg}")
-    else: st.success(f"#### {nom}\n{msg}")
+        # 3. Estrazione dati S. Giuliano Terme e Pisa S. Rossore nei dettagli delle fermate
+        sg_match = re.search(r'S\.\s*Giuliano\s*Terme.*?(?:Arrivo|Partenza):\s*([0-2]\d:[0-5]\d).*?Partenza:\s*([0-2]\d:[0-5]\d)', blocco, re.DOTALL | re.IGNORECASE)
+        # Se non trova sia arrivo che partenza (es. se c'è solo una voce), prova a prendere la partenza generica
+        if not sg_match:
+            sg_match = re.search(r'S\.\s*Giuliano\s*Terme.*?Partenza:\s*([0-2]\d:[0-5]\d)', blocco, re.DOTALL | re.IGNORECASE)
+            
+        pisa_match = re.search(r'Pisa\s*S\.\s*Rossore.*?(?:Arrivo|Partenza):\s*([0-2]\d:[0-5]\d)', blocco, re.DOTALL | re.IGNORECASE)
 
-st.markdown("---")
-st.link_button("☕ Offri un caffè al server", "https://www.paypal.com/paypalme/rebolo73")
-st.write("© 2026 BinarioLibero")
+        if sg_match and pisa_match:
+            # Per il calcolo dei minuti:
+            # Se ANDATA (Pisa -> Lucca): il tratto è Pisa S. Rossore (Partenza) -> S. Giuliano (Arrivo)
+            # Se RITORNO (Lucca -> Pisa): il tratto è S. Giuliano (Partenza) -> Pisa S. Rossore (Arrivo)
+            
+            try:
+                if direzione == "ANDATA":
+                    # Cerca l'orario di partenza da Pisa S. Rossore nei dettagli
+                    orario_pisa = pisa_match.group(1)
+                    # L'arrivo a San Giuliano è il primo orario catturato dal pattern esteso
+                    orario_sg = re.search(r'S\.\s*Giuliano\s*Terme.*?Arrivo:\s*([0-2]\d:[0-5]\d)', blocco, re.DOTALL | re.IGNORECASE).group(1)
+                    
+                    h_in, m_in = map(int, orario_pisa.split(':'))
+                    h_fi, m_fi = map(int, orario_sg.split(':'))
+                    stazione_partenza = f"Pisa S.R. ({orario_pisa})"
+                    stazione_arrivo = f"S. Giuliano ({orario_sg})"
+                else:
+                    # RITORNO
+                    orario_sg_partenza = sg_match.group(2) if len(sg_match.groups()) > 1 else sg_match.group(1)
+                    orario_pisa_arrivo = pisa_match.group(1)
+                    
+                    h_in, m_in = map(int, orario_sg_partenza.split(':'))
+                    h_fi, m_fi = map(int, orario_pisa_arrivo.split(':'))
+                    stazione_partenza = f"S. Giuliano ({orario_sg_partenza})"
+                    stazione_arrivo = f"Pisa S.R. ({orario_pisa_arrivo})"
+                
+                # Calcolo effettivo dei minuti
+                min_in = h_in * 60 + m_in
+                min_fi = h_fi * 60 + m_fi
+                if min_fi < min_in:  # Gestione cambio giorno/mezzanotte
+                    min_fi += 24 * 60
+                    
+                durata = min_fi - min_in
+                
+                info_treno = {
+                    "treno": num_treno,
+                    "chiave_orario": min_in, # per ordinamento cronologico
+                    "partenza": stazione_partenza,
+                    "arrivo": stazione_arrivo,
+                    "durata": durata
+                }
+                
+                if direzione == "ANDATA":
+                    report_andata.append(info_treno)
+                else:
+                    report_ritorno.append(info_treno)
+            except Exception:
+                continue
+
+    # Ordinamento cronologico
+    report_andata.sort(key=lambda x: x["chiave_orario"])
+    report_ritorno.sort(key=lambda x: x["chiave_orario"])
+
+    # Stampa i risultati
+    print("=== TRATTA: PISA S. ROSSORE --> LUCCA (ANDATA) ===")
+    print(f"{'Treno':<8} | {'Da Stazione (Ora)':<20} | {'A Stazione (Ora)':<20} | {'Durata Tratto Breve'}")
+    print("-" * 75)
+    for t in report_andata:
+        print(f"{t['treno']:<8} | {t['partenza']:<20} | {t['arrivo']:<20} | {t['durata']} min")
+        
+    print("\n" + "="*50 + "\n")
+    
+    print("=== TRATTA: LUCCA --> PISA S. ROSSORE (RITORNO) ===")
+    print(f"{'Treno':<8} | {'Da Stazione (Ora)':<20} | {'A Stazione (Ora)':<20} | {'Durata Tratto Breve'}")
+    print("-" * 75)
+    for t in report_ritorno:
+        print(f"{t['treno']:<8} | {t['partenza']:<20} | {t['arrivo']:<20} | {t['durata']} min")
+
+# --- INCOLLA I TUOI DATI QUI SOTTO ---
+dati_completi = """
+[Incolla qui tutto il testo dei treni che hai raccolto oggi]
+"""
+
+# Esegui l'analisi finale
+# analizza_tutti_i_treni(dati_completi)
