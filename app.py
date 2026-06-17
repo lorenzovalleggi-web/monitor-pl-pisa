@@ -11,10 +11,10 @@ st.markdown("""<style>
     .stButton>button, .stLinkButton>a { background-color: #1e293b !important; color: #ffffff !important; border: 1px solid #475569 !important; width: 100% !important; text-align: center !important; }
 </style>""", unsafe_allow_html=True)
 
-# Auto-refresh invisibile (Ricarica la pagina ogni 10 secondi)
+# Auto-refresh invisibile (Modificato a 30000ms = 30 secondi)
 st.components.v1.html("""
     <script>
-        setTimeout(function(){ window.parent.location.reload(); }, 10000);
+        setTimeout(function(){ window.parent.location.reload(); }, 30000);
     </script>
 """, height=0, width=0)
 
@@ -72,7 +72,7 @@ def prendi_treni(min_attuale):
 
 lista_treni = prendi_treni(min_ora)
 
-# Calcolo ritardi semplificato per evitare righe lunghe
+# Calcolo ritardi semplificato
 ritardi = []
 for t in lista_treni:
     if t["live"]:
@@ -82,7 +82,7 @@ est = 0
 if ritardi and max(ritardi) >= 4:
     est = min(max(ritardi), 12)
 
-# Filtro treni futuri scritto in modo super spezzettato e sicuro
+# Filtro treni futuri
 treni_futuri = []
 for t in lista_treni:
     mt = t["ora_p"] * 60 + t["min_p"] + t["ritardo"]
