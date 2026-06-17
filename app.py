@@ -73,16 +73,4 @@ dt = ora_adesso.strftime('%Y-%m-%dT00:00:00')
 
 # Fetch Pisa con While
 try:
-    bp = "http://www.viaggiatreno.it/viaggiatrenonew/api/esitoPartenze/S06411/"
-    res_p = requests.get(bp + dt, timeout=3).json().get('tabellone', [])
-    i_p = 0
-    tot_p = len(res_p)
-    while i_p < tot_p:
-        t = res_p[i_p]
-        dest = t.get('destinazione', '').upper()
-        if str_pisa in dest or str_liv in dest or str_pist in dest or str_fir in dest:
-            prog = t.get('orarioProgrammato', '')
-            h_p, m_p = map(int, prog.split(':'))
-            r_p = t.get('ritardo', 0)
-            rit = max(0, int(r_p if r_p else 0))
-            n
+    bp = "
