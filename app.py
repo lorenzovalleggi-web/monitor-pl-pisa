@@ -58,7 +58,7 @@ treni = []
 str_pisa = "PISA"
 str_lucca = "LUCCA"
 
-# Prova a prendere i dati live, se fallisce passa oltre senza rompere la pagina
+# Prova a prendere i dati live
 try:
     dt = ora_adesso.strftime('%Y-%m-%dT00:00:00')
     url_p = f"http://www.viaggiatreno.it/viaggiatrenonew/api/esitoPartenze/S06411/{dt}"
@@ -92,6 +92,36 @@ try:
 except:
     pass
 
-# SE I DATI LIVE MANCANO, CARICA SUBITO GLI ORARI PROGRAMMATI
+# SE I DATI LIVE MANCANO, CARICA GLI ORARI PROGRAMMATI (CORRETTO INDENTAZIONE)
 if not treni:
     for o, m in ORARI_PISA:
+        if (o * 60 + m) > min_ora:
+            treni.append({
+                "ora_p": o, "min_p": m, "ritardo": 0,
+                "direzione": str_lucca, "num": "PROG", "live": False
+            })
+    for o, m in ORARI_LUCCA:
+        if (o * 60 + m) > min_ora:
+            treni.append({
+                "ora_p": o, "min_p": m, "ritardo": 0,
+                "direzione": str_pisa, "num": "PROG", "live": False
+            })
+
+# Calcolo del ritardo massimo per l'estensione
+est = 0
+r_lista = [t["ritardo"] for t in treni if t["live"]]
+if r_lista and max(r_lista) >= 4:
+    est = min(max(r_lista), 12)
+
+# Filtro dei treni attivi nei prossimi 25 minuti
+treni_futuri = []
+for t in treni:
+    m_tr = (t["ora_p"] * 60) + t["min_p"] + t["ritardo"]
+    if (m_tr + 25) > min_ora:
+        treni_futuri.append((m_tr, t))
+
+# Box informativo del prossimo treno
+if treni_futuri:
+    p_el = min(treni_futuri, key=lambda x: x[0])
+    prox = p_el[1]
+    m_
