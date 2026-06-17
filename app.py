@@ -61,7 +61,6 @@ min_ora = h_or * 60 + m_or
 txt_ora = ora_adesso.strftime('%H:%M:%S')
 st.write(f"⏱️ Ora attuale: {txt_ora}")
 
-# 2. CHIAMATE API CON URL SCOMPOSTI (ANTI-TRONCAMENTO)
 treni = []
 str_pisa = "PISA"
 str_lucca = "LUCCA"
@@ -71,6 +70,157 @@ str_fir = "FIRENZE"
 
 dt = ora_adesso.strftime('%Y-%m-%dT00:00:00')
 
-# Ricostruzione URL Pisa senza stringhe dirette
-# Corrisponde a viaggiatreno... S06411/
-codici_p = [104,116,116,112,58,47,47,119,119,119,46,118,105,97,103,103,105,97,116,114,101,110,111,46,105,116,47,118,105,97,103,103,105,97,116,114,101,110,111,110,101,119,47,97,112,105,47,101,115,105,116,111,80,97,1
+# COSTRUZIONE VERTICALE URL PISA
+cp = []
+cp.append(104) # h
+cp.append(116) # t
+cp.append(116) # t
+cp.append(112) # p
+cp.append(58)  # :
+cp.append(47)  # /
+cp.append(47)  # /
+cp.append(119) # w
+cp.append(119) # w
+cp.append(119) # w
+cp.append(46)  # .
+cp.append(118) # v
+cp.append(105) # i
+cp.append(97)  # a
+cp.append(103) # g
+cp.append(103) # g
+cp.append(105) # i
+cp.append(97)  # a
+cp.append(116) # t
+cp.append(114) # r
+cp.append(101) # e
+cp.append(110) # n
+cp.append(111) # o
+cp.append(46)  # .
+cp.append(105) # i
+cp.append(116) # t
+cp.append(47)  # /
+cp.append(118) # v
+cp.append(105) # i
+cp.append(97)  # a
+cp.append(103) # g
+cp.append(103) # g
+cp.append(105) # i
+cp.append(97)  # a
+cp.append(116) # t
+cp.append(114) # r
+cp.append(101) # e
+cp.append(110) # n
+cp.append(111) # o
+cp.append(110) # n
+cp.append(101) # e
+cp.append(119) # w
+cp.append(47)  # /
+cp.append(97)  # a
+cp.append(112) # p
+cp.append(105) # i
+cp.append(47)  # /
+cp.append(101) # e
+cp.append(115) # s
+cp.append(105) # i
+cp.append(116) # t
+cp.append(111) # o
+cp.append(80)  # P
+cp.append(97)  # a
+cp.append(114) # r
+cp.append(116) # t
+cp.append(101) # e
+cp.append(110) # n
+cp.append(112) # z
+cp.append(101) # e
+cp.append(47)  # /
+cp.append(69)  # E
+cp.append(48)  # 0
+cp.append(54)  # 6
+cp.append(52)  # 4
+cp.append(49)  # 1
+cp.append(49)  # 1
+cp.append(47)  # /
+
+bp = "".join([chr(x) for x in cp])
+
+# Fetch Pisa
+try:
+    res_p = requests.get(
+        bp + dt, timeout=3
+    ).json().get('tabellone', [])
+    i_p = 0
+    tot_p = len(res_p)
+    while i_p < tot_p:
+        t = res_p[i_p]
+        dest = t.get(
+            'destinazione', ''
+        ).upper()
+        if str_pisa in dest or str_liv in dest or str_pist in dest or str_fir in dest:
+            prog = t.get(
+                'orarioProgrammato', ''
+            )
+            h_p, m_p = map(
+                int, prog.split(':')
+            )
+            r_p = t.get('ritardo', 0)
+            rit = max(
+                0, int(r_p if r_p else 0)
+            )
+            n_tr = t.get('numeroTreno')
+            treni.append({
+                "ora_p": h_p,
+                "min_p": m_p,
+                "ritardo": rit,
+                "direzione": str_pisa,
+                "num": n_tr,
+                "live": True
+            })
+        i_p += 1
+except:
+    pass
+
+# COSTRUZIONE VERTICALE URL LUCCA
+cl = []
+cl.append(104) # h
+cl.append(116) # t
+cl.append(116) # t
+cl.append(112) # p
+cl.append(58)  # :
+cl.append(47)  # /
+cl.append(47)  # /
+cl.append(119) # w
+cl.append(119) # w
+cl.append(119) # w
+cl.append(46)  # .
+cl.append(118) # v
+cl.append(105) # i
+cl.append(97)  # a
+cl.append(103) # g
+cl.append(103) # g
+cl.append(105) # i
+cl.append(97)  # a
+cl.append(116) # t
+cl.append(114) # r
+cl.append(101) # e
+cl.append(110) # n
+cl.append(111) # o
+cl.append(46)  # .
+cl.append(105) # i
+cl.append(116) # t
+cl.append(47)  # /
+cl.append(118) # v
+cl.append(105) # i
+cl.append(97)  # a
+cl.append(103) # g
+cl.append(103) # g
+cl.append(105) # i
+cl.append(97)  # a
+cl.append(116) # t
+cl.append(114) # r
+cl.append(101) # e
+cl.append(110) # n
+cl.append(111) # o
+cl.append(110) # n
+cl.append(101) # e
+cl.append(119) # w
+cl.append(47)  #
