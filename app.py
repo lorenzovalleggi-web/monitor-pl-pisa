@@ -24,26 +24,19 @@ st.components.v1.html("""
     </script>
 """, height=0, width=0)
 
-# 1. TABELLA ORARIA
+# 1. TABELLA ORARIA COMPLETA
 ORARI_PISA = [
-    (5,31), (7,10), (7,55),
-    (8,55), (9,55), (5,25),
-    (6,13), (7,4), (7,50),
-    (8,50), (9,3), (9,22),
-    (9,50), (10,20), (12,20),
-    (12,50), (13,20), (13,43),
-    (14,20), (14,50), (15,20),
-    (15,50), (16,19), (16,50),
-    (17,20), (17,50), (18,20),
-    (18,50), (19,20), (19,50),
+    (5,31), (7,10), (7,55), (8,55), (9,55), (5,25),
+    (6,13), (7,4), (7,50), (8,50), (9,3), (9,22),
+    (9,50), (10,20), (12,20), (12,50), (13,20), (13,43),
+    (14,20), (14,50), (15,20), (15,50), (16,19), (16,50),
+    (17,20), (17,50), (18,20), (18,50), (19,20), (19,50),
     (20,50), (21,20), (21,50)
 ]
 
 ORARI_LUCCA = [
-    (6,52), (7,8), (7,40),
-    (7,53), (8,15), (9,10),
-    (9,42), (10,12), (10,42),
-    (12,42), (13,12)
+    (6,52), (7,8), (7,40), (7,53), (8,15), (9,10),
+    (9,42), (10,12), (10,42), (12,42), (13,12)
 ]
 
 st.title("⚡ BinarioLibero Pisa")
@@ -59,168 +52,46 @@ m_or = ora_adesso.minute
 min_ora = h_or * 60 + m_or
 
 txt_ora = ora_adesso.strftime('%H:%M:%S')
-st.write(f"⏱️ Ora attuale: {txt_ora}")
+st.write(f"⏱️ Ora attuale: {txt_ora} (Aggiornamento auto 30s)")
 
 treni = []
 str_pisa = "PISA"
 str_lucca = "LUCCA"
-str_liv = "LIVORNO"
-str_pist = "PISTOIA"
-str_fir = "FIRENZE"
 
-dt = ora_adesso.strftime('%Y-%m-%dT00:00:00')
-
-# COSTRUZIONE VERTICALE URL PISA
-cp = []
-cp.append(104) # h
-cp.append(116) # t
-cp.append(116) # t
-cp.append(112) # p
-cp.append(58)  # :
-cp.append(47)  # /
-cp.append(47)  # /
-cp.append(119) # w
-cp.append(119) # w
-cp.append(119) # w
-cp.append(46)  # .
-cp.append(118) # v
-cp.append(105) # i
-cp.append(97)  # a
-cp.append(103) # g
-cp.append(103) # g
-cp.append(105) # i
-cp.append(97)  # a
-cp.append(116) # t
-cp.append(114) # r
-cp.append(101) # e
-cp.append(110) # n
-cp.append(111) # o
-cp.append(46)  # .
-cp.append(105) # i
-cp.append(116) # t
-cp.append(47)  # /
-cp.append(118) # v
-cp.append(105) # i
-cp.append(97)  # a
-cp.append(103) # g
-cp.append(103) # g
-cp.append(105) # i
-cp.append(97)  # a
-cp.append(116) # t
-cp.append(114) # r
-cp.append(101) # e
-cp.append(110) # n
-cp.append(111) # o
-cp.append(110) # n
-cp.append(101) # e
-cp.append(119) # w
-cp.append(47)  # /
-cp.append(97)  # a
-cp.append(112) # p
-cp.append(105) # i
-cp.append(47)  # /
-cp.append(101) # e
-cp.append(115) # s
-cp.append(105) # i
-cp.append(116) # t
-cp.append(111) # o
-cp.append(80)  # P
-cp.append(97)  # a
-cp.append(114) # r
-cp.append(116) # t
-cp.append(101) # e
-cp.append(110) # n
-cp.append(112) # z
-cp.append(101) # e
-cp.append(47)  # /
-cp.append(69)  # E
-cp.append(48)  # 0
-cp.append(54)  # 6
-cp.append(52)  # 4
-cp.append(49)  # 1
-cp.append(49)  # 1
-cp.append(47)  # /
-
-bp = "".join([chr(x) for x in cp])
-
-# Fetch Pisa
+# Prova a prendere i dati live, se fallisce passa oltre senza rompere la pagina
 try:
-    res_p = requests.get(
-        bp + dt, timeout=3
-    ).json().get('tabellone', [])
-    i_p = 0
-    tot_p = len(res_p)
-    while i_p < tot_p:
-        t = res_p[i_p]
-        dest = t.get(
-            'destinazione', ''
-        ).upper()
-        if str_pisa in dest or str_liv in dest or str_pist in dest or str_fir in dest:
-            prog = t.get(
-                'orarioProgrammato', ''
-            )
-            h_p, m_p = map(
-                int, prog.split(':')
-            )
+    dt = ora_adesso.strftime('%Y-%m-%dT00:00:00')
+    url_p = f"http://www.viaggiatreno.it/viaggiatrenonew/api/esitoPartenze/S06411/{dt}"
+    res_p = requests.get(url_p, timeout=2).json().get('tabellone', [])
+    for t in res_p:
+        prog = t.get('orarioProgrammato', '')
+        if prog and ':' in prog:
+            h_p, m_p = map(int, prog.split(':'))
             r_p = t.get('ritardo', 0)
-            rit = max(
-                0, int(r_p if r_p else 0)
-            )
-            n_tr = t.get('numeroTreno')
+            rit = max(0, int(r_p if r_p else 0))
             treni.append({
-                "ora_p": h_p,
-                "min_p": m_p,
-                "ritardo": rit,
-                "direzione": str_pisa,
-                "num": n_tr,
-                "live": True
+                "ora_p": h_p, "min_p": m_p, "ritardo": rit,
+                "direzione": str_pisa, "num": t.get('numeroTreno', 'REG'), "live": True
             })
-        i_p += 1
 except:
     pass
 
-# COSTRUZIONE VERTICALE URL LUCCA
-cl = []
-cl.append(104) # h
-cl.append(116) # t
-cl.append(116) # t
-cl.append(112) # p
-cl.append(58)  # :
-cl.append(47)  # /
-cl.append(47)  # /
-cl.append(119) # w
-cl.append(119) # w
-cl.append(119) # w
-cl.append(46)  # .
-cl.append(118) # v
-cl.append(105) # i
-cl.append(97)  # a
-cl.append(103) # g
-cl.append(103) # g
-cl.append(105) # i
-cl.append(97)  # a
-cl.append(116) # t
-cl.append(114) # r
-cl.append(101) # e
-cl.append(110) # n
-cl.append(111) # o
-cl.append(46)  # .
-cl.append(105) # i
-cl.append(116) # t
-cl.append(47)  # /
-cl.append(118) # v
-cl.append(105) # i
-cl.append(97)  # a
-cl.append(103) # g
-cl.append(103) # g
-cl.append(105) # i
-cl.append(97)  # a
-cl.append(116) # t
-cl.append(114) # r
-cl.append(101) # e
-cl.append(110) # n
-cl.append(111) # o
-cl.append(110) # n
-cl.append(101) # e
-cl.append(119) # w
-cl.append(47)  #
+try:
+    url_l = f"http://www.viaggiatreno.it/viaggiatrenonew/api/esitoPartenze/S06501/{dt}"
+    res_l = requests.get(url_l, timeout=2).json().get('tabellone', [])
+    for t in res_l:
+        prog = t.get('orarioProgrammato', '')
+        if prog and ':' in prog:
+            h_p, m_p = map(int, prog.split(':'))
+            r_p = t.get('ritardo', 0)
+            rit = max(0, int(r_p if r_p else 0))
+            treni.append({
+                "ora_p": h_p, "min_p": m_p, "ritardo": rit,
+                "direzione": str_lucca, "num": t.get('numeroTreno', 'REG'), "live": True
+            })
+except:
+    pass
+
+# SE I DATI LIVE MANCANO, CARICA SUBITO GLI ORARI PROGRAMMATI
+if not treni:
+    for o, m in ORARI_PISA:
