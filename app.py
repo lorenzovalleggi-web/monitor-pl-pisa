@@ -35,15 +35,17 @@ ORARI_LUCCA = [
 st.title("⚡ BinarioLibero Pisa")
 
 # Gestione Orario Italiano
-try: ora_adesso = datetime.datetime.now(pytz.timezone('Europe/Rome'))
-except: ora_adesso = datetime.datetime.now()
+try:
+    ora_adesso = datetime.datetime.now(pytz.timezone('Europe/Rome'))
+except:
+    ora_adesso = datetime.datetime.now()
 
 min_ora = ora_adesso.hour * 60 + ora_adesso.minute
 st.write(f"⏱️ Ora attuale: {ora_adesso.strftime('%H:%M:%S')} (Aggiornamento automatico)")
 
 # 2. SCARICAMENTO DATI LIVE DA VIAGGIATRENO
 @st.cache_data(ttl=5)
-def prendi_treni():
+def prendi_treni(min_attuale):
     treni = []
     try:
         dt = ora_adesso.strftime('%Y-%m-%dT00:00:00')
@@ -56,26 +58,21 @@ def prendi_treni():
                     h, m = map(int, t.get('orarioProgrammato', '').split(':'))
                     rit = max(0, int(t.get('ritardo', 0) or 0))
                     treni.append({"ora_p": h, "min_p": m, "ritardo": rit, "direzione": d_name, "num": t.get('numeroTreno'), "live": True})
-    except: pass
+    except:
+        pass
     
     if not treni:
         for o, m in ORARI_PISA:
-            if (o * 60 + m) > min_ora:
+            if (o * 60 + m) > min_attuale:
                 treni.append({"ora_p": o, "min_p": m, "ritardo": 0, "direzione": "LUCCA", "num": "PROG", "live": False})
         for o, m in ORARI_LUCCA:
-            if (o * 60 + m) > min_ora:
+            if (o * 60 + m) > min_attuale:
                 treni.append({"ora_p": o, "min_p": m, "ritardo": 0, "direzione": "PISA", "num": "PROG", "live": False})
     return treni
 
-lista_treni = prendi_treni()
+lista_treni = prendi_treni(min_ora)
 ritardi = [t["ritardo"] for t in lista_treni if t["live"]]
 est = min(max(ritardi), 12) if (ritardi and max(ritardi) >= 4) else 0
 
 treni_futuri = []
-for t in lista_treni:
-    mt = t["ora_p"] * 60 + t["min_p"] + t["ritardo"]
-    if (mt + 25) > min_ora: treni_futuri.append((mt, t))
-
-if treni_futuri:
-    _, prox = min(treni_futuri, key=lambda x: x[0])
-    h
+for t
