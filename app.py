@@ -92,7 +92,7 @@ try:
 except:
     pass
 
-# SE I DATI LIVE MANCANO, CARICA GLI ORARI PROGRAMMATI (CORRETTO INDENTAZIONE)
+# Se i dati live mancano, carica i programmati
 if not treni:
     for o, m in ORARI_PISA:
         if (o * 60 + m) > min_ora:
@@ -124,4 +124,27 @@ for t in treni:
 if treni_futuri:
     p_el = min(treni_futuri, key=lambda x: x[0])
     prox = p_el[1]
-    m_
+    m_v = (prox["ora_p"] * 60) + prox["min_p"] + prox["ritardo"]
+    st.info(f"📋 PROSSIMO: REG {prox['num']} (Dir. {prox['direzione']}) alle {m_v//60:02d}:{m_v%60:02d}")
+else:
+    st.info("📋 Servizio terminato o nessun treno imminente.")
+
+st.markdown("---")
+st.write("### 🤝 I nostri Sponsor")
+c1, c2, c3 = st.columns(3)
+with c1: st.write("**Il Cappellaio Matto** 🎩\nPisa\n[Pagina FB](https://www.facebook.com/ilcappellaiomattopisa)")
+with c2: st.write("**Spazio Libero** 🤝\nContattaci subito")
+with c3: st.write("**Spazio Libero** 🤝\nContattaci subito")
+
+st.markdown("---")
+st.write("### 🚊 STATO VARCHI (PASSAGGI A LIVELLO)")
+
+VARCHI_CONFIG = [
+    ("Via Ugo Rindi", -4, 2, 15, 21),
+    ("Via di Gagno", -4, 2, 15, 21),
+    ("Via XXIV Maggio", -3, 3, 14, 20),
+    ("Via U. Dini (Gello)", -1, 5, 11, 17),
+    ("San Giuliano Terme", 1, 7, 9, 15)
+]
+
+for nom, a_i, a_f, r_i, r_f in VARCHI_
