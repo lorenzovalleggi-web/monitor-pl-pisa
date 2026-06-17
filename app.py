@@ -43,42 +43,16 @@ except:
 min_ora = ora_adesso.hour * 60 + ora_adesso.minute
 st.write(f"⏱️ Ora attuale: {ora_adesso.strftime('%H:%M:%S')} (Aggiornamento automatico 30s)")
 
-# 2. MOTORE DI RECUPERO DATI LIVE (RIGHE CORTE ANTI-TAGLIO)
+# 2. MOTORE DI RECUPERO DATI LIVE (STRINGHE SCOMPOSTE ANTI-TAGLIO)
 @st.cache_data(ttl=5)
 def prendi_treni(min_attuale):
     treni = []
+    str_pisa = "P" + "I" + "S" + "A"
+    str_lucca = "L" + "U" + "C" + "C" + "A"
+    str_liv = "L" + "I" + "V" + "O" + "R" + "N" + "O"
+    str_pist = "P" + "I" + "S" + "T" + "O" + "I" + "A"
+    str_fir = "F" + "I" + "R" + "E" + "N" + "Z" + "E"
+    
     try:
         dt = ora_adesso.strftime('%Y-%m-%dT00:00:00')
-        stazioni = [
-            ("S06411", "PISA", "PISA"), 
-            ("S06501", "LUCCA", "LUCCA")
-        ]
-        for v_id, d_name, f_key in stazioni:
-            url = f"http://www.viaggiatreno.it/viaggiatrenonew/api/esitoPartenze/{v_id}/{dt}"
-            res = requests.get(url, timeout=3).json().get('tabellone', [])
-            for t in res:
-                dest = t.get('destinazione', '').upper()
-                cond_pisa = f_key in dest or "LIVORNO" in dest
-                cond_lucca = "PISTOIA" in dest or "FIRENZE" in dest
-                if cond_pisa or cond_lucca:
-                    h, m = map(int, t.get('orarioProgrammato', '').split(':'))
-                    rit = max(0, int(t.get('ritardo', 0) or 0))
-                    treni.append({
-                        "ora_p": h, 
-                        "min_p": m, 
-                        "ritardo": rit, 
-                        "direzione": d_name, 
-                        "num": t.get('numeroTreno'), 
-                        "live": True
-                    })
-    except:
-        pass
-    
-    if not treni:
-        for o, m in ORARI_PISA:
-            if (o * 60 + m) > min_attuale:
-                treni.append({
-                    "ora_p": o, 
-                    "min_p": m, 
-                    "ritardo": 0, 
-                    "direzione": "LU
+        stazioni =
