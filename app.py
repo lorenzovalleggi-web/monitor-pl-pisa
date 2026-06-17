@@ -3,7 +3,7 @@ import datetime, pytz, requests
 
 st.set_page_config(page_title="BinarioLibero - Monitor PL", layout="centered")
 
-# CSS Personalizzato: Design scuro, pulito e testi leggibili
+# CSS Personalizzato
 st.markdown("""<style>
     .stApp { background-color: #0f172a !important; color: #ffffff !important; }
     .stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp p, .stApp span, .stApp div, .stApp li { color: #ffffff !important; }
@@ -12,15 +12,14 @@ st.markdown("""<style>
     .stSuccess, .stError { border-radius: 15px !important; }
 </style>""", unsafe_allow_html=True)
 
-# Auto-refresh ogni 30 secondi per un monitoraggio fluido
+# Auto-refresh a 30 secondi
 st.components.v1.html("""
     <script>
         setTimeout(function(){ window.parent.location.reload(); }, 30000);
     </script>
 """, height=0, width=0)
 
-# 1. TABELLA ORARIA AGGIORNATA (Cronologia Trenitalia verificata)
-# Orari di PARTENZA da Pisa S. Rossore verso Lucca
+# 1. TABELLA ORARIA AGGIORNATA
 ORARI_PISA = [
     (5,31), (7,10), (7,55), (8,55), (9,55),
     (5,25), (6,13), (7,4), (7,50), (8,50), (9,3), (9,22), (9,50), (10,20), 
@@ -29,7 +28,6 @@ ORARI_PISA = [
     (20,50), (21,20), (21,50)
 ]
 
-# Orari di PARTENZA da Lucca verso Pisa
 ORARI_LUCCA = [
     (6,52), (7,8), (7,40), (7,53), (8,15), (9,10), (9,42), (10,12), (10,42), 
     (12,42), (13,12)
@@ -37,7 +35,6 @@ ORARI_LUCCA = [
 
 st.title("⚡ BinarioLibero Pisa")
 
-# Gestione Orario Italiano
 try:
     ora_adesso = datetime.datetime.now(pytz.timezone('Europe/Rome'))
 except:
@@ -46,30 +43,42 @@ except:
 min_ora = ora_adesso.hour * 60 + ora_adesso.minute
 st.write(f"⏱️ Ora attuale: {ora_adesso.strftime('%H:%M:%S')} (Aggiornamento automatico 30s)")
 
-# 2. MOTORE DI RECUPERO DATI LIVE
+# 2. MOTORE DI RECUPERO DATI LIVE (RIGHE CORTE ANTI-TAGLIO)
 @st.cache_data(ttl=5)
 def prendi_treni(min_attuale):
     treni = []
     try:
         dt = ora_adesso.strftime('%Y-%m-%dT00:00:00')
-        # API ViaggiaTreno per Pisa (Partenze verso Lucca) e Lucca (Partenze verso Pisa)
-        for v_id, d_name, f_key in [("S06411", "PISA", "PISA"), ("S06501", "LUCCA", "LUCCA")]:
+        stazioni = [
+            ("S06411", "PISA", "PISA"), 
+            ("S06501", "LUCCA", "LUCCA")
+        ]
+        for v_id, d_name, f_key in stazioni:
             url = f"http://www.viaggiatreno.it/viaggiatrenonew/api/esitoPartenze/{v_id}/{dt}"
             res = requests.get(url, timeout=3).json().get('tabellone', [])
             for t in res:
                 dest = t.get('destinazione', '').upper()
-                if f_key in dest or "LIVORNO" in dest or "PISTOIA" in dest or "FIRENZE" in dest:
+                cond_pisa = f_key in dest or "LIVORNO" in dest
+                cond_lucca = "PISTOIA" in dest or "FIRENZE" in dest
+                if cond_pisa or cond_lucca:
                     h, m = map(int, t.get('orarioProgrammato', '').split(':'))
                     rit = max(0, int(t.get('ritardo', 0) or 0))
-                    treni.append({"ora_p": h, "min_p": m, "ritardo": rit, "direzione": d_name, "num": t.get('numeroTreno'), "live": True})
+                    treni.append({
+                        "ora_p": h, 
+                        "min_p": m, 
+                        "ritardo": rit, 
+                        "direzione": d_name, 
+                        "num": t.get('numeroTreno'), 
+                        "live": True
+                    })
     except:
         pass
     
-    # Fallback su orari programmati se il server Trenitalia è lento
     if not treni:
         for o, m in ORARI_PISA:
             if (o * 60 + m) > min_attuale:
-                treni.append({"ora_p": o, "min_p": m, "ritardo": 0, "direzione": "LUCCA", "num": "PROG", "live": False})
-        for o, m in ORARI_LUCCA:
-            if (o * 60 + m) > min_attuale:
-                treni.append({"ora_p": o, "min_p": m, "ritardo": 0, "direzione
+                treni.append({
+                    "ora_p": o, 
+                    "min_p": m, 
+                    "ritardo": 0, 
+                    "direzione": "LU
