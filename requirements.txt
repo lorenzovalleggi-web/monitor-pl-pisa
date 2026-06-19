@@ -1,4 +1,5 @@
 streamlit
-streamlit-autorefresh
-pytz
+folium
+streamlit-folium
 requests
+pytz
