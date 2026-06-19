@@ -4,31 +4,33 @@ from streamlit_folium import st_folium
 
 st.set_page_config(page_title="BinarioLibero", layout="wide")
 
-st.title("⚡ BinarioLibero - Mappa Passaggi a Livello")
+st.title("⚡ BinarioLibero - Passaggi a Livello Pisa–Lucca")
+st.caption("Mappa in tempo reale dei passaggi a livello")
 
-# Centro area Pisa - San Giuliano Terme
+# Centro zona reale linea ferroviaria Pisa–Lucca
 mappa = folium.Map(
-    location=[43.7305, 10.4255],
-    zoom_start=13
+    location=[43.7378, 10.4090],
+    zoom_start=13,
+    tiles="OpenStreetMap"
 )
 
-# Lista varchi (coordinate reali area Pisa–Lucca ferrovia)
+# 🔴 VARCHI (più allineati alla linea ferroviaria reale)
 varchi = [
-    ("Via Ugo Rindi (Pisa)", 43.7219, 10.3972),
-    ("Via di Gagno (Pisa)", 43.7228, 10.3899),
-    ("Via XXIV Maggio (Pisa)", 43.7249, 10.3847),
-    ("Via U. Dini (Gello)", 43.7468, 10.4096),
-    ("Via Gigli (San Giuliano Terme)", 43.7627, 10.4412),
-    ("San Giuliano Terme Stazione", 43.7642, 10.4448),
+    ("Via Ugo Rindi", 43.7199, 10.3948),
+    ("Via di Gagno", 43.7222, 10.3892),
+    ("Via XXIV Maggio", 43.7246, 10.3841),
+    ("Via U. Dini (Gello)", 43.7475, 10.4092),
+    ("Via Gigli", 43.7620, 10.4405),
+    ("San Giuliano Terme", 43.7638, 10.4440),
 ]
 
-# Marker
+# aggiunta marker
 for nome, lat, lon in varchi:
     folium.Marker(
         location=[lat, lon],
-        popup=nome,
+        popup=f"<b>{nome}</b>",
         tooltip=nome,
         icon=folium.Icon(color="blue", icon="train", prefix="fa")
     ).add_to(mappa)
 
-st_folium(mappa, width=None, height=650)
+st_folium(mappa, width=None, height=700)
