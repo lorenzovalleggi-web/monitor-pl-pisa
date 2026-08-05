@@ -2,7 +2,7 @@ import datetime
 import pandas as pd
 import streamlit as st
 
-# Configurazione pagina
+# Configurazione della pagina
 st.set_page_config(
     page_title="Monitor PL Pisa", layout="wide", initial_sidebar_state="collapsed"
 )
@@ -10,7 +10,7 @@ st.set_page_config(
 st.title("🚆 Monitor Passaggi a Livello - Pisa")
 st.write("Stato in tempo reale e prossimi orari di chiusura/riapertura.")
 
-# 1. Lista dei Passaggi a Livello e Orari
+# Database Passaggi a Livello e Orari
 PL_DATA = [
     {
         "nome": "PL Via Rigattieri",
@@ -44,18 +44,15 @@ PL_DATA = [
 ]
 
 
-# 2. Calcolo dello stato
 def calcola_stato(orari_list):
     ora_attuale = datetime.datetime.now().time()
 
-    # Controlla se è CHIUSO adesso
     for inizio_str, fine_str in orari_list:
         inizio = datetime.datetime.strptime(inizio_str, "%H:%M").time()
         fine = datetime.datetime.strptime(fine_str, "%H:%M").time()
         if inizio <= ora_attuale <= fine:
             return "🔴 CHIUSO", inizio_str, fine_str
 
-    # Se è APERTO, cerca la prossima chiusura
     for inizio_str, fine_str in orari_list:
         inizio = datetime.datetime.strptime(inizio_str, "%H:%M").time()
         if inizio > ora_attuale:
@@ -64,7 +61,7 @@ def calcola_stato(orari_list):
     return "🟢 APERTO", "Nessuna", "-"
 
 
-# 3. Visualizzazione con ICONE e SCHEDE GIGANTI
+# Schede con Icone e Orari
 cols = st.columns(len(PL_DATA))
 
 for i, pl in enumerate(PL_DATA):
@@ -76,23 +73,23 @@ for i, pl in enumerate(PL_DATA):
         st.subheader(pl["nome"])
         if stato == "🔴 CHIUSO":
             st.error(f"### {stato}")
-            st.write(f"⏰ **Riapertura prevista:** {pross_riapertura}")
+            st.write(f"⏰ **Prevista Riapertura:** {pross_riapertura}")
         else:
             st.success(f"### {stato}")
-            st.write(f"⏰ **Prossima chiusura:** {pross_chiusura}")
-            st.write(f"🔓 **Riapertura:** {pross_riapertura}")
+            st.write(f"⏰ **Prossima Chiusura:** {pross_chiusura}")
+            st.write(f"🔓 **Riapertura Prevista:** {pross_riapertura}")
 
 st.markdown("---")
 
-# 4. Tabella Riassuntiva per una consultazione rapida
-st.subheader("📋 Tabella Orari Completa")
+# Tabella Riassuntiva
+st.subheader("📋 Riepilogo Stato")
 tabella = []
 for pl in PL_DATA:
     stato, p_chiusura, p_riapertura = calcola_stato(pl["orari_chiusura"])
     tabella.append(
         {
             "Passaggio a Livello": pl["nome"],
-            "Stato": stato,
+            "Stato Attuale": stato,
             "Prossima Chiusura": p_chiusura,
             "Prevista Riapertura": p_riapertura,
         }
