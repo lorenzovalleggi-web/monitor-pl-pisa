@@ -1,21 +1,19 @@
 import datetime
-import folium
-import numpy as np
 import pandas as pd
 import streamlit as st
-from streamlit_folium import st_folium
 
 # Configurazione pagina
-st.set_page_config(page_title="Monitor PL Pisa", layout="wide")
-st.title("🚆 Monitor Passaggi a Livello - Pisa")
+st.set_page_config(
+    page_title="Monitor PL Pisa", layout="wide", initial_sidebar_state="collapsed"
+)
 
-# 1. Database Passaggi a Livello di Pisa (Coordinate e Finestre Orarie)
-# NOTA: Puoi modificare gli orari indicativi nella lista 'orari_chiusura'
+st.title("🚆 Monitor Passaggi a Livello - Pisa")
+st.write("Stato in tempo reale e prossimi orari di chiusura/riapertura.")
+
+# 1. Lista dei Passaggi a Livello e Orari
 PL_DATA = [
     {
         "nome": "PL Via Rigattieri",
-        "lat": 43.70812,
-        "lon": 10.40125,
         "orari_chiusura": [
             ("07:30", "07:42"),
             ("08:15", "08:25"),
@@ -26,8 +24,6 @@ PL_DATA = [
     },
     {
         "nome": "PL Via Putignano",
-        "lat": 43.69950,
-        "lon": 10.42150,
         "orari_chiusura": [
             ("07:40", "07:50"),
             ("08:30", "08:40"),
@@ -38,8 +34,6 @@ PL_DATA = [
     },
     {
         "nome": "PL Via S. Marta",
-        "lat": 43.71520,
-        "lon": 10.41010,
         "orari_chiusura": [
             ("07:20", "07:32"),
             ("09:00", "09:12"),
@@ -50,60 +44,58 @@ PL_DATA = [
 ]
 
 
-# 2. Calcolo dello stato attuale (Aperto/Chiuso)
-def calcola_stato_pl(orari_list):
+# 2. Calcolo dello stato
+def calcola_stato(orari_list):
     ora_attuale = datetime.datetime.now().time()
 
+    # Controlla se è CHIUSO adesso
     for inizio_str, fine_str in orari_list:
         inizio = datetime.datetime.strptime(inizio_str, "%H:%M").time()
         fine = datetime.datetime.strptime(fine_str, "%H:%M").time()
-
         if inizio <= ora_attuale <= fine:
             return "🔴 CHIUSO", inizio_str, fine_str
 
-    # Se non è in fascia di chiusura, cerca la prossima chiusura
+    # Se è APERTO, cerca la prossima chiusura
     for inizio_str, fine_str in orari_list:
         inizio = datetime.datetime.strptime(inizio_str, "%H:%M").time()
         if inizio > ora_attuale:
             return "🟢 APERTO", inizio_str, fine_str
 
-    # Se la giornata è finita
-    return "🟢 APERTO", "Domani", "-"
+    return "🟢 APERTO", "Nessuna", "-"
 
 
-# 3. Preparazione dati per la tabella e la mappa
-tabella_dati = []
-m = folium.Map(location=[43.708, 10.405], zoom_start=13)
+# 3. Visualizzazione con ICONE e SCHEDE GIGANTI
+cols = st.columns(len(PL_DATA))
 
-for pl in PL_DATA:
-    stato, pross_chiusura, pross_riapertura = calcola_stato_pl(
+for i, pl in enumerate(PL_DATA):
+    stato, pross_chiusura, pross_riapertura = calcola_stato(
         pl["orari_chiusura"]
     )
 
-    # Dati Tabella
-    tabella_dati.append(
+    with cols[i]:
+        st.subheader(pl["nome"])
+        if stato == "🔴 CHIUSO":
+            st.error(f"### {stato}")
+            st.write(f"⏰ **Riapertura prevista:** {pross_riapertura}")
+        else:
+            st.success(f"### {stato}")
+            st.write(f"⏰ **Prossima chiusura:** {pross_chiusura}")
+            st.write(f"🔓 **Riapertura:** {pross_riapertura}")
+
+st.markdown("---")
+
+# 4. Tabella Riassuntiva per una consultazione rapida
+st.subheader("📋 Tabella Orari Completa")
+tabella = []
+for pl in PL_DATA:
+    stato, p_chiusura, p_riapertura = calcola_stato(pl["orari_chiusura"])
+    tabella.append(
         {
             "Passaggio a Livello": pl["nome"],
-            "Stato Attuale": stato,
-            "Prossima Chiusura": pross_chiusura,
-            "Prevista Riapertura": pross_riapertura,
+            "Stato": stato,
+            "Prossima Chiusura": p_chiusura,
+            "Prevista Riapertura": p_riapertura,
         }
     )
 
-    # Colore Marker Mappa
-    color = "red" if stato == "🔴 CHIUSO" else "green"
-
-    # Inserimento Marker sulla Mappa
-    folium.Marker(
-        location=[pl["lat"], pl["lon"]],
-        popup=f"<b>{pl['nome']}</b><br>Stato: {stato}",
-        tooltip=pl["nome"],
-        icon=folium.Icon(color=color, icon="info-sign"),
-    ).add_to(m)
-
-# 4. Visualizzazione nell'interfaccia Streamlit
-st.subheader("📋 Tabella Orari e Stato In Tempo Reale")
-st.dataframe(pd.DataFrame(tabella_dati), use_container_width=True)
-
-st.subheader("🗺️ Mappa Passaggi a Livello")
-st_folium(m, width=900, height=450)
+st.dataframe(pd.DataFrame(tabella), use_container_width=True)
