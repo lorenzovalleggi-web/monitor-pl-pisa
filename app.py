@@ -1,16 +1,17 @@
-
 import streamlit as st
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
 # ==========================================
 # BINARIO LIBERO
 # Monitor PL sulla tratta Pisa S. Rossore ↔ San Giuliano Terme
+# Fuso orario: Italia (Europe/Rome)
 # Auto-refresh ogni 20 secondi
 # ==========================================
 
 st.set_page_config(page_title="Binario Libero", page_icon="🚧", layout="centered")
 
-# Auto-refresh ogni 20 secondi (affidabile in Streamlit)
+# Auto-refresh ogni 20 secondi
 st.markdown('<meta http-equiv="refresh" content="20">', unsafe_allow_html=True)
 
 st.markdown("""
@@ -43,23 +44,29 @@ st.markdown("""
         font-weight: 500;
     }
     .ora-box {
-        font-size: 1.3rem;
-        font-weight: 600;
+        font-size: 1.4rem;
+        font-weight: 700;
         text-align: center;
-        padding: 10px;
+        padding: 12px;
         background: #212529;
         color: #fff;
         border-radius: 10px;
-        margin-bottom: 12px;
+        margin-bottom: 8px;
+        letter-spacing: 2px;
     }
     .refresh-note {
         font-size: 0.8rem;
         color: #868e96;
         text-align: center;
-        margin-bottom: 8px;
+        margin-bottom: 10px;
     }
 </style>
 """, unsafe_allow_html=True)
+
+# ==========================================
+# FUSO ORARIO ITALIA
+# ==========================================
+TZ_ITALIA = ZoneInfo("Europe/Rome")
 
 # ==========================================
 # CONFIGURAZIONE PL
@@ -136,7 +143,7 @@ def parse_hhmm(oggi, hhmm):
 
 
 def calcola_stato(transito_ora):
-    now = datetime.now()
+    now = datetime.now(TZ_ITALIA)
     chiusura = transito_ora - timedelta(minutes=CHIUSURA_ANTICIPO)
     apertura = transito_ora + timedelta(seconds=APERTURA_POST)
 
@@ -158,7 +165,7 @@ def mostra_pl(pl_name, offset, orari_list, oggi):
         partenza = parse_hhmm(oggi, hhmm)
         transito = partenza + timedelta(minutes=offset)
         stato, msg, chiusura, apertura = calcola_stato(transito)
-        if stato == "passato" and (datetime.now() - apertura).total_seconds() > 7200:
+        if stato == "passato" and (datetime.now(TZ_ITALIA) - apertura).total_seconds() > 7200:
             continue
         visto = True
         st.markdown(f"""
@@ -178,8 +185,8 @@ def mostra_pl(pl_name, offset, orari_list, oggi):
 st.title("🚧 Binario Libero")
 st.caption("Monitor PL — Pisa S. Rossore ↔ San Giuliano Terme")
 
-# Orologio grande e visibile
-now = datetime.now()
+# Orologio con fuso orario Italia
+now = datetime.now(TZ_ITALIA)
 st.markdown(f'<div class="ora-box">🕐 {now.strftime("%H:%M:%S")}</div>', unsafe_allow_html=True)
 st.markdown('<div class="refresh-note">⏳ Aggiornamento automatico ogni 20 secondi</div>', unsafe_allow_html=True)
 
@@ -198,7 +205,7 @@ tab1, tab2 = st.tabs(["🚂 San Giuliano → Pisa", "🚂 Pisa → San Giuliano"
 # ─── ANDATA ───
 with tab1:
     st.subheader("🚂 San Giuliano Terme → Pisa S. Rossore")
-    oggi = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    oggi = datetime.now(TZ_ITALIA).replace(hour=0, minute=0, second=0, microsecond=0)
 
     for pl_name, cfg in PL_CONFIG.items():
         mostra_pl(pl_name, cfg["offset_andata"], ORARI_ANDATA, oggi)
@@ -220,7 +227,7 @@ with tab1:
 # ─── RITORNO ───
 with tab2:
     st.subheader("🚂 Pisa S. Rossore → San Giuliano Terme")
-    oggi = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    oggi = datetime.now(TZ_ITALIA).replace(hour=0, minute=0, second=0, microsecond=0)
 
     for pl_name, cfg in PL_CONFIG.items():
         mostra_pl(pl_name, cfg["offset_ritorno"], ORARI_RITORNO, oggi)
