@@ -1,12 +1,17 @@
+
 import streamlit as st
 from datetime import datetime, timedelta
 
 # ==========================================
 # BINARIO LIBERO
 # Monitor PL sulla tratta Pisa S. Rossore ↔ San Giuliano Terme
+# Auto-refresh ogni 20 secondi
 # ==========================================
 
 st.set_page_config(page_title="Binario Libero", page_icon="🚧", layout="centered")
+
+# Auto-refresh ogni 20 secondi (affidabile in Streamlit)
+st.markdown('<meta http-equiv="refresh" content="20">', unsafe_allow_html=True)
 
 st.markdown("""
 <style>
@@ -37,10 +42,21 @@ st.markdown("""
         font-size: 1.05rem;
         font-weight: 500;
     }
-    .ora-live {
-        font-size: 1.1rem;
-        font-weight: 500;
-        color: #212529;
+    .ora-box {
+        font-size: 1.3rem;
+        font-weight: 600;
+        text-align: center;
+        padding: 10px;
+        background: #212529;
+        color: #fff;
+        border-radius: 10px;
+        margin-bottom: 12px;
+    }
+    .refresh-note {
+        font-size: 0.8rem;
+        color: #868e96;
+        text-align: center;
+        margin-bottom: 8px;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -162,27 +178,18 @@ def mostra_pl(pl_name, offset, orari_list, oggi):
 st.title("🚧 Binario Libero")
 st.caption("Monitor PL — Pisa S. Rossore ↔ San Giuliano Terme")
 
-# Orologio LIVE con JavaScript (si aggiorna da solo senza ricaricare la pagina)
-st.markdown("""
-<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
-    <div class="ora-live">⏱️ Ora: <span id="clock">--:--:--</span></div>
-</div>
-<script>
-    function updateClock() {
-        const now = new Date();
-        const h = String(now.getHours()).padStart(2,'0');
-        const m = String(now.getMinutes()).padStart(2,'0');
-        const s = String(now.getSeconds()).padStart(2,'0');
-        const el = document.getElementById('clock');
-        if(el) el.textContent = h + ':' + m + ':' + s;
-    }
-    updateClock();
-    setInterval(updateClock, 1000);
-</script>
-""", unsafe_allow_html=True)
+# Orologio grande e visibile
+now = datetime.now()
+st.markdown(f'<div class="ora-box">🕐 {now.strftime("%H:%M:%S")}</div>', unsafe_allow_html=True)
+st.markdown('<div class="refresh-note">⏳ Aggiornamento automatico ogni 20 secondi</div>', unsafe_allow_html=True)
 
-if st.button("🔄 Aggiorna stato PL", use_container_width=True):
-    st.rerun()
+col1, col2 = st.columns([1, 1])
+with col1:
+    if st.button("🔄 Aggiorna ora", use_container_width=True):
+        st.rerun()
+with col2:
+    if st.button("⏸️ Ferma auto-refresh", use_container_width=True):
+        st.info("Per fermare l\'auto-refresh, chiudi e riapri l\'app.")
 
 st.markdown("---")
 
