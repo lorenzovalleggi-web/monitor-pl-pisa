@@ -4,14 +4,6 @@ from datetime import datetime, timedelta
 # ==========================================
 # BINARIO LIBERO
 # Monitor PL sulla tratta Pisa S. Rossore ↔ San Giuliano Terme
-# 5 PL monitorati:
-#   1. Via Ugo Rindi
-#   2. Via di Gagno
-#   3. Via 24 Maggio
-#   4. Via Ulisse Dini
-#   5. Via Cave
-# Chiusura: 3 min prima del transito
-# Apertura: 12 secondi dopo il transito
 # ==========================================
 
 st.set_page_config(page_title="Binario Libero", page_icon="🚧", layout="centered")
@@ -45,6 +37,11 @@ st.markdown("""
         font-size: 1.05rem;
         font-weight: 500;
     }
+    .ora-live {
+        font-size: 1.1rem;
+        font-weight: 500;
+        color: #212529;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -59,8 +56,8 @@ PL_CONFIG = {
     "Via Cave":        {"offset_andata": 1,  "offset_ritorno": 5},
 }
 
-CHIUSURA_ANTICIPO = 3   # minuti prima del transito al PL
-APERTURA_POST = 12      # secondi dopo il transito al PL
+CHIUSURA_ANTICIPO = 3
+APERTURA_POST = 12
 
 # ==========================================
 # ORARI REALI — ANDATA (San Giuliano Terme → Pisa S. Rossore)
@@ -129,7 +126,7 @@ def calcola_stato(transito_ora):
 
     if now < chiusura:
         sec = int((chiusura - now).total_seconds())
-        if sec <= 300:  # ultimi 5 min
+        if sec <= 300:
             return "chiude", f"🟡 Si chiude tra {sec//60}m {sec%60}s", chiusura, apertura
         return "aperto", "🟢 Passaggio libero", chiusura, apertura
     if chiusura <= now <= apertura:
@@ -159,35 +156,33 @@ def mostra_pl(pl_name, offset, orari_list, oggi):
         st.info("Nessun treno in questa fascia oraria.")
 
 
-def totale_pl(offset_dict, orari_list, oggi):
-    aperti = 0
-    chiusi = 0
-    for pl_name, cfg in offset_dict.items():
-        offset = cfg["offset_andata"] if "andata" in str(offset_dict) else cfg["offset_ritorno"]
-        for num, hhmm in orari_list:
-            partenza = parse_hhmm(oggi, hhmm)
-            transito = partenza + timedelta(minutes=offset)
-            stato, _, _, _ = calcola_stato(transito)
-            if stato in ("aperto", "chiude"):
-                aperti += 1
-            elif stato == "chiuso":
-                chiusi += 1
-            break
-    return aperti, chiusi
-
-
 # ==========================================
 # INTERFACCIA
 # ==========================================
 st.title("🚧 Binario Libero")
 st.caption("Monitor PL — Pisa S. Rossore ↔ San Giuliano Terme")
 
-col1, col2 = st.columns([3, 1])
-with col1:
-    st.markdown(f"⏱️ **{datetime.now().strftime('%H:%M:%S')}**")
-with col2:
-    if st.button("🔄 Aggiorna", use_container_width=True):
-        st.rerun()
+# Orologio LIVE con JavaScript (si aggiorna da solo senza ricaricare la pagina)
+st.markdown("""
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+    <div class="ora-live">⏱️ Ora: <span id="clock">--:--:--</span></div>
+</div>
+<script>
+    function updateClock() {
+        const now = new Date();
+        const h = String(now.getHours()).padStart(2,'0');
+        const m = String(now.getMinutes()).padStart(2,'0');
+        const s = String(now.getSeconds()).padStart(2,'0');
+        const el = document.getElementById('clock');
+        if(el) el.textContent = h + ':' + m + ':' + s;
+    }
+    updateClock();
+    setInterval(updateClock, 1000);
+</script>
+""", unsafe_allow_html=True)
+
+if st.button("🔄 Aggiorna stato PL", use_container_width=True):
+    st.rerun()
 
 st.markdown("---")
 
