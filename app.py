@@ -1,108 +1,248 @@
-import datetime
-import pandas as pd
 import streamlit as st
+from datetime import datetime, timedelta
 
-# Configurazione della pagina
-st.set_page_config(
-    page_title="Monitor PL Pisa", layout="wide", initial_sidebar_state="collapsed"
-)
+# ==========================================
+# BINARIO LIBERO
+# Monitor PL sulla tratta Pisa S. Rossore ↔ San Giuliano Terme
+# 5 PL monitorati:
+#   1. Via Ugo Rindi
+#   2. Via di Gagno
+#   3. Via 24 Maggio
+#   4. Via Ulisse Dini
+#   5. Via Cave
+# Chiusura: 3 min prima del transito
+# Apertura: 12 secondi dopo il transito
+# ==========================================
 
-st.title("🚆 Monitor Passaggi a Livello - Pisa")
+st.set_page_config(page_title="Binario Libero", page_icon="🚧", layout="centered")
 
-# Pulsante di aggiornamento manuale per bloccare il ricaricamento automatico continuo
-col_info, col_btn = st.columns([3, 1])
-with col_info:
-    ora_lettura = datetime.datetime.now().strftime("%H:%M:%S")
-    st.write(f"⏱️ **Ultimo controllo effettuato alle:** `{ora_lettura}`")
-with col_btn:
-    if st.button("🔄 Aggiorna Ora", use_container_width=True):
+st.markdown("""
+<style>
+    .pl-card {
+        padding: 18px;
+        border-radius: 14px;
+        margin-bottom: 14px;
+        border: 1px solid #e9ecef;
+        background: #ffffff;
+    }
+    .pl-name {
+        font-size: 1.15rem;
+        font-weight: 600;
+        color: #212529;
+        margin-bottom: 6px;
+    }
+    .stato-chiuso { color: #dc3545; font-size: 1.4rem; font-weight: 700; }
+    .stato-chiude { color: #ffc107; font-size: 1.4rem; font-weight: 700; }
+    .stato-aperto { color: #28a745; font-size: 1.4rem; font-weight: 700; }
+    .info-row { font-size: 0.95rem; color: #495057; margin-top: 6px; }
+    .totale-box {
+        margin-top: 18px;
+        padding: 14px;
+        border-radius: 10px;
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        text-align: center;
+        font-size: 1.05rem;
+        font-weight: 500;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# ==========================================
+# CONFIGURAZIONE PL
+# ==========================================
+PL_CONFIG = {
+    "Via Ugo Rindi":   {"offset_andata": 5,  "offset_ritorno": 1},
+    "Via di Gagno":    {"offset_andata": 4,  "offset_ritorno": 2},
+    "Via 24 Maggio":   {"offset_andata": 3,  "offset_ritorno": 3},
+    "Via Ulisse Dini": {"offset_andata": 2,  "offset_ritorno": 4},
+    "Via Cave":        {"offset_andata": 1,  "offset_ritorno": 5},
+}
+
+CHIUSURA_ANTICIPO = 3   # minuti prima del transito al PL
+APERTURA_POST = 12      # secondi dopo il transito al PL
+
+# ==========================================
+# ORARI REALI — ANDATA (San Giuliano Terme → Pisa S. Rossore)
+# ==========================================
+ORARI_ANDATA = [
+    ("R 32829", "07:58"),
+    ("R 34146", "08:15"),
+    ("R 18556", "08:58"),
+    ("R 18562", "09:58"),
+    ("R 83571", "11:44"),
+    ("R 18570", "13:28"),
+    ("R 18490", "13:58"),
+    ("R 18574", "14:27"),
+    ("R 34098", "14:57"),
+    ("R 18578", "15:28"),
+    ("R 18494", "15:58"),
+    ("R 18584", "16:27"),
+    ("R 18588", "16:58"),
+    ("R 18592", "17:28"),
+    ("R 18594", "17:58"),
+    ("R 18598", "18:29"),
+    ("R 83691", "18:58"),
+    ("R 18602", "19:28"),
+    ("R 83663", "20:20"),
+    ("R 18606", "20:58"),
+    ("R 83665", "21:32"),
+]
+
+# ==========================================
+# ORARI REALI — RITORNO (Pisa S. Rossore → San Giuliano Terme)
+# ==========================================
+ORARI_RITORNO = [
+    ("R 83671", "05:31"),
+    ("R 18553", "07:10"),
+    ("R 83675", "07:55"),
+    ("R 18555", "08:55"),
+    ("R 18561", "09:55"),
+    ("R 18573", "12:55"),
+    ("R 18575", "13:25"),
+    ("R 83679", "13:48"),
+    ("R 18577", "14:24"),
+    ("R 18493", "14:55"),
+    ("R 18581", "15:25"),
+    ("R 18583", "15:55"),
+    ("R 18497", "16:23"),
+    ("R 18585", "16:55"),
+    ("R 18591", "17:25"),
+    ("R 83681", "17:55"),
+    ("R 18593", "18:25"),
+    ("R 18595", "18:55"),
+    ("R 83683", "19:25"),
+    ("R 18597", "19:55"),
+    ("R 18605", "21:55"),
+]
+
+
+def parse_hhmm(oggi, hhmm):
+    h, m = map(int, hhmm.split(":"))
+    return oggi.replace(hour=h, minute=m, second=0, microsecond=0)
+
+
+def calcola_stato(transito_ora):
+    now = datetime.now()
+    chiusura = transito_ora - timedelta(minutes=CHIUSURA_ANTICIPO)
+    apertura = transito_ora + timedelta(seconds=APERTURA_POST)
+
+    if now < chiusura:
+        sec = int((chiusura - now).total_seconds())
+        if sec <= 300:  # ultimi 5 min
+            return "chiude", f"🟡 Si chiude tra {sec//60}m {sec%60}s", chiusura, apertura
+        return "aperto", "🟢 Passaggio libero", chiusura, apertura
+    if chiusura <= now <= apertura:
+        sec = int((apertura - now).total_seconds())
+        return "chiuso", f"🔴 CHIUSO — si apre tra {sec//60}m {sec%60}s", chiusura, apertura
+    return "passato", "⚫ Treno passato", chiusura, apertura
+
+
+def mostra_pl(pl_name, offset, orari_list, oggi):
+    st.markdown(f"<div style='font-size:1.1rem;font-weight:600;margin-top:16px;'>📍 {pl_name}</div>", unsafe_allow_html=True)
+    visto = False
+    for num, hhmm in orari_list:
+        partenza = parse_hhmm(oggi, hhmm)
+        transito = partenza + timedelta(minutes=offset)
+        stato, msg, chiusura, apertura = calcola_stato(transito)
+        if stato == "passato" and (datetime.now() - apertura).total_seconds() > 7200:
+            continue
+        visto = True
+        st.markdown(f"""
+        <div class="pl-card">
+            <div class="pl-name">{num} — transito {transito.strftime('%H:%M')}</div>
+            <div class="stato-{stato}">{msg}</div>
+            <div class="info-row">⏰ Chiusura: {chiusura.strftime('%H:%M')} &nbsp;|&nbsp; 🔓 Apertura: {apertura.strftime('%H:%M')}</div>
+        </div>
+        """, unsafe_allow_html=True)
+    if not visto:
+        st.info("Nessun treno in questa fascia oraria.")
+
+
+def totale_pl(offset_dict, orari_list, oggi):
+    aperti = 0
+    chiusi = 0
+    for pl_name, cfg in offset_dict.items():
+        offset = cfg["offset_andata"] if "andata" in str(offset_dict) else cfg["offset_ritorno"]
+        for num, hhmm in orari_list:
+            partenza = parse_hhmm(oggi, hhmm)
+            transito = partenza + timedelta(minutes=offset)
+            stato, _, _, _ = calcola_stato(transito)
+            if stato in ("aperto", "chiude"):
+                aperti += 1
+            elif stato == "chiuso":
+                chiusi += 1
+            break
+    return aperti, chiusi
+
+
+# ==========================================
+# INTERFACCIA
+# ==========================================
+st.title("🚧 Binario Libero")
+st.caption("Monitor PL — Pisa S. Rossore ↔ San Giuliano Terme")
+
+col1, col2 = st.columns([3, 1])
+with col1:
+    st.markdown(f"⏱️ **{datetime.now().strftime('%H:%M:%S')}**")
+with col2:
+    if st.button("🔄 Aggiorna", use_container_width=True):
         st.rerun()
 
 st.markdown("---")
 
-# Database Passaggi a Livello e Orari
-PL_DATA = [
-    {
-        "nome": "PL Via Rigattieri",
-        "orari_chiusura": [
-            ("07:30", "07:42"),
-            ("08:15", "08:25"),
-            ("12:40", "12:52"),
-            ("14:10", "14:22"),
-            ("18:30", "18:45"),
-        ],
-    },
-    {
-        "nome": "PL Via Putignano",
-        "orari_chiusura": [
-            ("07:40", "07:50"),
-            ("08:30", "08:40"),
-            ("13:00", "13:10"),
-            ("17:50", "18:02"),
-            ("19:15", "19:25"),
-        ],
-    },
-    {
-        "nome": "PL Via S. Marta",
-        "orari_chiusura": [
-            ("07:20", "07:32"),
-            ("09:00", "09:12"),
-            ("13:15", "13:28"),
-            ("18:10", "18:22"),
-        ],
-    },
-]
+tab1, tab2 = st.tabs(["🚂 San Giuliano → Pisa", "🚂 Pisa → San Giuliano"])
 
+# ─── ANDATA ───
+with tab1:
+    st.subheader("🚂 San Giuliano Terme → Pisa S. Rossore")
+    oggi = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
 
-def calcola_stato(orari_list):
-    ora_attuale = datetime.datetime.now().time()
+    for pl_name, cfg in PL_CONFIG.items():
+        mostra_pl(pl_name, cfg["offset_andata"], ORARI_ANDATA, oggi)
 
-    for inizio_str, fine_str in orari_list:
-        inizio = datetime.datetime.strptime(inizio_str, "%H:%M").time()
-        fine = datetime.datetime.strptime(fine_str, "%H:%M").time()
-        if inizio <= ora_attuale <= fine:
-            return "🔴 CHIUSO", inizio_str, fine_str
+    aperti, chiusi = 0, 0
+    for pl_name, cfg in PL_CONFIG.items():
+        for num, hhmm in ORARI_ANDATA:
+            partenza = parse_hhmm(oggi, hhmm)
+            transito = partenza + timedelta(minutes=cfg["offset_andata"])
+            stato, _, _, _ = calcola_stato(transito)
+            if stato in ("aperto", "chiude"):
+                aperti += 1
+            elif stato == "chiuso":
+                chiusi += 1
+            break
 
-    for inizio_str, fine_str in orari_list:
-        inizio = datetime.datetime.strptime(inizio_str, "%H:%M").time()
-        if inizio > ora_attuale:
-            return "🟢 APERTO", inizio_str, fine_str
+    st.markdown(f"<div class='totale-box'>🟢 {aperti} PL aperti &nbsp;|&nbsp; 🔴 {chiusi} PL chiusi</div>", unsafe_allow_html=True)
 
-    return "🟢 APERTO", "Nessuna", "-"
+# ─── RITORNO ───
+with tab2:
+    st.subheader("🚂 Pisa S. Rossore → San Giuliano Terme")
+    oggi = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
 
+    for pl_name, cfg in PL_CONFIG.items():
+        mostra_pl(pl_name, cfg["offset_ritorno"], ORARI_RITORNO, oggi)
 
-# Schede con Icone e Orari
-cols = st.columns(len(PL_DATA))
+    aperti, chiusi = 0, 0
+    for pl_name, cfg in PL_CONFIG.items():
+        for num, hhmm in ORARI_RITORNO:
+            partenza = parse_hhmm(oggi, hhmm)
+            transito = partenza + timedelta(minutes=cfg["offset_ritorno"])
+            stato, _, _, _ = calcola_stato(transito)
+            if stato in ("aperto", "chiude"):
+                aperti += 1
+            elif stato == "chiuso":
+                chiusi += 1
+            break
 
-for i, pl in enumerate(PL_DATA):
-    stato, pross_chiusura, pross_riapertura = calcola_stato(
-        pl["orari_chiusura"]
-    )
+    st.markdown(f"<div class='totale-box'>🟢 {aperti} PL aperti &nbsp;|&nbsp; 🔴 {chiusi} PL chiusi</div>", unsafe_allow_html=True)
 
-    with cols[i]:
-        st.subheader(pl["nome"])
-        if stato == "🔴 CHIUSO":
-            st.error(f"### {stato}")
-            st.write(f"⏰ **Prevista Riapertura:** {pross_riapertura}")
-        else:
-            st.success(f"### {stato}")
-            st.write(f"⏰ **Prossima Chiusura:** {pross_chiusura}")
-            st.write(f"🔓 **Riapertura Prevista:** {pross_riapertura}")
-
-st.markdown("---")
-
-# Tabella Riassuntiva
-st.subheader("📋 Riepilogo Stato")
-tabella = []
-for pl in PL_DATA:
-    stato, p_chiusura, p_riapertura = calcola_stato(pl["orari_chiusura"])
-    tabella.append(
-        {
-            "Passaggio a Livello": pl["nome"],
-            "Stato Attuale": stato,
-            "Prossima Chiusura": p_chiusura,
-            "Prevista Riapertura": p_riapertura,
-        }
-    )
-
-st.dataframe(pd.DataFrame(tabella), use_container_width=True)
+st.divider()
+st.markdown("""
+<small>
+<b>Binario Libero</b> — Monitor passaggi a livello in tempo reale.<br>
+5 PL monitorati: Via Ugo Rindi, Via di Gagno, Via 24 Maggio, Via Ulisse Dini, Via Cave.<br>
+Chiusura ~3 min prima del transito, apertura 12 sec dopo.<br>
+<b>Aggiornamento orari:</b> 2ª domenica di giugno e dicembre.
+</small>
+""", unsafe_allow_html=True)
