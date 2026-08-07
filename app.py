@@ -7,6 +7,7 @@ from zoneinfo import ZoneInfo
 # Monitor PL sulla tratta Pisa S. Rossore ↔ San Giuliano Terme
 # Fuso orario: Italia (Europe/Rome)
 # Auto-refresh ogni 20 secondi
+# Mostra solo treni in tempo reale e futuri
 # ==========================================
 
 st.set_page_config(page_title="Binario Libero", page_icon="🚧", layout="centered")
@@ -59,6 +60,12 @@ st.markdown("""
         color: #868e96;
         text-align: center;
         margin-bottom: 10px;
+    }
+    .nessun-treno {
+        text-align: center;
+        padding: 20px;
+        color: #868e96;
+        font-size: 1rem;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -161,12 +168,19 @@ def calcola_stato(transito_ora):
 def mostra_pl(pl_name, offset, orari_list, oggi):
     st.markdown(f"<div style='font-size:1.1rem;font-weight:600;margin-top:16px;'>📍 {pl_name}</div>", unsafe_allow_html=True)
     visto = False
+    now = datetime.now(TZ_ITALIA)
+
     for num, hhmm in orari_list:
         partenza = parse_hhmm(oggi, hhmm)
         transito = partenza + timedelta(minutes=offset)
-        stato, msg, chiusura, apertura = calcola_stato(transito)
-        if stato == "passato" and (datetime.now(TZ_ITALIA) - apertura).total_seconds() > 7200:
+        chiusura = transito - timedelta(minutes=CHIUSURA_ANTICIPO)
+        apertura = transito + timedelta(seconds=APERTURA_POST)
+
+        # SALTA se il treno è già passato (apertura del PL già avvenuta)
+        if now > apertura:
             continue
+
+        stato, msg, _, _ = calcola_stato(transito)
         visto = True
         st.markdown(f"""
         <div class="pl-card">
@@ -175,8 +189,35 @@ def mostra_pl(pl_name, offset, orari_list, oggi):
             <div class="info-row">⏰ Chiusura: {chiusura.strftime('%H:%M')} &nbsp;|&nbsp; 🔓 Apertura: {apertura.strftime('%H:%M')}</div>
         </div>
         """, unsafe_allow_html=True)
+
     if not visto:
-        st.info("Nessun treno in questa fascia oraria.")
+        st.markdown('<div class="nessun-treno">⚫ Nessun treno in arrivo per questo PL</div>', unsafe_allow_html=True)
+
+
+def conta_pl(offset_dict, orari_list, oggi):
+    aperti = 0
+    chiusi = 0
+    now = datetime.now(TZ_ITALIA)
+
+    for pl_name, cfg in offset_dict.items():
+        offset = cfg["offset_andata"] if "andata" in str(offset_dict) else cfg["offset_ritorno"]
+        for num, hhmm in orari_list:
+            partenza = parse_hhmm(oggi, hhmm)
+            transito = partenza + timedelta(minutes=offset)
+            apertura = transito + timedelta(seconds=APERTURA_POST)
+
+            # Considera solo treni non ancora passati
+            if now > apertura:
+                continue
+
+            stato, _, _, _ = calcola_stato(transito)
+            if stato in ("aperto", "chiude"):
+                aperti += 1
+            elif stato == "chiuso":
+                chiusi += 1
+            break
+
+    return aperti, chiusi
 
 
 # ==========================================
@@ -210,18 +251,7 @@ with tab1:
     for pl_name, cfg in PL_CONFIG.items():
         mostra_pl(pl_name, cfg["offset_andata"], ORARI_ANDATA, oggi)
 
-    aperti, chiusi = 0, 0
-    for pl_name, cfg in PL_CONFIG.items():
-        for num, hhmm in ORARI_ANDATA:
-            partenza = parse_hhmm(oggi, hhmm)
-            transito = partenza + timedelta(minutes=cfg["offset_andata"])
-            stato, _, _, _ = calcola_stato(transito)
-            if stato in ("aperto", "chiude"):
-                aperti += 1
-            elif stato == "chiuso":
-                chiusi += 1
-            break
-
+    aperti, chiusi = conta_pl(PL_CONFIG, ORARI_ANDATA, oggi)
     st.markdown(f"<div class='totale-box'>🟢 {aperti} PL aperti &nbsp;|&nbsp; 🔴 {chiusi} PL chiusi</div>", unsafe_allow_html=True)
 
 # ─── RITORNO ───
@@ -232,18 +262,7 @@ with tab2:
     for pl_name, cfg in PL_CONFIG.items():
         mostra_pl(pl_name, cfg["offset_ritorno"], ORARI_RITORNO, oggi)
 
-    aperti, chiusi = 0, 0
-    for pl_name, cfg in PL_CONFIG.items():
-        for num, hhmm in ORARI_RITORNO:
-            partenza = parse_hhmm(oggi, hhmm)
-            transito = partenza + timedelta(minutes=cfg["offset_ritorno"])
-            stato, _, _, _ = calcola_stato(transito)
-            if stato in ("aperto", "chiude"):
-                aperti += 1
-            elif stato == "chiuso":
-                chiusi += 1
-            break
-
+    aperti, chiusi = conta_pl(PL_CONFIG, ORARI_RITORNO, oggi)
     st.markdown(f"<div class='totale-box'>🟢 {aperti} PL aperti &nbsp;|&nbsp; 🔴 {chiusi} PL chiusi</div>", unsafe_allow_html=True)
 
 st.divider()
