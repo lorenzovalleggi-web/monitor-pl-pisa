@@ -3,7 +3,7 @@ import zoneinfo
 import streamlit as st
 
 # ==========================================
-# BINARIO LIBERO — Con PL San Giuliano
+# BINARIO LIBERO — Vista Unica Automatico
 # ==========================================
 
 st.set_page_config(page_title="Binario Libero", page_icon="🚧", layout="wide")
@@ -15,21 +15,30 @@ st.markdown(
     """
 <style>
     .pl-card {
-        padding: 16px;
+        padding: 18px;
         border-radius: 12px;
-        margin-bottom: 12px;
-        border: 1px solid #e9ecef;
+        margin-bottom: 16px;
+        border: 1px solid #dee2e6;
         background: #ffffff;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
     .pl-title {
-        font-size: 1.1rem;
+        font-size: 1.2rem;
         font-weight: 700;
         color: #1a1d20;
+        margin-bottom: 6px;
     }
     .stato-chiuso { color: #dc3545; font-size: 1.25rem; font-weight: 700; }
     .stato-chiude { color: #d97706; font-size: 1.25rem; font-weight: 700; }
     .stato-aperto { color: #28a745; font-size: 1.25rem; font-weight: 700; }
-    .info-row { font-size: 0.9rem; color: #495057; margin-top: 4px; }
+    .dir-box {
+        background: #f8f9fa;
+        padding: 10px;
+        border-radius: 8px;
+        margin-top: 8px;
+        border-left: 4px solid #0d6efd;
+    }
+    .info-row { font-size: 0.9rem; color: #333; margin-top: 2px; }
     .ora-box {
         font-size: 1.2rem;
         font-weight: 600;
@@ -170,95 +179,86 @@ with col_time:
 
 st.markdown("---")
 
-tab1, tab2 = st.tabs(["🚂 San Giuliano → Pisa", "🚂 Pisa → San Giuliano"])
+# MOSTRA TUTTI I PASSAGGI A LIVELLO IN UN'UNICA SCHERMATA
+for pl_name, cfg in PL_CONFIG.items():
+    t_andata = get_prossimo_treno(cfg["offset_andata"], ORARI_ANDATA, oggi)
+    t_ritorno = get_prossimo_treno(cfg["offset_ritorno"], ORARI_RITORNO, oggi)
 
-# ─── TAB ANDATA ───
-with tab1:
-    st.subheader("Stato PL imminente (San Giuliano → Pisa)")
-    for pl_name, cfg in PL_CONFIG.items():
-        treno = get_prossimo_treno(cfg["offset_andata"], ORARI_ANDATA, oggi)
-        if treno:
-            num, transito, stato, msg, chiusura, apertura = treno
-            st.markdown(
-                f"""
-            <div class="pl-card">
-                <div class="pl-title">📍 {pl_name}</div>
-                <div class="stato-{stato}">{msg}</div>
-                <div class="info-row"><b>Treno:</b> {num} | <b>Transito:</b> {transito.strftime('%H:%M')}</div>
-                <div class="info-row">⏰ Chiusura: <b>{chiusura.strftime('%H:%M')}</b> &nbsp;|&nbsp; 🔓 Riapertura: <b>{apertura.strftime('%H:%M')}</b></div>
-            </div>
-            """,
-                unsafe_allow_html=True,
-            )
-        else:
-            st.info(f"📍 {pl_name}: Nessun altro treno previsto per oggi.")
+    # Determina lo stato globale prioritario del PL (Chiuso > Chiude > Aperto)
+    stati = [
+        t[2] for t in [t_andata, t_ritorno] if t is not None
+    ]
+    if "chiuso" in stati:
+        stato_globale = "chiuso"
+        msg_globale = "🔴 PASSAGGIO A LIVELLO CHIUSO"
+    elif "chiude" in stati:
+        stato_globale = "chiude"
+        msg_globale = "🟡 PASSAGGIO A LIVELLO IN CHIUSURA"
+    else:
+        stato_globale = "aperto"
+        msg_globale = "🟢 PASSAGGIO LIBERO"
 
-# ─── TAB RITORNO ───
-with tab2:
-    st.subheader("Stato PL imminente (Pisa → San Giuliano)")
-    for pl_name, cfg in PL_CONFIG.items():
-        treno = get_prossimo_treno(cfg["offset_ritorno"], ORARI_RITORNO, oggi)
-        if treno:
-            num, transito, stato, msg, chiusura, apertura = treno
-            st.markdown(
-                f"""
-            <div class="pl-card">
-                <div class="pl-title">📍 {pl_name}</div>
-                <div class="stato-{stato}">{msg}</div>
-                <div class="info-row"><b>Treno:</b> {num} | <b>Transito:</b> {transito.strftime('%H:%M')}</div>
-                <div class="info-row">⏰ Chiusura: <b>{chiusura.strftime('%H:%M')}</b> &nbsp;|&nbsp; 🔓 Riapertura: <b>{apertura.strftime('%H:%M')}</b></div>
-            </div>
-            """,
-                unsafe_allow_html=True,
-            )
-        else:
-            st.info(f"📍 {pl_name}: Nessun altro treno previsto per oggi.")
+    html_card = f"""
+    <div class="pl-card">
+        <div class="pl-title">📍 {pl_name}</div>
+        <div class="stato-{stato_globale}">{msg_globale}</div>
+    """
+
+    # Sezione Direzione San Giuliano -> Pisa
+    if t_andata:
+        num, transito, stato, msg, chiusura, apertura = t_andata
+        html_card += f"""
+        <div class="dir-box">
+            <b>➡️ Verso Pisa:</b> Treno <b>{num}</b> (Transito {transito.strftime('%H:%M')})<br>
+            <span class="info-row">Stato: <b>{msg}</b> | Chiusura: <b>{chiusura.strftime('%H:%M')}</b> ➜ Riapertura: <b>{apertura.strftime('%H:%M')}</b></span>
+        </div>
+        """
+
+    # Sezione Direzione Pisa -> San Giuliano
+    if t_ritorno:
+        num, transito, stato, msg, chiusura, apertura = t_ritorno
+        html_card += f"""
+        <div class="dir-box">
+            <b>⬅️ Verso San Giuliano:</b> Treno <b>{num}</b> (Transito {transito.strftime('%H:%M')})<br>
+            <span class="info-row">Stato: <b>{msg}</b> | Chiusura: <b>{chiusura.strftime('%H:%M')}</b> ➜ Riapertura: <b>{apertura.strftime('%H:%M')}</b></span>
+        </div>
+        """
+
+    html_card += "</div>"
+    st.markdown(html_card, unsafe_allow_html=True)
 
 # ==========================================
-# PANNELLO LATERALE (SIDEBAR) - PROSSIMI ORARI
+# PANNELLO LATERALE (SIDEBAR) - ORARI COMPLETI
 # ==========================================
 with st.sidebar:
-    st.header("📋 Tabella Orari Completa")
-    st.write("Consulta i passaggi successivi della giornata.")
-
+    st.header("📋 Tabella Orari")
     pl_selezionato = st.selectbox(
         "Seleziona Passaggio a Livello:", list(PL_CONFIG.keys())
     )
-    direzione = st.radio(
-        "Direzione:", ["San Giuliano → Pisa", "Pisa → San Giuliano"]
-    )
 
     cfg = PL_CONFIG[pl_selezionato]
-    offset = (
-        cfg["offset_andata"]
-        if direzione == "San Giuliano → Pisa"
-        else cfg["offset_ritorno"]
-    )
-    lista_orari = (
-        ORARI_ANDATA
-        if direzione == "San Giuliano → Pisa"
-        else ORARI_RITORNO
-    )
 
-    st.markdown(f"### Prossimi treni per `{pl_selezionato}`")
+    st.markdown(f"### Prossimi passaggi per `{pl_selezionato}`")
 
-    trovati = 0
-    for num, hhmm in lista_orari:
-        partenza = parse_hhmm(oggi, hhmm)
-        transito = partenza + timedelta(minutes=offset)
-        chiusura = transito - timedelta(minutes=CHIUSURA_ANTICIPO)
-        apertura = transito + timedelta(seconds=APERTURA_POST)
+    # Unifica e ordina tutti i prossimi treni per l'orario di transito
+    prossimi_treni = []
+    for num, hhmm in ORARI_ANDATA:
+        transito = parse_hhmm(oggi, hhmm) + timedelta(
+            minutes=cfg["offset_andata"]
+        )
+        if transito > now_ita - timedelta(minutes=2):
+            prossimi_treni.append((transito, num, "➡️ Pisa"))
 
-        if now_ita < apertura:
-            st.write(
-                f"🚆 **{num}** — Transito: `{transito.strftime('%H:%M')}`"
-            )
-            st.caption(
-                f"Chiusura: {chiusura.strftime('%H:%M')} ➜ Riapertura:"
-                f" {apertura.strftime('%H:%M')}"
-            )
-            st.markdown("---")
-            trovati += 1
+    for num, hhmm in ORARI_RITORNO:
+        transito = parse_hhmm(oggi, hhmm) + timedelta(
+            minutes=cfg["offset_ritorno"]
+        )
+        if transito > now_ita - timedelta(minutes=2):
+            prossimi_treni.append((transito, num, "⬅️ San Giuliano"))
 
-    if trovati == 0:
-        st.write("Nessun altro treno in programma per oggi.")
+    prossimi_treni.sort(key=lambda x: x[0])
+
+    for transito, num, dir_txt in prossimi_treni:
+        st.write(
+            f"🚆 **{transito.strftime('%H:%M')}** — {num} ({dir_txt})"
+        )
