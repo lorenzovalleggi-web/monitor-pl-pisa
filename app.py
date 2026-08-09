@@ -3,7 +3,7 @@ import zoneinfo
 import streamlit as st
 
 # ==========================================
-# BINARIO LIBERO — Auto-refresh 40 secondi
+# BINARIO LIBERO — Con PL San Giuliano
 # ==========================================
 
 st.set_page_config(page_title="Binario Libero", page_icon="🚧", layout="wide")
@@ -48,11 +48,12 @@ st.markdown(
 TZ_ITALIA = zoneinfo.ZoneInfo("Europe/Rome")
 
 PL_CONFIG = {
-    "Via Ugo Rindi": {"offset_andata": 5, "offset_ritorno": 1},
-    "Via di Gagno": {"offset_andata": 4, "offset_ritorno": 2},
-    "Via 24 Maggio": {"offset_andata": 3, "offset_ritorno": 3},
-    "Via Ulisse Dini": {"offset_andata": 2, "offset_ritorno": 4},
+    "San Giuliano Terme": {"offset_andata": 0, "offset_ritorno": 6},
     "Via Cave": {"offset_andata": 1, "offset_ritorno": 5},
+    "Via Ulisse Dini": {"offset_andata": 2, "offset_ritorno": 4},
+    "Via 24 Maggio": {"offset_andata": 3, "offset_ritorno": 3},
+    "Via di Gagno": {"offset_andata": 4, "offset_ritorno": 2},
+    "Via Ugo Rindi": {"offset_andata": 5, "offset_ritorno": 1},
 }
 
 CHIUSURA_ANTICIPO = 3
