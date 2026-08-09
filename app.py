@@ -1,9 +1,20 @@
-from datetime import datetime, timedelta
-import zoneinfo
+
 import streamlit as st
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
 # ==========================================
-# BINARIO LIBERO — Layout Nativo & Stabile
+# BINARIO LIBERO
+# Monitor PL e Stazione — Pisa S. Rossore ↔ San Giuliano Terme
+# 6 punti monitorati:
+#   1. San Giuliano Terme (stazione)
+#   2. Via Cave
+#   3. Via Ulisse Dini
+#   4. Via 24 Maggio
+#   5. Via di Gagno
+#   6. Via Ugo Rindi
+# Chiusura: 3 min prima del transito
+# Apertura: 12 secondi dopo il transito (dato reale Via 24 Maggio)
 # ==========================================
 
 st.set_page_config(
@@ -13,23 +24,30 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# Auto-refresh ogni 40 secondi
-st.markdown('<meta http-equiv="refresh" content="40">', unsafe_allow_html=True)
+# Auto-refresh ogni 20 secondi
+st.markdown('<meta http-equiv="refresh" content="20">', unsafe_allow_html=True)
 
-TZ_ITALIA = zoneinfo.ZoneInfo("Europe/Rome")
+TZ_ITALIA = ZoneInfo("Europe/Rome")
 
+# ==========================================
+# CONFIGURAZIONE PL e Stazione
+# Offset = minuti dopo la partenza dalla stazione di origine
+# ==========================================
 PL_CONFIG = {
     "San Giuliano Terme": {"offset_andata": 0, "offset_ritorno": 6},
-    "Via Cave": {"offset_andata": 1, "offset_ritorno": 5},
-    "Via Ulisse Dini": {"offset_andata": 2, "offset_ritorno": 4},
-    "Via 24 Maggio": {"offset_andata": 3, "offset_ritorno": 3},
-    "Via di Gagno": {"offset_andata": 4, "offset_ritorno": 2},
-    "Via Ugo Rindi": {"offset_andata": 5, "offset_ritorno": 1},
+    "Via Cave":           {"offset_andata": 1, "offset_ritorno": 5},
+    "Via Ulisse Dini":    {"offset_andata": 2, "offset_ritorno": 4},
+    "Via 24 Maggio":      {"offset_andata": 3, "offset_ritorno": 3},
+    "Via di Gagno":       {"offset_andata": 4, "offset_ritorno": 2},
+    "Via Ugo Rindi":      {"offset_andata": 5, "offset_ritorno": 1},
 }
 
 CHIUSURA_ANTICIPO_MINUTI = 3
-APERTURA_POST_SECONDI = 30
+APERTURA_POST_SECONDI = 12
 
+# ==========================================
+# ORARI REALI — ANDATA (San Giuliano Terme → Pisa S. Rossore)
+# ==========================================
 ORARI_ANDATA = [
     ("R 32829", "07:58"),
     ("R 34146", "08:15"),
@@ -54,6 +72,9 @@ ORARI_ANDATA = [
     ("R 83665", "21:32"),
 ]
 
+# ==========================================
+# ORARI REALI — RITORNO (Pisa S. Rossore → San Giuliano Terme)
+# ==========================================
 ORARI_RITORNO = [
     ("R 83671", "05:31"),
     ("R 18553", "07:10"),
